@@ -20,6 +20,7 @@
 - 统一的日志记录
 - 多级健康检查系统
 - 标准化的错误处理系统（错误码、堆栈追踪、请求ID关联）
+- 全面的性能监控系统（系统指标、请求追踪、数据库监控、pprof集成）
 
 ## 项目结构
 
@@ -336,6 +337,119 @@ if err != nil {
     errors.HandleError(c, err)
     return
 }
+```
+
+## 性能监控系统
+
+项目内置了全面的性能监控系统，帮助开发者追踪和优化应用性能：
+
+### 特性
+
+- 系统级指标监控（内存使用、goroutine数量、GC信息等）
+- HTTP请求性能追踪（响应时间、请求计数、错误率等）
+- 数据库性能指标（查询时间、连接池状态、慢查询监控等）
+- 缓存系统指标（命中率、访问时间、缓存大小等）
+- 请求速率限制保护
+- pprof性能分析支持（CPU、内存、阻塞分析等）
+
+### 指标接口
+
+- `GET /metrics` - 获取所有性能指标
+- `GET /metrics/system` - 仅获取系统指标
+- `GET /metrics/requests` - 仅获取请求指标
+- `GET /metrics/database` - 仅获取数据库指标
+- `GET /metrics/cache` - 仅获取缓存指标
+- `POST /metrics/reset` - 重置性能指标
+
+### 性能分析接口 (仅开发环境)
+
+- `/debug/pprof` - pprof索引页面
+- `/debug/pprof/profile` - CPU性能分析
+- `/debug/pprof/heap` - 内存分配分析
+- `/debug/pprof/goroutine` - goroutine分析
+- `/debug/pprof/block` - 阻塞分析
+- `/debug/pprof/mutex` - 锁竞争分析
+
+### 指标响应示例
+
+```json
+{
+  "code": 0,
+  "message": "获取性能指标成功",
+  "data": {
+    "system": {
+      "uptime": "1h30m45s",
+      "num_goroutine": 15,
+      "alloc_bytes": 8562400,
+      "gc_cycles": 24,
+      "gc_pause_total": "12ms",
+      "gc_pause_percent": 0.02
+    },
+    "request": {
+      "total": 12580,
+      "active": 5,
+      "success": 12490,
+      "errors": 90,
+      "avg_response_time": "35ms",
+      "max_response_time": "1.2s",
+      "requests_per_sec": 2.31,
+      "status_codes": {
+        "200": 12490,
+        "400": 45,
+        "404": 25,
+        "500": 20
+      }
+    },
+    "database": {
+      "total_queries": 45280,
+      "active_connections": 8,
+      "max_connections": 20,
+      "slow_queries": 12,
+      "avg_query_time": "15ms"
+    },
+    "cache": {
+      "hits": 28540,
+      "misses": 1230,
+      "hit_ratio": 0.958
+    }
+  },
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": "2023-01-01T12:00:00Z"
+}
+```
+
+### 配置选项
+
+在`config.yaml`中配置性能监控参数：
+
+```yaml
+app:
+  # 其他配置...
+  
+  # 性能监控配置
+  enable_metrics: true            # 是否启用性能指标收集
+  enable_pprof: false             # 是否启用pprof分析（生产环境应设为false）
+  enable_rate_limit: true         # 是否启用请求速率限制
+  metrics_log_interval: 5         # 指标收集日志间隔(分钟)
+  rate_limit_requests: 100        # 速率限制窗口内最大请求数
+  rate_limit_window: 60           # 速率限制窗口大小(秒)
+  slow_query_threshold: 200       # 慢查询阈值(毫秒)
+  slow_response_threshold: 500    # 慢响应阈值(毫秒)
+```
+
+### 与pprof工具集成
+
+在开发环境中通过命令行查看实时性能分析：
+
+```bash
+# CPU性能分析(30秒)
+go tool pprof http://localhost:9000/debug/pprof/profile?seconds=30
+
+# 内存分配分析
+go tool pprof http://localhost:9000/debug/pprof/heap
+
+# 并发阻塞分析
+go tool pprof http://localhost:9000/debug/pprof/block
 ```
 
 ## 快速开始

@@ -88,4 +88,26 @@ func (c *RedisCache) Close() error {
 		return c.client.Close()
 	}
 	return nil
-} 
+}
+
+// RedisAvailable 检查Redis是否可用
+func RedisAvailable() bool {
+	return redisCache != nil && redisCache.client != nil
+}
+
+// GetRedisClient 获取Redis客户端
+// 性能监控和指标收集使用
+func GetRedisClient() *redis.Client {
+	if !RedisAvailable() {
+		return nil
+	}
+	return redisCache.client
+}
+
+// GetRedisContext 获取Redis上下文
+func GetRedisContext() context.Context {
+	if !RedisAvailable() {
+		return context.Background()
+	}
+	return redisCache.ctx
+}

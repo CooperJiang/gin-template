@@ -32,6 +32,16 @@ type AppConfig struct {
 	Port            int    `yaml:"port" env:"PORT"`
 	Mode            string `yaml:"mode" env:"MODE"`
 	DefaultRootPass string `yaml:"defaultRootPass" env:"DEFAULT_ROOT_PASS"`
+
+	// 性能监控相关配置
+	EnableRateLimit       bool `yaml:"enable_rate_limit" env:"ENABLE_RATE_LIMIT"`
+	EnableMetrics         bool `yaml:"enable_metrics" env:"ENABLE_METRICS"`
+	EnablePprof           bool `yaml:"enable_pprof" env:"ENABLE_PPROF"`
+	MetricsLogInterval    int  `yaml:"metrics_log_interval" env:"METRICS_LOG_INTERVAL"`       // 分钟
+	RateLimitRequests     int  `yaml:"rate_limit_requests" env:"RATE_LIMIT_REQUESTS"`         // 请求数/窗口
+	RateLimitWindow       int  `yaml:"rate_limit_window" env:"RATE_LIMIT_WINDOW"`             // 窗口大小(秒)
+	SlowQueryThreshold    int  `yaml:"slow_query_threshold" env:"SLOW_QUERY_THRESHOLD"`       // 慢查询阈值(毫秒)
+	SlowResponseThreshold int  `yaml:"slow_response_threshold" env:"SLOW_RESPONSE_THRESHOLD"` // 慢响应阈值(毫秒)
 }
 
 // DatabaseConfig 数据库配置
