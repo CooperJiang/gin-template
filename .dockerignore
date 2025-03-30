@@ -1,0 +1,45 @@
+# 版本控制
+.git
+.gitignore
+
+# 临时和构建文件
+tmp/
+app
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 日志
+logs/
+*.log
+
+# 编译缓存目录
+vendor/
+
+# IDE 文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 数据库文件
+*.db
+*.sqlite
+
+# 配置和敏感信息
+.env
+
+# 文档
+README.md
+LICENSE
+*.md
+
+# 测试文件
+*_test.go
+*_test/
+
+# 其他不需要的文件
+.DS_Store
+Thumbs.db 

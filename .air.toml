@@ -1,0 +1,44 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+# 执行的命令
+cmd = "go build -o ./tmp/app ./cmd"
+# 构建后执行的命令
+bin = "./tmp/app"
+# 监视的文件类型
+include_ext = ["go", "tpl", "tmpl", "html"]
+# 忽略的目录
+exclude_dir = ["assets", "tmp", "vendor", "internal/static/dist"]
+# 忽略的文件
+exclude_file = []
+# 忽略特定的正则表达式
+exclude_regex = ["_test.go"]
+# 忽略未变更的文件
+exclude_unchanged = true
+# 监视目录的间隔时间
+poll = false
+# 单元测试
+poll_interval = 500
+# 是否输出日志
+log = true
+# 启动延迟
+delay = 1000
+# 是否发送通知
+send_interrupt = true
+# 中断发生后的延迟
+kill_delay = 500
+# 终端颜色
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[log]
+# 时间格式
+time = false
+
+[misc]
+# 退出时删除tmp目录
+clean_on_exit = true 

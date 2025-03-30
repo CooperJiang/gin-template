@@ -244,6 +244,89 @@ go build -o app cmd/main.go
 ./app
 ```
 
+## Docker部署
+
+项目支持Docker容器化部署，提供了生产环境和开发环境的配置。
+
+### 开发环境
+
+使用Docker Compose快速启动完整的开发环境，包括应用、MySQL和Redis：
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止所有服务
+docker-compose down
+```
+
+开发环境特性：
+- 代码热重载（使用Air工具）
+- 源代码与容器同步
+- 预配置的MySQL和Redis服务
+- 持久化的数据卷
+
+### 生产环境
+
+使用多阶段构建优化的Dockerfile部署到生产环境：
+
+```bash
+# 构建生产镜像
+docker build -t your-app-name:latest .
+
+# 运行容器
+docker run -d --name your-app -p 9000:9000 \
+  -e APP_APP_PORT=9000 \
+  -e APP_DB_HOST=your-db-host \
+  -e APP_DB_USERNAME=your-username \
+  -e APP_DB_PASSWORD=your-password \
+  -e APP_DB_NAME=your-db-name \
+  your-app-name:latest
+```
+
+生产环境特性：
+- 多阶段构建，镜像体积小
+- 非root用户运行，增强安全性
+- 环境变量配置，便于在不同环境部署
+- 基于Alpine的轻量级基础镜像
+
+### 使用GitHub Actions自动构建Docker镜像
+
+```yaml
+name: Docker Build and Push
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: yourusername/yourapp:latest
+```
+
 ## 默认基础API文档
 
 ### 用户相关API
