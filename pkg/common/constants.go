@@ -1,5 +1,7 @@
 package common
 
+import "net/http"
+
 // 验证码类型常量
 const (
 	// CodeTypeRegister 注册验证码
@@ -10,14 +12,14 @@ const (
 
 // 系统常量
 const (
-	// 状态码
-	StatusSuccess             = 200
-	StatusBadRequest          = 400
-	StatusUnauthorized        = 401
-	StatusForbidden           = 403
-	StatusNotFound            = 404
-	StatusServerError         = 500
-	StatusInternalServerError = 500
+	// 状态码 (保留用于向后兼容)
+	StatusSuccess             = http.StatusOK
+	StatusBadRequest          = http.StatusBadRequest
+	StatusUnauthorized        = http.StatusUnauthorized
+	StatusForbidden           = http.StatusForbidden
+	StatusNotFound            = http.StatusNotFound
+	StatusServerError         = http.StatusInternalServerError
+	StatusInternalServerError = http.StatusInternalServerError
 
 	// 分页默认值
 	DefaultPageSize = 10

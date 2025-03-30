@@ -9,6 +9,7 @@ import (
 	"template/pkg/config"
 	"template/pkg/database"
 	"template/pkg/email"
+	"template/pkg/errors"
 	"template/pkg/health"
 	"template/pkg/logger"
 	"time"
@@ -48,8 +49,14 @@ func main() {
 	// 设置 gin 模式
 	gin.SetMode(config.GetConfig().App.Mode)
 
-	// 使用 gin.Default() 替代 gin.New()
-	r := gin.Default()
+	// 使用 gin.New() 替代 gin.Default() 以便完全控制中间件
+	r := gin.New()
+
+	// 添加 recovery 和 logger 中间件
+	r.Use(gin.Recovery())
+
+	// 添加错误处理和请求ID中间件
+	r.Use(errors.ErrorHandler())
 
 	// 添加 CORS 中间件
 	r.Use(func(c *gin.Context) {

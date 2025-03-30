@@ -4,40 +4,42 @@ import (
 	"template/internal/controllers/user/dto"
 	"template/internal/services/user"
 	"template/pkg/common"
+	"template/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Register 用户注册
 func Register(c *gin.Context) {
-	req, validationErr := common.ValidateRequest[dto.RegisterDTO](c)
-	if validationErr != nil {
-		common.BadRequest(c, validationErr.Message)
+	// 使用新的验证版本
+	req, err := common.ValidateRequestV2[dto.RegisterDTO](c)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
 	// 调用服务层进行注册
-	err := user.RegisterUser(req.Username, req.Email, req.Password, req.Code)
-	if err != nil {
-		common.Fail(c, common.StatusBadRequest, err.Error())
+	if err := user.RegisterUser(req.Username, req.Email, req.Password, req.Code); err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
-	common.SuccessWithMessage(c, "注册成功")
+	errors.ResponseSuccess(c, nil, "注册成功")
 }
 
 // Login 用户登录
 func Login(c *gin.Context) {
-	req, validationErr := common.ValidateRequest[dto.LoginDTO](c)
-	if validationErr != nil {
-		common.BadRequest(c, validationErr.Message)
+	// 使用新的验证版本
+	req, err := common.ValidateRequestV2[dto.LoginDTO](c)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
 	// 调用服务层进行登录验证
 	userInfo, token, err := user.Login(req.Account, req.Password)
 	if err != nil {
-		common.Fail(c, common.StatusBadRequest, err.Error())
+		errors.HandleError(c, err)
 		return
 	}
 
@@ -46,56 +48,59 @@ func Login(c *gin.Context) {
 		"userInfo": userInfo,
 	}
 
-	common.Success(c, data, "登录成功")
+	errors.ResponseSuccess(c, data, "登录成功")
 }
 
 // SendRegistrationCode 发送注册验证码
 func SendRegistrationCode(c *gin.Context) {
-	req, validationErr := common.ValidateRequest[dto.SendCodeDTO](c)
-	if validationErr != nil {
-		common.BadRequest(c, validationErr.Message)
+	// 使用新的验证版本
+	req, err := common.ValidateRequestV2[dto.SendCodeDTO](c)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
 	// 发送验证码
 	if err := user.SendRegistrationCode(req.Email); err != nil {
-		common.Fail(c, common.StatusBadRequest, err.Error())
+		errors.HandleError(c, err)
 		return
 	}
 
-	common.SuccessWithMessage(c, "验证码已发送")
+	errors.ResponseSuccess(c, nil, "验证码已发送")
 }
 
 // SendResetPasswordCode 发送重置密码验证码
 func SendResetPasswordCode(c *gin.Context) {
-	req, validationErr := common.ValidateRequest[dto.SendCodeDTO](c)
-	if validationErr != nil {
-		common.BadRequest(c, validationErr.Message)
+	// 使用新的验证版本
+	req, err := common.ValidateRequestV2[dto.SendCodeDTO](c)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
 	// 发送验证码
 	if err := user.SendResetPasswordCode(req.Email); err != nil {
-		common.Fail(c, common.StatusBadRequest, err.Error())
+		errors.HandleError(c, err)
 		return
 	}
 
-	common.SuccessWithMessage(c, "验证码已发送")
+	errors.ResponseSuccess(c, nil, "验证码已发送")
 }
 
 // ResetPassword 重置密码
 func ResetPassword(c *gin.Context) {
-	req, validationErr := common.ValidateRequest[dto.ResetPasswordDTO](c)
-	if validationErr != nil {
-		common.BadRequest(c, validationErr.Message)
+	// 使用新的验证版本
+	req, err := common.ValidateRequestV2[dto.ResetPasswordDTO](c)
+	if err != nil {
+		errors.HandleError(c, err)
 		return
 	}
 
 	// 重置密码
 	if err := user.ResetPassword(req.Email, req.Code, req.NewPassword); err != nil {
-		common.Fail(c, common.StatusBadRequest, err.Error())
+		errors.HandleError(c, err)
 		return
 	}
 
-	common.SuccessWithMessage(c, "密码重置成功")
+	errors.ResponseSuccess(c, nil, "密码重置成功")
 }

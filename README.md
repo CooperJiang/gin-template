@@ -18,6 +18,8 @@
 - 定时任务支持
 - 跨域(CORS)支持
 - 统一的日志记录
+- 多级健康检查系统
+- 标准化的错误处理系统（错误码、堆栈追踪、请求ID关联）
 
 ## 项目结构
 
@@ -222,6 +224,117 @@ func (c *MyServiceChecker) Type() health.CheckType {
 // 注册自定义检查器
 func init() {
 	health.RegisterChecker(&MyServiceChecker{})
+}
+```
+
+## 标准化错误处理系统
+
+项目实现了完整的标准化错误处理系统，确保统一的错误响应格式和错误处理流程：
+
+### 特性
+
+- 统一的错误码体系（包括通用错误、用户相关错误、数据库错误、第三方服务错误等）
+- 错误堆栈跟踪和请求ID关联，方便排查问题
+- 安全的错误信息处理，防止敏感信息泄露
+- 请求验证错误的统一处理
+- 统一的API响应格式
+
+### 错误响应格式
+
+```json
+{
+  "code": 100,
+  "message": "无效的请求参数",
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "timestamp": "2023-01-01T12:00:00Z"
+}
+```
+
+### 错误码分类
+
+- **通用错误码**: 1-999
+  - 包括未知错误、内部错误、参数错误、权限错误等
+
+- **用户相关错误码**: 1000-1999
+  - 包括用户不存在、密码错误、账号禁用等
+
+- **数据库相关错误码**: 2000-2999
+  - 包括数据库连接失败、查询失败、记录不存在等
+
+- **第三方服务错误码**: 3000-3999
+  - 包括外部API错误、Redis错误、邮件服务错误等
+
+### 使用示例
+
+在控制器中抛出和处理错误：
+
+```go
+import "template/pkg/errors"
+
+func SomeHandler(c *gin.Context) {
+    // 验证请求
+    req, err := common.ValidateRequestV2[SomeDTO](c)
+    if err != nil {
+        errors.HandleError(c, err)
+        return
+    }
+
+    // 业务处理
+    if somethingIsWrong {
+        err := errors.New(errors.CodeInvalidParameter, "详细错误信息")
+        errors.HandleError(c, err)
+        return
+    }
+
+    // 成功响应
+    errors.ResponseSuccess(c, data, "操作成功")
+}
+```
+
+### 自定义错误
+
+可以通过以下方式创建定制化错误：
+
+```go
+// 创建基本错误
+err := errors.New(errors.CodeDBNoRecord, "找不到用户记录")
+
+// 添加请求ID
+err = err.WithRequestID("request-123")
+
+// 添加元数据
+err = err.WithMetadata("user_id", 123)
+
+// 包装错误
+originalErr := someDatabase.Query()
+wrappedErr := errors.Wrap(originalErr, errors.CodeDBQueryFailed, "查询数据库失败")
+```
+
+### 验证错误处理
+
+系统集成了请求验证功能，可以自动生成友好的验证错误消息：
+
+```go
+// 定义请求DTO类型
+type LoginRequest struct {
+    Username string `json:"username" binding:"required"`
+    Password string `json:"password" binding:"required,min=6"`
+}
+
+// 实现GetValidationMessages方法（可选）
+func (r *LoginRequest) GetValidationMessages() map[string]string {
+    return map[string]string{
+        "Username.required": "用户名不能为空",
+        "Password.required": "密码不能为空",
+        "Password.min":      "密码长度不能少于6位",
+    }
+}
+
+// 在控制器中使用
+req, err := common.ValidateRequestV2[LoginRequest](c)
+if err != nil {
+    errors.HandleError(c, err)
+    return
 }
 ```
 
