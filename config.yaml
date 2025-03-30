@@ -1,0 +1,50 @@
+app:
+  name: "template"
+  port: 9000
+  mode: "debug"  # 改为 "release" 为生产环境，不输出调试日志
+  defaultRootPass: "123456"  # 初次启动默认设置的管理员密码配置
+
+# 数据库配置
+database:
+  driver: "mysql"
+  host: "localhost"
+  port: 3306
+  username: ""
+  password: ""
+  name: ""
+  charset: "utf8mb4"
+
+
+# JWT配置
+jwt:
+  secret_key: "your-secret-key"
+  expires_in: 24  # JWT有效期，单位小时
+
+# Redis配置
+redis:
+  host: "localhost"  # 设置为空字符串可禁用Redis
+  port: 6379
+  password: ""
+  db: 0
+
+# 日志配置
+log:
+  level: "info"
+  path: "logs"
+  filename: "app.log"
+  max_size: 100
+  max_backups: 10
+  max_age: 7
+  compress: true
+
+# 邮件配置
+mail:
+  host: "smtp.example.com"
+  port: 465  # 使用SSL加密端口
+  username: "your-email@example.com"
+  password: "your-password"
+  from: "your-email@example.com"
+  from_name: "你的应用名称"
+  reply_to: "your-email@example.com"
+  ssl: true  # 启用SSL加密
+  enabled: true  # 设置为false可禁用邮件服务 
