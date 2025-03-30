@@ -11,8 +11,8 @@ import (
 
 // Register 用户注册
 func Register(c *gin.Context) {
-	// 使用新的验证版本
-	req, err := common.ValidateRequestV2[dto.RegisterDTO](c)
+	// 验证请求
+	req, err := common.ValidateRequest[dto.RegisterDTO](c)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -29,8 +29,8 @@ func Register(c *gin.Context) {
 
 // Login 用户登录
 func Login(c *gin.Context) {
-	// 使用新的验证版本
-	req, err := common.ValidateRequestV2[dto.LoginDTO](c)
+	// 验证请求
+	req, err := common.ValidateRequest[dto.LoginDTO](c)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -53,8 +53,8 @@ func Login(c *gin.Context) {
 
 // SendRegistrationCode 发送注册验证码
 func SendRegistrationCode(c *gin.Context) {
-	// 使用新的验证版本
-	req, err := common.ValidateRequestV2[dto.SendCodeDTO](c)
+	// 验证请求
+	req, err := common.ValidateRequest[dto.SendCodeDTO](c)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -71,8 +71,8 @@ func SendRegistrationCode(c *gin.Context) {
 
 // SendResetPasswordCode 发送重置密码验证码
 func SendResetPasswordCode(c *gin.Context) {
-	// 使用新的验证版本
-	req, err := common.ValidateRequestV2[dto.SendCodeDTO](c)
+	// 验证请求
+	req, err := common.ValidateRequest[dto.SendCodeDTO](c)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -89,8 +89,8 @@ func SendResetPasswordCode(c *gin.Context) {
 
 // ResetPassword 重置密码
 func ResetPassword(c *gin.Context) {
-	// 使用新的验证版本
-	req, err := common.ValidateRequestV2[dto.ResetPasswordDTO](c)
+	// 验证请求
+	req, err := common.ValidateRequest[dto.ResetPasswordDTO](c)
 	if err != nil {
 		errors.HandleError(c, err)
 		return

@@ -273,7 +273,7 @@ import "template/pkg/errors"
 
 func SomeHandler(c *gin.Context) {
     // 验证请求
-    req, err := common.ValidateRequestV2[SomeDTO](c)
+    req, err := common.ValidateRequest[SomeDTO](c)
     if err != nil {
         errors.HandleError(c, err)
         return
@@ -331,7 +331,7 @@ func (r *LoginRequest) GetValidationMessages() map[string]string {
 }
 
 // 在控制器中使用
-req, err := common.ValidateRequestV2[LoginRequest](c)
+req, err := common.ValidateRequest[LoginRequest](c)
 if err != nil {
     errors.HandleError(c, err)
     return
