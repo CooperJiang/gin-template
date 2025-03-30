@@ -137,6 +137,94 @@ services:
 
 3. 嵌入后的前端文件会随Go二进制一起打包，无需额外部署静态文件
 
+## 健康检查系统
+
+项目内置了完整的健康检查系统，提供多种粒度的健康状态监控：
+
+### 健康检查接口
+
+- `GET /health` - 简单健康检查，返回基础服务状态
+- `GET /health/basic` - 基础健康检查，检查关键服务组件状态
+- `GET /health/complete` - 完整健康检查，检查所有系统组件状态
+
+### 健康检查响应示例
+
+```json
+{
+  "status": "up",
+  "version": "1.0.0",
+  "check_time": "2023-01-01T12:00:00Z",
+  "components": [
+    {
+      "name": "database",
+      "status": "up",
+      "check_time": "2023-01-01T12:00:00Z",
+      "details": {
+        "ping_time_ms": 5,
+        "max_open_conns": 10,
+        "open_conns": 2,
+        "in_use": 1
+      }
+    },
+    {
+      "name": "cache",
+      "status": "up",
+      "check_time": "2023-01-01T12:00:00Z",
+      "details": {
+        "set_time_ms": 3,
+        "get_time_ms": 2,
+        "type": "redis"
+      }
+    }
+  ],
+  "system_info": {
+    "go_version": "go1.20",
+    "goroutines": 15,
+    "cpu_num": 8,
+    "memory_alloc": 8562400,
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "uptime": "24h0m0s",
+  "start_time": "2023-01-01T00:00:00Z"
+}
+```
+
+### 状态说明
+
+- `up`: 组件正常运行
+- `down`: 组件不可用
+- `degraded`: 组件性能下降但仍可用
+
+### 自定义健康检查
+
+可通过实现`health.Checker`接口并注册到健康检查系统来添加自定义检查项：
+
+```go
+// 创建自定义检查器
+type MyServiceChecker struct{}
+
+func (c *MyServiceChecker) Name() string {
+	return "my_service"
+}
+
+func (c *MyServiceChecker) Check() (health.Status, map[string]interface{}) {
+	// 执行检查逻辑
+	return health.StatusUp, map[string]interface{}{
+		"custom_metric": 100,
+	}
+}
+
+func (c *MyServiceChecker) Type() health.CheckType {
+	return health.CheckTypeBasic
+}
+
+// 注册自定义检查器
+func init() {
+	health.RegisterChecker(&MyServiceChecker{})
+}
+```
+
 ## 快速开始
 
 1. 克隆项目模板

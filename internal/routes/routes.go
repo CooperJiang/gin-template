@@ -2,7 +2,7 @@ package routes
 
 import (
 	"template/internal/middleware"
-	"template/pkg/config"
+	"template/pkg/health"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,12 +15,9 @@ func RegisterRoutes(r *gin.Engine) {
 	RegisterClientRoutes(r)
 
 	// 健康检查
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-			"name":   config.GetConfig().App.Name,
-		})
-	})
+	r.GET("/health", health.SimpleHealthHandler)
+	r.GET("/health/basic", health.BasicHealthHandler)
+	r.GET("/health/complete", health.CompleteHealthHandler)
 
 	// API路由组
 	api := r.Group("/api")

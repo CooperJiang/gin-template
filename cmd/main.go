@@ -9,11 +9,15 @@ import (
 	"template/pkg/config"
 	"template/pkg/database"
 	"template/pkg/email"
+	"template/pkg/health"
 	"template/pkg/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// 应用版本号
+const appVersion = "1.0.0"
 
 func main() {
 	// 设置时区
@@ -30,6 +34,9 @@ func main() {
 	defer database.Close()
 	cache.InitCache()
 	email.Init()
+
+	// 设置健康检查系统应用版本
+	health.SetVersion(appVersion)
 
 	// 初始化定时任务
 	cron.InitCronManager()
@@ -66,6 +73,7 @@ func main() {
 
 	// 启动服务器
 	cfg := config.GetConfig().App
+	logger.Info("服务启动成功，监听端口: %d，版本: %s", cfg.Port, appVersion)
 	if err := r.Run(fmt.Sprintf(":%d", cfg.Port)); err != nil {
 		panic(err)
 	}
