@@ -1,0 +1,79 @@
+# 应用基本配置
+app:
+  name: "template"               # 应用名称，用于日志、标识等
+  port: 9000                     # 应用监听端口
+  mode: "debug"                  # 运行模式: debug/release，生产环境应设为"release"，调试环境设为"debug"
+  defaultRootPass: "change_me"   # 初次启动时自动创建的管理员账号密码，建议在首次登录后立即修改
+
+# 数据库配置
+database:
+  driver: "mysql"                # 数据库类型: mysql/sqlite，如设置为"sqlite"或mysql参数不全，将自动使用SQLite
+  host: "localhost"              # MySQL主机地址，空字符串表示使用SQLite
+  port: 3306                     # MySQL端口
+  username: "dbuser"             # MySQL用户名
+  password: "dbpassword"         # MySQL密码
+  name: "template_db"            # 数据库名称
+  charset: "utf8mb4"             # 字符集，推荐utf8mb4以支持emoji等特殊字符
+
+# JWT认证配置
+jwt:
+  secret_key: "change-to-your-secure-secret-key" # JWT签名密钥，生产环境必须修改为强密钥
+  expires_in: 24                 # JWT令牌有效期，单位小时
+
+# Redis缓存配置
+redis:
+  host: "localhost"              # Redis主机地址，设置为空字符串将禁用Redis并自动降级为内存缓存
+  port: 6379                     # Redis端口
+  password: ""                   # Redis密码，无密码则留空
+  db: 0                          # Redis数据库索引，默认为0
+
+# 日志配置
+log:
+  level: "info"                  # 日志级别: debug/info/warn/error
+  path: "logs"                   # 日志保存目录
+  filename: "app.log"            # 日志文件名
+  max_size: 100                  # 单日志文件最大大小，单位MB
+  max_backups: 10                # 最大保留日志文件数
+  max_age: 7                     # 日志文件最大保留天数
+  compress: true                 # 是否压缩旧日志文件
+
+# 邮件服务配置
+mail:
+  host: "smtp.example.com"       # SMTP服务器地址
+  port: 465                      # SMTP端口，通常SSL为465，TLS为587
+  username: "your@example.com"   # SMTP用户名/邮箱地址
+  password: "email-password"     # SMTP密码
+  from: "your@example.com"       # 发件人邮箱，通常与username相同
+  from_name: "应用名称"           # 发件人名称
+  reply_to: "your@example.com"   # 回复地址
+  ssl: true                      # 是否使用SSL加密，通常为true
+  enabled: true                  # 是否启用邮件服务，设为false则不发送邮件
+
+# 性能监控配置
+metrics:
+  enable_metrics: true           # 是否启用性能指标收集
+  enable_pprof: false            # 是否启用pprof性能分析，生产环境应设为false
+  enable_rate_limit: true        # 是否启用请求速率限制
+  metrics_log_interval: 10       # 指标收集日志记录间隔，单位分钟
+  rate_limit_requests: 60        # 速率限制窗口内允许的最大请求数
+  slow_query_threshold: 150      # 慢查询阈值，单位毫秒，超过此值的数据库查询将被记录
+  slow_response_threshold: 500   # 慢响应阈值，单位毫秒，超过此值的HTTP响应将被记录
+
+# 跨域(CORS)配置
+cors:
+  enabled: true                  # 是否启用CORS支持
+  allowed_origins:               # 允许的来源域名列表
+    - "http://localhost:3000"
+    - "https://yourdomain.com"
+  allowed_methods:               # 允许的HTTP方法
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed_headers:               # 允许的请求头
+    - "Origin"
+    - "Content-Type"
+    - "Authorization"
+  allow_credentials: true        # 是否允许请求携带凭证（Cookie等）
+  max_age: 86400                 # 预检请求结果缓存时间，单位秒 

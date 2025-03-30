@@ -7,11 +7,11 @@ app:
 # 数据库配置
 database:
   driver: "mysql"
-  host: "localhost"
+  host: ""
   port: 3306
   username: ""
   password: ""
-  name: ""
+  name: "template"
   charset: "utf8mb4"
 
 
@@ -48,3 +48,31 @@ mail:
   reply_to: "your-email@example.com"
   ssl: true  # 启用SSL加密
   enabled: true  # 设置为false可禁用邮件服务 
+
+# 性能监控配置
+metrics:
+  enable_metrics: true
+  enable_pprof: false  # 生产环境禁用pprof
+  enable_rate_limit: true
+  metrics_log_interval: 10
+  rate_limit_requests: 60  # 限制每分钟60个请求
+  slow_query_threshold: 150  # 150ms以上视为慢查询
+
+# 跨域(CORS)配置
+cors:
+  enabled: true                  # 是否启用CORS支持
+  allowed_origins:               # 允许的来源域名列表
+    - "http://localhost:3000"
+    - "https://yourdomain.com"
+  allowed_methods:               # 允许的HTTP方法
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed_headers:               # 允许的请求头
+    - "Origin"
+    - "Content-Type"
+    - "Authorization"
+  allow_credentials: true        # 是否允许请求携带凭证（Cookie等）
+  max_age: 86400                 # 预检请求结果缓存时间，单位秒 

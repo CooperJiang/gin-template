@@ -24,6 +24,7 @@ type Config struct {
 	JWT      JWTConfig      `yaml:"jwt" env:"JWT"`
 	Log      LogConfig      `yaml:"log" env:"LOG"`
 	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
+	CORS     CORSConfig     `yaml:"cors" env:"CORS"`
 }
 
 // AppConfig 应用基础配置
@@ -93,6 +94,16 @@ type MailConfig struct {
 	Enabled  bool   `yaml:"enabled" env:"ENABLED"`
 }
 
+// CORSConfig 跨域(CORS)配置
+type CORSConfig struct {
+	Enabled          bool     `yaml:"enabled" env:"ENABLED"`
+	AllowedOrigins   []string `yaml:"allowed_origins" env:"ALLOWED_ORIGINS"`
+	AllowedMethods   []string `yaml:"allowed_methods" env:"ALLOWED_METHODS"`
+	AllowedHeaders   []string `yaml:"allowed_headers" env:"ALLOWED_HEADERS"`
+	AllowCredentials bool     `yaml:"allow_credentials" env:"ALLOW_CREDENTIALS"`
+	MaxAge           int      `yaml:"max_age" env:"MAX_AGE"`
+}
+
 var (
 	config Config
 	once   sync.Once
@@ -146,6 +157,9 @@ func loadConfigFromEnv(cfg *Config) {
 
 	// 处理Mail配置的环境变量
 	loadEnvToStruct(envPrefix+"MAIL_", &cfg.Mail)
+
+	// 处理CORS配置的环境变量
+	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)
 }
 
 // loadEnvToStruct 加载环境变量到结构体
@@ -219,7 +233,7 @@ func setFieldValue(field reflect.Value, value string) {
 // GetConfig 获取配置
 func GetConfig() *Config {
 	// 确保配置已初始化
-	if (Config{}) == config {
+	if reflect.DeepEqual(config, Config{}) {
 		InitConfig()
 	}
 	return &config

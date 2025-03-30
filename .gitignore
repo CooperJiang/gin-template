@@ -35,8 +35,12 @@ temp/
 config.local.yaml
 config.dev.yaml
 config.prod.yaml
+config.test.yaml
 config.*.yaml
-!config.yaml
+!config.example.yaml
+
+# 部署配置
+deploy.conf
 
 # IDE和编辑器文件
 .idea/
@@ -65,4 +69,75 @@ tmp/
 
 # 其他
 .env
-__debug_bin 
+__debug_bin
+
+# 编译生成的文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# 构建目录
+/build/
+/dist/
+/bin/
+
+# 日志文件
+/logs/
+*.log
+
+# SQLite数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 环境配置文件（只保留示例配置）
+config.*.yaml
+!config.example.yaml
+.env
+.env.*
+
+# 部署配置文件（敏感信息）
+deploy.conf
+*.pem
+*.key
+
+# 临时文件
+*.tmp
+.DS_Store
+tmp/
+.tmp/
+.temp/
+
+# IDE 和编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 依赖目录
+/vendor/
+/node_modules/
+
+# 特定于Go的忽略
+go.work
+
+# 特定于部署的文件
+*.tar.gz
+*.zip
+
+# 编译时生成的前端文件
+/internal/static/dist/
+/internal/static/assets/
+
+# Air工具的临时文件
+.air.toml.tmp
+/tmp-air-*/
+
+# 其他不需要提交的文件
+TODO.md
+NOTES.md 

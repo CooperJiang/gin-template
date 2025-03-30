@@ -21,6 +21,7 @@
 - 多级健康检查系统
 - 标准化的错误处理系统（错误码、堆栈追踪、请求ID关联）
 - 全面的性能监控系统（系统指标、请求追踪、数据库监控、pprof集成）
+- 自动化部署支持（多环境、版本管理、回滚功能）
 
 ## 项目结构
 
@@ -471,9 +472,57 @@ go build -o app cmd/main.go
 ./app
 ```
 
+## 部署指南
+
+项目提供了完整的自动化部署解决方案，支持多环境部署、版本管理和一键回滚功能。
+
+### 部署工具
+
+项目包含三个核心脚本文件：
+- `build.sh`: 项目构建脚本，支持跨平台编译
+- `deploy.sh`: 自动化部署脚本，用于部署应用到远程服务器
+- `run.sh`: 本地开发环境管理脚本
+
+### 快速部署步骤
+
+1. **首次部署配置**
+```bash
+# 配置部署参数（服务器地址、用户名等）
+./deploy.sh config
+
+# 配置环境特定参数（生产/测试环境）
+./deploy.sh envconfig
+
+# 初始化服务器环境（重要！首次部署必须执行）
+./deploy.sh setup
+```
+
+2. **执行部署**
+```bash
+# 部署到配置的环境
+./deploy.sh deploy
+
+# 或指定环境部署
+./deploy.sh -e prod deploy
+```
+
+3. **管理已部署应用**
+```bash
+# 查看应用状态
+./deploy.sh status
+
+# 查看应用日志
+./deploy.sh logs
+
+# 需要回滚时
+./deploy.sh rollback
+```
+
+**详细部署文档请参考：[部署指南](DEPLOY_README.md)**
+
 ## Docker部署
 
-项目支持Docker容器化部署，提供了生产环境和开发环境的配置。
+项目同时支持Docker容器化部署，提供了生产环境和开发环境的配置。
 
 ### 开发环境
 
@@ -520,9 +569,12 @@ docker run -d --name your-app -p 9000:9000 \
 - 环境变量配置，便于在不同环境部署
 - 基于Alpine的轻量级基础镜像
 
-### 使用GitHub Actions自动构建Docker镜像
+### CI/CD集成
+
+可以使用GitHub Actions自动构建和推送Docker镜像：
 
 ```yaml
+# .github/workflows/docker-build.yml
 name: Docker Build and Push
 
 on:

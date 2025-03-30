@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"template/internal/cron"
+	"template/internal/middleware"
 	"template/internal/routes"
 	"template/internal/services/user"
 	"template/pkg/cache"
@@ -10,7 +11,6 @@ import (
 	"template/pkg/database"
 	"template/pkg/email"
 	"template/pkg/errors"
-	"template/pkg/health"
 	"template/pkg/logger"
 	"template/pkg/metrics"
 	"time"
@@ -36,9 +36,6 @@ func main() {
 	defer database.Close()
 	cache.InitCache()
 	email.Init()
-
-	// 设置健康检查系统应用版本
-	health.SetVersion(appVersion)
 
 	// 初始化定时任务
 	cron.InitCronManager()
@@ -94,19 +91,7 @@ func main() {
 	}
 
 	// 添加 CORS 中间件
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "*")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "*")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(200)
-			return
-		}
-		c.Next()
-	})
+	r.Use(middleware.CORSMiddleware())
 
 	r.SetTrustedProxies([]string{"127.0.0.1", "localhost"})
 
