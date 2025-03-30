@@ -1,0 +1,68 @@
+# Go语言特定的忽略文件
+# 二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# 编译输出
+*.test
+*.out
+*.o
+*.a
+app
+main
+
+# 依赖管理
+vendor/
+
+# 项目特定文件
+*.db
+app.db
+logs/
+*.log
+.env
+.env.*
+!.env.example
+
+# 临时文件
+tmp/
+temp/
+.tmp/
+
+# 本地配置覆盖
+config.local.yaml
+config.dev.yaml
+config.prod.yaml
+config.*.yaml
+!config.yaml
+
+# IDE和编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.settings/
+.classpath
+*.sublime-workspace
+*.sublime-project
+
+# 测试覆盖率文件
+*.cover
+coverage.txt
+profile.out
+
+# 缓存目录
+.cache/
+
+# Air热重载缓存
+.air.toml.tmp
+tmp/
+
+# 其他
+.env
+__debug_bin 
