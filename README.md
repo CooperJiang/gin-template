@@ -70,6 +70,53 @@ template/
    - 当MySQL配置不完整时，系统自动使用SQLite数据库
    - 无需额外配置，系统会创建`app.db`文件作为SQLite数据库
 
+## 环境变量配置
+
+项目支持通过环境变量覆盖配置文件中的设置，格式为：`APP_[模块]_[配置项]`
+
+环境变量配置优先级：**环境变量 > 配置文件 > 默认值**
+
+### 示例：
+
+```bash
+# 应用基本配置
+export APP_APP_NAME="我的应用"
+export APP_APP_PORT=8080
+export APP_APP_MODE=release
+
+# 数据库配置
+export APP_DB_HOST=db.example.com
+export APP_DB_PORT=3306
+export APP_DB_USERNAME=dbuser
+export APP_DB_PASSWORD=secret
+export APP_DB_NAME=myapp
+
+# Redis配置
+export APP_REDIS_HOST=redis.example.com
+export APP_REDIS_PORT=6379
+
+# JWT配置
+export APP_JWT_SECRET_KEY=my-secret-key
+export APP_JWT_EXPIRES_IN=48
+```
+
+### Docker环境配置示例：
+
+```yaml
+# docker-compose.yml 示例
+version: '3'
+services:
+  app:
+    image: your-app-image
+    environment:
+      - APP_APP_PORT=8080
+      - APP_DB_HOST=mysql
+      - APP_DB_USERNAME=root
+      - APP_DB_PASSWORD=password
+      - APP_DB_NAME=app_db
+      - APP_REDIS_HOST=redis
+```
+
 ## 前端集成
 
 本项目支持将前端构建文件嵌入到Go二进制文件中：
