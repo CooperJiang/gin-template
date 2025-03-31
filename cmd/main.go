@@ -57,34 +57,30 @@ func main() {
 	r.Use(errors.ErrorHandler())
 
 	// 配置
-	cfg := config.GetConfig().App
+	appCfg := config.GetConfig().App
+	metricsCfg := config.GetConfig().Metrics
 
 	// 添加性能监控中间件
-	if cfg.EnableMetrics {
+	if metricsCfg.EnableMetrics {
 		r.Use(metrics.MetricsMiddleware())
 		logger.Info("性能指标监控已启用")
 	}
 
 	// 如果是开发模式或明确启用，启用pprof调试
-	if cfg.EnablePprof || cfg.Mode == gin.DebugMode {
+	if metricsCfg.EnablePprof || appCfg.Mode == gin.DebugMode {
 		metrics.PprofMiddleware(r)
 		logger.Info("pprof性能分析工具已启用，访问 /debug/pprof 查看")
 	}
 
 	// 添加请求速率限制
-	if cfg.EnableRateLimit {
+	if metricsCfg.EnableRateLimit {
 		// 获取配置的速率限制参数，如果未配置则使用默认值
-		maxRequests := cfg.RateLimitRequests
+		maxRequests := metricsCfg.RateLimitRequests
 		if maxRequests <= 0 {
 			maxRequests = 100 // 默认每分钟100个请求
 		}
 
-		windowSeconds := cfg.RateLimitWindow
-		if windowSeconds <= 0 {
-			windowSeconds = 60 // 默认1分钟窗口
-		}
-
-		windowDuration := time.Duration(windowSeconds) * time.Second
+		windowDuration := time.Minute // 默认1分钟窗口
 		rateLimiter := metrics.NewRateLimiter(maxRequests, windowDuration)
 		r.Use(rateLimiter.Middleware())
 		logger.Info("请求速率限制已启用: %d请求/%v", maxRequests, windowDuration)
@@ -99,21 +95,21 @@ func main() {
 	routes.RegisterRoutes(r)
 
 	// 注册指标接口
-	if cfg.EnableMetrics {
+	if metricsCfg.EnableMetrics {
 		metrics.RegisterMetricsHandlers(r)
-		logger.Info("性能指标接口已注册，访问 /metrics 查看")
+		logger.Info("性能指标接口已注册，访问 /api/v1/metrics 查看")
 
 		// 配置慢查询阈值
-		if cfg.SlowQueryThreshold > 0 {
-			metrics.SlowQueryThreshold = time.Duration(cfg.SlowQueryThreshold) * time.Millisecond
-			logger.Info("慢查询阈值已设置为 %dms", cfg.SlowQueryThreshold)
+		if metricsCfg.SlowQueryThreshold > 0 {
+			metrics.SlowQueryThreshold = time.Duration(metricsCfg.SlowQueryThreshold) * time.Millisecond
+			logger.Info("慢查询阈值已设置为 %dms", metricsCfg.SlowQueryThreshold)
 		}
 
 		// 整合数据库指标监控
 		db := database.GetDB()
 		if db != nil {
 			// 创建并初始化GORM指标插件
-			slowThreshold := time.Duration(cfg.SlowQueryThreshold)
+			slowThreshold := time.Duration(metricsCfg.SlowQueryThreshold)
 			if slowThreshold <= 0 {
 				slowThreshold = 200 // 默认200毫秒
 			}
@@ -134,7 +130,7 @@ func main() {
 		}
 
 		// 定期记录系统指标
-		interval := cfg.MetricsLogInterval
+		interval := metricsCfg.MetricsLogInterval
 		if interval <= 0 {
 			interval = 5 // 默认5分钟
 		}
@@ -155,9 +151,9 @@ func main() {
 	}
 
 	// 启动服务器
-	logger.Info("服务启动成功，监听端口: %d，版本: %s", cfg.Port, appVersion)
+	logger.Info("服务启动成功，监听端口: %d，版本: %s", appCfg.Port, appVersion)
 
-	if err := r.Run(fmt.Sprintf(":%d", cfg.Port)); err != nil {
+	if err := r.Run(fmt.Sprintf(":%d", appCfg.Port)); err != nil {
 		panic(err)
 	}
 }

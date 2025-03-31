@@ -268,12 +268,12 @@ if err != nil {
 
 ### 指标接口
 
-- `GET /metrics` - 获取所有性能指标
-- `GET /metrics/system` - 仅获取系统指标
-- `GET /metrics/requests` - 仅获取请求指标
-- `GET /metrics/database` - 仅获取数据库指标
-- `GET /metrics/cache` - 仅获取缓存指标
-- `POST /metrics/reset` - 重置性能指标
+- `GET /api/v1/metrics` - 获取所有性能指标
+- `GET /api/v1/metrics/system` - 仅获取系统指标
+- `GET /api/v1/metrics/requests` - 仅获取请求指标
+- `GET /api/v1/metrics/database` - 仅获取数据库指标
+- `GET /api/v1/metrics/cache` - 仅获取缓存指标
+- `POST /api/v1/metrics/reset` - 重置性能指标
 
 ### 性能分析接口 (仅开发环境)
 
@@ -337,16 +337,12 @@ if err != nil {
 在`config.yaml`中配置性能监控参数：
 
 ```yaml
-app:
-  # 其他配置...
-  
-  # 性能监控配置
+metrics:
   enable_metrics: true            # 是否启用性能指标收集
   enable_pprof: false             # 是否启用pprof分析（生产环境应设为false）
   enable_rate_limit: true         # 是否启用请求速率限制
   metrics_log_interval: 5         # 指标收集日志间隔(分钟)
   rate_limit_requests: 100        # 速率限制窗口内最大请求数
-  rate_limit_window: 60           # 速率限制窗口大小(秒)
   slow_query_threshold: 200       # 慢查询阈值(毫秒)
   slow_response_threshold: 500    # 慢响应阈值(毫秒)
 ```
@@ -521,13 +517,55 @@ jobs:
 
 ## 默认基础API文档
 
+### 健康检查接口
+
+- `GET /api/v1/health` - 简单健康检查
+- `GET /api/v1/health/basic` - 基础健康检查
+- `GET /api/v1/health/complete` - 完整健康检查
+
 ### 用户相关API
 
-- `POST /api/user/register` - 用户注册
-- `POST /api/user/login` - 用户登录
-- `POST /api/user/send-registration-code` - 发送注册验证码
-- `POST /api/user/send-reset-password-code` - 发送重置密码验证码
-- `POST /api/user/reset-password` - 重置密码
+- `POST /api/v1/user/register` - 用户注册
+- `POST /api/v1/user/login` - 用户登录
+- `POST /api/v1/user/send-registration-code` - 发送注册验证码
+- `POST /api/v1/user/send-reset-password-code` - 发送重置密码验证码
+- `POST /api/v1/user/reset-password` - 重置密码
+
+### 路由说明
+
+项目使用以下路由结构：
+
+1. API 路由：
+   - `/api/v1/*` - 所有API端点
+   - `/api/v1/metrics/*` - 性能监控相关的API端点
+   - `/api/v1/health/*` - 健康检查相关的API端点
+   - `/api/v1/user/*` - 用户相关的API端点
+
+2. 调试路由：
+   - `/debug/pprof/*` - 性能分析工具（仅在开发环境或显式启用时可用）
+
+3. 前端路由：
+   - `/` - 前端页面入口
+   - `/*` - 所有不匹配API和调试路由的请求都会返回前端页面（index.html）
+   - `/assets/*` - 静态资源文件
+
+### 使用示例
+
+```bash
+# 获取所有性能指标
+curl http://localhost:9000/api/v1/metrics
+
+# 获取系统健康状态
+curl http://localhost:9000/api/v1/health
+
+# 用户登录
+curl -X POST http://localhost:9000/api/v1/user/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "test", "password": "password"}'
+
+# 获取CPU性能分析（需要启用pprof）
+curl http://localhost:9000/debug/pprof/profile?seconds=30 > cpu.prof
+```
 
 ## 自定义和扩展
 

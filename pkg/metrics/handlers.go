@@ -82,7 +82,7 @@ func MetricsCacheHandler(c *gin.Context) {
 // RegisterMetricsHandlers 注册指标相关路由
 func RegisterMetricsHandlers(r *gin.Engine) {
 	// 指标路由组
-	metricsGroup := r.Group("/metrics")
+	metricsGroup := r.Group("/api/v1/metrics")
 	{
 		metricsGroup.GET("", MetricsHandler)                  // 获取所有指标
 		metricsGroup.GET("/system", MetricsSystemHandler)     // 系统指标

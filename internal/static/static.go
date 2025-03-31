@@ -9,7 +9,7 @@ import (
 dist/css/* dist/js/* dist/components/* dist/utils/* dist/plugins/* dist/public/*
 */
 
-//go:embed dist/*.html
+//go:embed  dist/*.html
 var DistDir embed.FS
 
 // GetDistFS 返回嵌入的静态文件系统

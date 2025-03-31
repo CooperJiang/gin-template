@@ -54,9 +54,6 @@ func ErrorHandler() gin.HandlerFunc {
 			}
 		}()
 
-		// 记录请求日志
-		logger.Info("[REQ] [%s] %s %s", requestID, c.Request.Method, c.Request.URL.Path)
-
 		// 调用下一个处理器
 		c.Next()
 

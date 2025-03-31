@@ -24,7 +24,9 @@ type Config struct {
 	JWT      JWTConfig      `yaml:"jwt" env:"JWT"`
 	Log      LogConfig      `yaml:"log" env:"LOG"`
 	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
+	Metrics  MetricsConfig  `yaml:"metrics" env:"METRICS"`
 	CORS     CORSConfig     `yaml:"cors" env:"CORS"`
+	Docs     DocsConfig     `yaml:"docs" env:"DOCS"`
 }
 
 // AppConfig 应用基础配置
@@ -33,16 +35,6 @@ type AppConfig struct {
 	Port            int    `yaml:"port" env:"PORT"`
 	Mode            string `yaml:"mode" env:"MODE"`
 	DefaultRootPass string `yaml:"defaultRootPass" env:"DEFAULT_ROOT_PASS"`
-
-	// 性能监控相关配置
-	EnableRateLimit       bool `yaml:"enable_rate_limit" env:"ENABLE_RATE_LIMIT"`
-	EnableMetrics         bool `yaml:"enable_metrics" env:"ENABLE_METRICS"`
-	EnablePprof           bool `yaml:"enable_pprof" env:"ENABLE_PPROF"`
-	MetricsLogInterval    int  `yaml:"metrics_log_interval" env:"METRICS_LOG_INTERVAL"`       // 分钟
-	RateLimitRequests     int  `yaml:"rate_limit_requests" env:"RATE_LIMIT_REQUESTS"`         // 请求数/窗口
-	RateLimitWindow       int  `yaml:"rate_limit_window" env:"RATE_LIMIT_WINDOW"`             // 窗口大小(秒)
-	SlowQueryThreshold    int  `yaml:"slow_query_threshold" env:"SLOW_QUERY_THRESHOLD"`       // 慢查询阈值(毫秒)
-	SlowResponseThreshold int  `yaml:"slow_response_threshold" env:"SLOW_RESPONSE_THRESHOLD"` // 慢响应阈值(毫秒)
 }
 
 // DatabaseConfig 数据库配置
@@ -94,6 +86,17 @@ type MailConfig struct {
 	Enabled  bool   `yaml:"enabled" env:"ENABLED"`
 }
 
+// MetricsConfig 性能监控配置
+type MetricsConfig struct {
+	EnableMetrics         bool `yaml:"enable_metrics" env:"ENABLE_METRICS"`
+	EnablePprof           bool `yaml:"enable_pprof" env:"ENABLE_PPROF"`
+	EnableRateLimit       bool `yaml:"enable_rate_limit" env:"ENABLE_RATE_LIMIT"`
+	MetricsLogInterval    int  `yaml:"metrics_log_interval" env:"METRICS_LOG_INTERVAL"`
+	RateLimitRequests     int  `yaml:"rate_limit_requests" env:"RATE_LIMIT_REQUESTS"`
+	SlowQueryThreshold    int  `yaml:"slow_query_threshold" env:"SLOW_QUERY_THRESHOLD"`
+	SlowResponseThreshold int  `yaml:"slow_response_threshold" env:"SLOW_RESPONSE_THRESHOLD"`
+}
+
 // CORSConfig 跨域(CORS)配置
 type CORSConfig struct {
 	Enabled          bool     `yaml:"enabled" env:"ENABLED"`
@@ -102,6 +105,13 @@ type CORSConfig struct {
 	AllowedHeaders   []string `yaml:"allowed_headers" env:"ALLOWED_HEADERS"`
 	AllowCredentials bool     `yaml:"allow_credentials" env:"ALLOW_CREDENTIALS"`
 	MaxAge           int      `yaml:"max_age" env:"MAX_AGE"`
+}
+
+// DocsConfig 文档配置
+type DocsConfig struct {
+	Enabled bool   `yaml:"enabled" env:"ENABLED"`
+	Path    string `yaml:"path" env:"PATH"`
+	Title   string `yaml:"title" env:"TITLE"`
 }
 
 var (
@@ -158,8 +168,14 @@ func loadConfigFromEnv(cfg *Config) {
 	// 处理Mail配置的环境变量
 	loadEnvToStruct(envPrefix+"MAIL_", &cfg.Mail)
 
+	// 处理Metrics配置的环境变量
+	loadEnvToStruct(envPrefix+"METRICS_", &cfg.Metrics)
+
 	// 处理CORS配置的环境变量
 	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)
+
+	// 处理Docs配置的环境变量
+	loadEnvToStruct(envPrefix+"DOCS_", &cfg.Docs)
 }
 
 // loadEnvToStruct 加载环境变量到结构体

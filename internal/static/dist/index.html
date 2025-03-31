@@ -4,146 +4,712 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>模板应用</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="font-sans bg-gray-50 text-gray-800">
+    <!-- 导航栏 -->
+    <nav class="bg-gradient-to-r from-blue-800 to-indigo-900 shadow-lg">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas fa-cube text-white text-2xl mr-3"></i>
+                    <span class="text-white font-bold text-xl"> Gin模板应用 <span class="text-blue-200 text-sm">Version: 1.0.0</span></span>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="#home" class="text-white hover:text-blue-200 transition">
+                        <i class="fas fa-home mr-1"></i> 首页
+                    </a>
+                    <a href="#features" class="text-white hover:text-blue-200 transition">
+                        <i class="fas fa-list-ul mr-1"></i> 功能
+                    </a>
+                    <a href="#docs" class="text-white hover:text-blue-200 transition">
+                        <i class="fas fa-book mr-1"></i> 文档
+                    </a>
+                    <a href="#deploy" class="text-white hover:text-blue-200 transition">
+                        <i class="fas fa-rocket mr-1"></i> 部署
+                    </a>
+                    <a href="#" onclick="showAboutModal()" class="text-white hover:text-blue-200 transition">
+                        <i class="fas fa-info-circle mr-1"></i> 关于
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 关于弹窗 -->
+    <div id="aboutModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 transform transition-all duration-300 scale-0 opacity-0" id="aboutModalContent">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">关于项目</h3>
+                <button onclick="hideAboutModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-code-branch text-blue-600"></i>
+                    <span class="text-gray-600">版本：1.0.0</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-calendar text-green-600"></i>
+                    <span class="text-gray-600">发布日期：2024-03-20</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-user text-purple-600"></i>
+                    <span class="text-gray-600">作者：Cooper Jiang</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-envelope text-red-600"></i>
+                    <span class="text-gray-600">邮箱：J_longyan@163.com</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i class="fab fa-github text-gray-800"></i>
+                    <a href="https://github.com/CooperJiang/gin-template" class="text-blue-600 hover:underline">GitHub 仓库</a>
+                </div>
+                <div class="mt-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">项目简介</h4>
+                    <p class="text-gray-600">这是一个基于Go语言的Web应用程序模板，集成了常用的功能和最佳实践。它提供了一个完整的开发框架，包括用户认证、数据库集成、缓存支持、性能监控等功能，帮助开发者快速构建企业级应用。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加动画效果 -->
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            color: #333;
-            background-color: #f4f4f4;
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        header {
-            background-color: #2c3e50;
-            color: #fff;
-            padding: 1rem;
+        .slide-up {
+            animation: slideUp 0.5s ease-out;
         }
-        header .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-        nav ul {
-            display: flex;
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .scale-in {
+            animation: scaleIn 0.3s ease-out;
         }
-        nav ul li {
-            margin-left: 1rem;
-        }
-        nav ul li a {
-            color: #fff;
-            text-decoration: none;
-            padding: 0.5rem;
-        }
-        nav ul li a:hover {
-            text-decoration: underline;
-        }
-        main {
-            padding: 2rem 0;
-        }
-        .hero {
-            text-align: center;
-            padding: 2rem;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        .feature {
-            background-color: #fff;
-            padding: 1.5rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .feature h3 {
-            color: #2c3e50;
-        }
-        footer {
-            background-color: #2c3e50;
-            color: #fff;
-            text-align: center;
-            padding: 1rem;
-            margin-top: 2rem;
-        }
-        .btn {
-            display: inline-block;
-            background-color: #3498db;
-            color: #fff;
-            padding: 0.7rem 1.5rem;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .btn:hover {
-            background-color: #2980b9;
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <h1>模板应用 Version: 1.4</h1>
-            <nav>
-                <ul>
-                    <li><a href="/">首页</a></li>
-                    <li><a href="/about">关于</a></li>
-                    <li><a href="#" id="loginBtn">登录</a></li>
-                </ul>
-            </nav>
+
+    <script>
+        function showAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            const content = document.getElementById('aboutModalContent');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-0', 'opacity-0');
+            }, 10);
+        }
+
+        function hideAboutModal() {
+            const modal = document.getElementById('aboutModal');
+            const content = document.getElementById('aboutModalContent');
+            content.classList.add('scale-0', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        // 添加滚动动画
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in', 'slide-up');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section').forEach(section => {
+            observer.observe(section);
+        });
+    </script>
+
+    <!-- 英雄区域 -->
+    <header id="home" class="bg-gradient-to-r from-indigo-900 to-blue-800 text-white">
+        <div class="container mx-auto px-4 py-20">
+            <div class="flex flex-wrap items-center">
+                <div class="w-full lg:w-1/2 mb-10 lg:mb-0">
+                    <h1 class="text-4xl md:text-5xl font-bold mb-6">个人使用的一套Go Web应用程序模板</h1>
+                    <p class="text-xl text-blue-100 mb-8">一个集成了常用功能和最佳实践的高性能Go语言Web应用模板，帮助开发者快速构建企业级应用</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="#features" class="bg-white text-indigo-900 hover:bg-blue-100 px-6 py-3 rounded-lg font-medium transition">
+                            <i class="fas fa-list-ul mr-2"></i> 探索功能
+                        </a>
+                        <a href="https://github.com/CooperJiang/gin-template" target="_blank" class="bg-transparent hover:bg-blue-700 border border-white text-white px-6 py-3 rounded-lg font-medium transition">
+                            <i class="fab fa-github mr-2"></i> GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="w-full lg:w-1/2 flex justify-center">
+                    <img src="https://images.unsplash.com/photo-1607799279861-4dd421887fb3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Go Web开发" class="rounded-lg shadow-2xl max-w-full h-auto">
+                </div>
+            </div>
         </div>
     </header>
-    
-    <main class="container">
-        <section class="hero">
-            <h1>欢迎使用模板应用</h1>
-            <p>这是一个基于Go语言的Web应用程序模板，集成了常用的功能和最佳实践。</p>
-            <a href="#features" class="btn">了解更多</a>
-        </section>
-        
-        <section id="features" class="features">
-            <div class="feature">
-                <h3>用户认证</h3>
-                <p>内置完整的用户认证系统，包括注册、登录、密码重置等功能。</p>
+
+    <!-- 功能概述 -->
+    <section id="features" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4">全面的功能体系</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">这套模板整合了企业级Web应用所需的关键功能，让您专注于业务逻辑的实现</p>
             </div>
-            <div class="feature">
-                <h3>JWT身份验证</h3>
-                <p>使用JWT进行安全的身份验证，支持不同角色的权限控制。</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- 用户认证 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-user-shield text-indigo-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">用户认证系统</h3>
+                    <p class="text-gray-600">内置完整的用户认证系统，包括注册、登录、密码重置等功能，支持邮件验证码流程。</p>
+                </div>
+                
+                <!-- JWT身份验证 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-key text-blue-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">JWT身份验证</h3>
+                    <p class="text-gray-600">使用JWT进行安全的身份验证，支持基于角色的权限控制，保障应用安全性。</p>
+                </div>
+                
+                <!-- 数据库集成 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-database text-green-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">数据库与缓存</h3>
+                    <p class="text-gray-600">集成MySQL数据库和Redis缓存支持，自动降级能力，提高应用性能和可靠性。</p>
+                </div>
+                
+                <!-- 错误处理 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">标准化错误处理</h3>
+                    <p class="text-gray-600">统一的错误处理系统，包括错误码、堆栈追踪和请求ID关联，方便排查问题。</p>
+                </div>
+                
+                <!-- 性能监控 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">性能监控系统</h3>
+                    <p class="text-gray-600">全面的性能监控系统，提供系统指标、请求追踪、数据库监控和pprof集成。</p>
+                </div>
+                
+                <!-- 部署支持 -->
+                <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition border border-gray-100">
+                    <div class="w-14 h-14 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-rocket text-yellow-600 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3">自动化部署</h3>
+                    <p class="text-gray-600">支持多环境部署、Docker容器化、版本管理和一键回滚功能，简化部署流程。</p>
+                </div>
             </div>
-            <div class="feature">
-                <h3>数据库与缓存</h3>
-                <p>集成MySQL数据库和Redis缓存支持，提高应用性能。</p>
+        </div>
+    </section>
+
+    <!-- 文档部分 -->
+    <section id="docs" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">项目文档</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">详细的部署和使用指南</p>
             </div>
-        </section>
-    </main>
-    
-    <footer>
-        <div class="container">
-            <p>&copy; 2023 模板应用. 保留所有权利.</p>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- 快速开始 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-2xl font-bold mb-4">快速开始</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">1. 克隆项目</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>git clone https://github.com/CooperJiang/gin-template.git
+cd template</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">2. 配置环境</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>cp config.example.yaml config.yaml
+# 编辑 config.yaml 配置文件</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">3. 构建运行</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>go build -o app cmd/main.go
+./app</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 项目结构 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-2xl font-bold mb-4">项目结构</h3>
+                    <div class="space-y-2">
+                        <p class="text-gray-600">项目采用标准的Go项目布局，主要目录包括：</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">cmd/</code> - 主程序入口</li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">internal/</code> - 内部包</li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">pkg/</code> - 公共包</li>
+                            <li><code class="bg-gray-100 px-2 py-1 rounded">configs/</code> - 配置文件</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 配置说明 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-2xl font-bold mb-4">配置说明</h3>
+                    <div class="space-y-4">
+                        <p class="text-gray-600">配置文件采用YAML格式，支持通过环境变量覆盖配置项（环境变量格式：<code class="bg-gray-100 px-2 py-1 rounded">APP_[模块]_[配置项]</code>）。</p>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">应用基本配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>app:
+  name: "template"               # 应用名称，用于日志、标识等
+  port: 9000                     # 应用监听端口
+  mode: "debug"                  # 运行模式: debug/release
+  defaultRootPass: "change_me"   # 初始管理员密码
+  timezone: "Asia/Shanghai"      # 应用时区设置
+  api_prefix: "/api/v1"          # API路由前缀
+  static_path: "/static"         # 静态文件路径
+  upload_path: "uploads"         # 文件上传路径
+  max_upload_size: 10            # 最大上传文件大小(MB)</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">数据库配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>database:
+  driver: "mysql"                # 数据库类型: mysql/sqlite
+  host: "localhost"              # MySQL主机地址
+  port: 3306                     # MySQL端口
+  username: "dbuser"             # MySQL用户名
+  password: "dbpassword"         # MySQL密码
+  name: "template_db"            # 数据库名称
+  charset: "utf8mb4"             # 字符集，推荐utf8mb4
+  max_idle_conns: 10             # 最大空闲连接数
+  max_open_conns: 100            # 最大打开连接数
+  conn_max_lifetime: 3600        # 连接最大生命周期(秒)
+  slow_query_threshold: 200      # 慢查询阈值(毫秒)
+  enable_logging: true           # 是否启用SQL日志</code></pre>
+                            <p class="text-gray-600 mt-2">注意：当MySQL配置不完整时，系统会自动降级使用SQLite数据库。</p>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">JWT认证配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>jwt:
+  secret_key: "change-to-your-secure-secret-key" # JWT签名密钥
+  expires_in: 24                 # JWT令牌有效期(小时)
+  refresh_expires_in: 168        # 刷新令牌有效期(小时)
+  issuer: "template-app"         # JWT发行者
+  audience: "template-users"     # JWT接收者
+  blacklist_enabled: true        # 是否启用令牌黑名单</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">Redis缓存配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>redis:
+  host: "localhost"              # Redis主机地址
+  port: 6379                     # Redis端口
+  password: ""                   # Redis密码
+  db: 0                          # Redis数据库索引
+  pool_size: 10                  # 连接池大小
+  min_idle_conns: 5              # 最小空闲连接数
+  idle_timeout: 240              # 空闲连接超时时间(秒)</code></pre>
+                            <p class="text-gray-600 mt-2">注意：当Redis host为空字符串时，系统会自动降级使用内存缓存。</p>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">日志配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>log:
+  level: "info"                  # 日志级别: debug/info/warn/error
+  path: "logs"                   # 日志保存目录
+  filename: "app.log"            # 日志文件名
+  max_size: 100                  # 单日志文件最大大小(MB)
+  max_backups: 10                # 最大保留日志文件数
+  max_age: 7                     # 日志文件最大保留天数
+  compress: true                 # 是否压缩旧日志文件
+  json_format: false             # 是否使用JSON格式输出
+  show_caller: true              # 是否显示调用者信息</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">邮件服务配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>mail:
+  host: "smtp.example.com"       # SMTP服务器地址
+  port: 465                      # SMTP端口(SSL:465, TLS:587)
+  username: "your@example.com"   # SMTP用户名/邮箱地址
+  password: "email-password"     # SMTP密码
+  from: "your@example.com"       # 发件人邮箱
+  from_name: "应用名称"           # 发件人名称
+  reply_to: "your@example.com"   # 回复地址
+  ssl: true                      # 是否使用SSL加密
+  enabled: true                  # 是否启用邮件服务
+  template_path: "templates/mail" # 邮件模板路径</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">性能监控配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>metrics:
+  enable_metrics: true           # 是否启用性能指标收集
+  enable_pprof: false            # 是否启用pprof性能分析
+  enable_rate_limit: true        # 是否启用请求速率限制
+  metrics_log_interval: 10       # 指标收集日志间隔(分钟)
+  rate_limit_requests: 60        # 速率限制窗口内最大请求数
+  slow_query_threshold: 150      # 慢查询阈值(毫秒)
+  slow_response_threshold: 500   # 慢响应阈值(毫秒)
+  enable_tracing: true           # 是否启用请求追踪
+  enable_prometheus: true        # 是否启用Prometheus指标导出</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">跨域(CORS)配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>cors:
+  enabled: true                  # 是否启用CORS支持
+  allowed_origins:               # 允许的来源域名列表
+    - "http://localhost:3000"
+    - "https://yourdomain.com"
+  allowed_methods:               # 允许的HTTP方法
+    - "GET", "POST", "PUT", "DELETE", "OPTIONS"
+  allowed_headers:               # 允许的请求头
+    - "Origin", "Content-Type", "Authorization"
+  allow_credentials: true        # 是否允许请求携带凭证
+  max_age: 86400                 # 预检请求结果缓存时间(秒)</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">文档配置</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>docs:
+  enabled: true                  # 是否启用文档服务
+  path: "/docs"                  # 文档访问路径
+  title: "项目文档"               # 文档标题
+  description: "API文档"          # 文档描述
+  version: "1.0.0"               # API版本
+  host: "api.example.com"        # API主机地址
+  base_path: "/api/v1"           # API基础路径</code></pre>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">环境变量配置示例</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 应用基本配置
+export APP_APP_NAME="我的应用"
+export APP_APP_PORT=8080
+export APP_APP_MODE=release
+
+# 数据库配置
+export APP_DB_HOST=db.example.com
+export APP_DB_PORT=3306
+export APP_DB_USERNAME=dbuser
+export APP_DB_PASSWORD=secret
+
+# Redis配置
+export APP_REDIS_HOST=redis.example.com
+export APP_REDIS_PORT=6379
+
+# JWT配置
+export APP_JWT_SECRET_KEY=my-secret-key
+export APP_JWT_EXPIRES_IN=48</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 部署指南 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-2xl font-bold mb-4">部署指南</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">Docker部署</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>docker build -t template .
+docker run -p 9000:9000 template</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">手动部署</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 编译
+go build -o app cmd/main.go
+
+# 运行
+./app</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 部署部分 -->
+    <section id="deploy" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">部署指南</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">完整的部署解决方案，支持多环境部署和自动化流程</p>
+            </div>
+
+            <div class="max-w-4xl mx-auto">
+                <!-- 部署脚本说明 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-2xl font-bold mb-4">部署脚本说明</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">build.sh - 项目构建脚本</h4>
+                            <p class="text-gray-600 mb-2">用于将项目编译为不同平台的可执行文件。</p>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./build.sh --help              # 显示帮助信息
+./build.sh --local             # 构建当前平台版本
+./build.sh --linux             # 构建Linux版本(服务器部署用)
+./build.sh --all               # 构建所有支持平台版本
+./build.sh -n myapp --linux    # 指定应用名称并构建Linux版本
+./build.sh -o dist --linux     # 指定输出目录并构建Linux版本</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">deploy.sh - 远程部署脚本</h4>
+                            <p class="text-gray-600 mb-2">用于将应用部署到远程服务器并管理应用生命周期。</p>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./deploy.sh help                          # 显示帮助信息
+./deploy.sh config                        # 配置部署参数
+./deploy.sh envconfig                     # 配置环境特定参数
+./deploy.sh setup                         # 设置远程服务器环境
+./deploy.sh deploy                        # 部署应用到服务器
+./deploy.sh rollback                      # 回滚到上一个版本
+./deploy.sh restart                       # 重启服务器上的应用
+./deploy.sh status                        # 查看服务器上的应用状态
+./deploy.sh logs                          # 查看服务器上的应用日志</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">run.sh - 本地管理脚本</h4>
+                            <p class="text-gray-600 mb-2">用于在本地开发环境管理应用。</p>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./run.sh help      # 显示帮助信息
+./run.sh build     # 构建应用
+./run.sh start     # 启动应用
+./run.sh stop      # 停止应用
+./run.sh restart   # 重启应用
+./run.sh status    # 查看应用状态
+./run.sh log       # 查看应用日志</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 部署流程 -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-2xl font-bold mb-4">部署流程</h3>
+                    <div class="space-y-4">
+                        <!-- SSH密钥配置 -->
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">SSH密钥配置</h4>
+                            <p class="text-gray-600 mb-2">使用SSH密钥认证可以实现无密码部署，这对自动化部署至关重要。</p>
+                            <div class="space-y-2">
+                                <p class="text-gray-600">1. 检查现有SSH密钥：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>ls -la ~/.ssh/</code></pre>
+                                <p class="text-gray-600">2. 创建新的SSH密钥（如果没有）：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>ssh-keygen -t rsa -b 4096 -C "your_email@example.com"</code></pre>
+                                <p class="text-gray-600">3. 将SSH公钥上传到服务器（最简单的方法）：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>ssh-copy-id 用户名@服务器IP  # 例如: ssh-copy-id root@192.168.1.100</code></pre>
+                                <p class="text-gray-600">4. 如果ssh-copy-id命令不可用，可以手动上传：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 查看公钥内容
+cat ~/.ssh/id_rsa.pub
+
+# 登录服务器
+ssh 用户名@服务器IP
+
+# 在服务器上执行
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+echo "你的公钥内容" >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+exit</code></pre>
+                                <p class="text-gray-600">5. 测试SSH密钥连接：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>ssh 用户名@服务器IP</code></pre>
+                                <p class="text-gray-600">如果不需要输入密码即可登录，说明SSH密钥配置成功。</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">1. 首次部署准备</h4>
+                            <div class="space-y-2">
+                                <p class="text-gray-600">配置部署参数：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./deploy.sh config</code></pre>
+                                <p class="text-gray-600">配置环境特定参数：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./deploy.sh envconfig</code></pre>
+                                <p class="text-gray-600">设置远程服务器环境：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./deploy.sh setup</code></pre>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">2. 执行部署</h4>
+                            <div class="space-y-2">
+                                <p class="text-gray-600">部署到指定环境：</p>
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 部署到生产环境
+./deploy.sh -e prod deploy
+
+# 部署到测试环境
+./deploy.sh -e test deploy</code></pre>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">3. 管理部署的应用</h4>
+                            <div class="space-y-2">
+                                <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code>./deploy.sh status                  # 查看应用状态
+./deploy.sh restart                 # 重启应用
+./deploy.sh logs                    # 查看应用日志
+./deploy.sh logs 100                # 查看最后100行日志
+./deploy.sh rollback                # 回滚到上一个版本</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docker部署 -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-2xl font-bold mb-4">Docker部署</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">开发环境</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止所有服务
+docker-compose down</code></pre>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-md">
+                            <h4 class="font-semibold mb-2">生产环境</h4>
+                            <pre class="bg-gray-900 text-white p-4 rounded-md overflow-x-auto"><code># 构建生产镜像
+docker build -t your-app-name:latest .
+
+# 运行容器
+docker run -d --name your-app -p 9000:9000 \
+  -e APP_APP_PORT=9000 \
+  -e APP_DB_HOST=your-db-host \
+  -e APP_DB_USERNAME=your-username \
+  -e APP_DB_PASSWORD=your-password \
+  -e APP_DB_NAME=your-db-name \
+  your-app-name:latest</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术栈展示 -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">现代技术栈</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">基于最新技术和最佳实践构建</p>
+            </div>
+            
+            <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-3 bg-white rounded-full shadow-md flex items-center justify-center">
+                        <i class="fab fa-golang text-4xl text-blue-600"></i>
+                    </div>
+                    <span class="font-medium">Go</span>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-3 bg-white rounded-full shadow-md flex items-center justify-center">
+                        <i class="fas fa-cocktail text-4xl text-green-600"></i>
+                    </div>
+                    <span class="font-medium">Gin</span>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-3 bg-white rounded-full shadow-md flex items-center justify-center">
+                        <i class="fas fa-database text-4xl text-orange-600"></i>
+                    </div>
+                    <span class="font-medium">MySQL</span>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-3 bg-white rounded-full shadow-md flex items-center justify-center">
+                        <i class="fas fa-memory text-4xl text-red-600"></i>
+                    </div>
+                    <span class="font-medium">Redis</span>
+                </div>
+                <div class="text-center">
+                    <div class="w-20 h-20 mx-auto mb-3 bg-white rounded-full shadow-md flex items-center justify-center">
+                        <i class="fas fa-docker text-4xl text-blue-800"></i>
+                    </div>
+                    <span class="font-medium">Docker</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="font-bold text-xl mb-4 flex items-center">
+                        <i class="fas fa-cube mr-2"></i> 模板应用
+                    </h3>
+                    <p class="text-gray-400">一个集成了常用功能和最佳实践的Go语言Web应用模板</p>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">链接</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-white transition">首页</a></li>
+                        <li><a href="#features" class="text-gray-400 hover:text-white transition">功能</a></li>
+                        <li><a href="#docs" class="text-gray-400 hover:text-white transition">文档</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">资源</h4>
+                    <ul class="space-y-2">
+                        <li><a href="https://github.com/CooperJiang/gin-template" class="text-gray-400 hover:text-white transition">GitHub</a></li>
+                        <li><a href="/examples" class="text-gray-400 hover:text-white transition">示例</a></li>
+                        <li><a href="/api" class="text-gray-400 hover:text-white transition">API文档</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold mb-4">联系我们</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-gray-400">
+                            <i class="fas fa-envelope mr-2"></i> J_longyan@163.com
+                        </li>
+                        <li class="flex items-center text-gray-400">
+                            <i class="fab fa-github mr-2"></i> github.com/CooperJiang
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-500">&copy; 2023 模板应用. 保留所有权利.</p>
+            </div>
         </div>
     </footer>
-    
-    <script src="/static/dist/js/main.js"></script>
+
+    <!-- 平滑滚动 -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

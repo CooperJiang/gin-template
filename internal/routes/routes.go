@@ -12,18 +12,20 @@ func RegisterRoutes(r *gin.Engine) {
 	// 应用CORS中间件
 	r.Use(middleware.CORSMiddleware())
 
+	// 注册前端路由
 	RegisterClientRoutes(r)
 
-	// 健康检查
-	r.GET("/health", health.SimpleHealthHandler)
-	r.GET("/health/basic", health.BasicHealthHandler)
-	r.GET("/health/complete", health.CompleteHealthHandler)
+	prefix := r.Group("/api")
+	version := prefix.Group("/v1")
 
-	// API路由组
-	api := r.Group("/api")
+	// 健康检查
+	version.GET("/health", health.SimpleHealthHandler)
+	version.GET("/health/basic", health.BasicHealthHandler)
+	version.GET("/health/complete", health.CompleteHealthHandler)
+
 	{
 		// 用户相关路由
-		userRoutes := api.Group("/user")
+		userRoutes := version.Group("/user")
 		RegisterUserRoutes(userRoutes)
 
 		// 在这里添加其他模块路由
