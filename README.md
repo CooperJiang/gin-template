@@ -334,12 +334,6 @@ GET /api/v1/user/profile
 Authorization: Bearer <token>
 ```
 
-### 健康检查
-```bash
-GET /health
-GET /api/v1/health
-```
-
 ## 🤝 贡献指南
 
 1. Fork 项目

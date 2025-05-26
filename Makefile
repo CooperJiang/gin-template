@@ -368,26 +368,6 @@ swagger: ## 生成Swagger文档
 		echo "$(YELLOW)安装命令: go install github.com/swaggo/swag/cmd/swag@latest$(RESET)"; \
 	fi
 
-.PHONY: health-check
-health-check: ## 检查应用健康状态
-	@echo "$(GREEN)检查应用健康状态...$(RESET)"
-	@if curl -s -f http://localhost:8080/health > /dev/null; then \
-		echo "$(GREEN)✓ 应用健康状态正常$(RESET)"; \
-	else \
-		echo "$(RED)✗ 应用健康检查失败$(RESET)"; \
-		exit 1; \
-	fi
-
-.PHONY: load-test
-load-test: ## 运行负载测试 (需要安装wrk)
-	@echo "$(GREEN)运行负载测试...$(RESET)"
-	@if command -v wrk > /dev/null; then \
-		wrk -t12 -c400 -d30s http://localhost:8080/api/v1/health; \
-	else \
-		echo "$(RED)wrk 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: brew install wrk (macOS) 或参考官方文档$(RESET)"; \
-	fi
-
 .PHONY: api-test
 api-test: ## 运行API测试
 	@echo "$(GREEN)运行API测试...$(RESET)"
