@@ -12,7 +12,6 @@ import (
 	"template/pkg/email"
 	"template/pkg/errors"
 	"template/pkg/logger"
-	"template/pkg/metrics"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -56,36 +55,6 @@ func main() {
 	// 添加错误处理和请求ID中间件
 	r.Use(errors.ErrorHandler())
 
-	// 配置
-	appCfg := config.GetConfig().App
-	metricsCfg := config.GetConfig().Metrics
-
-	// 添加性能监控中间件
-	if metricsCfg.EnableMetrics {
-		r.Use(metrics.MetricsMiddleware())
-		logger.Info("性能指标监控已启用")
-	}
-
-	// 如果是开发模式或明确启用，启用pprof调试
-	if metricsCfg.EnablePprof || appCfg.Mode == gin.DebugMode {
-		metrics.PprofMiddleware(r)
-		logger.Info("pprof性能分析工具已启用，访问 /debug/pprof 查看")
-	}
-
-	// 添加请求速率限制
-	if metricsCfg.EnableRateLimit {
-		// 获取配置的速率限制参数，如果未配置则使用默认值
-		maxRequests := metricsCfg.RateLimitRequests
-		if maxRequests <= 0 {
-			maxRequests = 100 // 默认每分钟100个请求
-		}
-
-		windowDuration := time.Minute // 默认1分钟窗口
-		rateLimiter := metrics.NewRateLimiter(maxRequests, windowDuration)
-		r.Use(rateLimiter.Middleware())
-		logger.Info("请求速率限制已启用: %d请求/%v", maxRequests, windowDuration)
-	}
-
 	// 添加 CORS 中间件
 	r.Use(middleware.CORSMiddleware())
 
@@ -94,66 +63,10 @@ func main() {
 	// 注册路由
 	routes.RegisterRoutes(r)
 
-	// 注册指标接口
-	if metricsCfg.EnableMetrics {
-		metrics.RegisterMetricsHandlers(r)
-		logger.Info("性能指标接口已注册，访问 /api/v1/metrics 查看")
-
-		// 配置慢查询阈值
-		if metricsCfg.SlowQueryThreshold > 0 {
-			metrics.SlowQueryThreshold = time.Duration(metricsCfg.SlowQueryThreshold) * time.Millisecond
-			logger.Info("慢查询阈值已设置为 %dms", metricsCfg.SlowQueryThreshold)
-		}
-
-		// 整合数据库指标监控
-		db := database.GetDB()
-		if db != nil {
-			// 创建并初始化GORM指标插件
-			slowThreshold := time.Duration(metricsCfg.SlowQueryThreshold)
-			if slowThreshold <= 0 {
-				slowThreshold = 200 // 默认200毫秒
-			}
-			dbMetricsPlugin := metrics.NewGormPlugin(slowThreshold*time.Millisecond, true)
-			if err := dbMetricsPlugin.Initialize(db); err != nil {
-				logger.Error("初始化数据库指标监控失败: %v", err)
-			} else {
-				logger.Info("数据库指标监控已启用")
-			}
-		}
-
-		// 整合Redis指标监控
-		if cache.RedisAvailable() {
-			// 获取Redis客户端并包装
-			redisClient := cache.GetRedisClient()
-			metrics.NewRedisMetricsWrapper(redisClient)
-			logger.Info("Redis指标监控已启用")
-		}
-
-		// 定期记录系统指标
-		interval := metricsCfg.MetricsLogInterval
-		if interval <= 0 {
-			interval = 5 // 默认5分钟
-		}
-
-		go func() {
-			// 立即收集一次指标
-			metrics.GetMetrics().CollectSystemStats()
-
-			// 定期收集指标
-			ticker := time.NewTicker(time.Duration(interval) * time.Minute)
-			defer ticker.Stop()
-
-			for range ticker.C {
-				metrics.GetMetrics().CollectSystemStats()
-				logger.Debug("系统指标已收集")
-			}
-		}()
-	}
-
 	// 启动服务器
-	logger.Info("服务启动成功，监听端口: %d，版本: %s", appCfg.Port, appVersion)
+	logger.Info("服务启动成功，监听端口: %d，版本: %s", config.GetConfig().App.Port, appVersion)
 
-	if err := r.Run(fmt.Sprintf(":%d", appCfg.Port)); err != nil {
+	if err := r.Run(fmt.Sprintf(":%d", config.GetConfig().App.Port)); err != nil {
 		panic(err)
 	}
 }

@@ -1,62 +1,91 @@
+# 应用基本配置
 app:
-  name: "template"
-  port: 9000
-  mode: "debug"  # 改为 "release" 为生产环境，不输出调试日志
-  defaultRootPass: "123456"  # 初次启动默认设置的管理员密码配置
+  name: "template"               # 应用名称，用于日志、标识等
+  port: 9000                     # 应用监听端口
+  mode: "debug"                  # 运行模式: debug/release，生产环境应设为"release"，调试环境设为"debug"
+  defaultRootPass: "change_me"   # 初次启动时自动创建的管理员账号密码，建议在首次登录后立即修改
+  timezone: "Asia/Shanghai"      # 应用时区设置
+  api_prefix: "/api/v1"          # API路由前缀
+  static_path: "/static"         # 静态文件路径
+  upload_path: "uploads"         # 文件上传路径
+  max_upload_size: 10            # 最大上传文件大小(MB)
+  allowed_file_types:            # 允许上传的文件类型
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "application/pdf"
+    - "application/msword"
+    - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 # 数据库配置
 database:
-  driver: "mysql"
-  host: ""
-  port: 3306
-  username: ""
-  password: ""
-  name: "template"
-  charset: "utf8mb4"
+  driver: "mysql"                # 数据库类型: mysql/sqlite，如设置为"sqlite"或mysql参数不全，将自动使用SQLite
+  host: "localhost"              # MySQL主机地址，空字符串表示使用SQLite
+  port: 3306                     # MySQL端口
+  username: "dbuser"             # MySQL用户名
+  password: "dbpassword"         # MySQL密码
+  name: "template_db"            # 数据库名称
+  charset: "utf8mb4"             # 字符集，推荐utf8mb4以支持emoji等特殊字符
+  max_idle_conns: 10             # 最大空闲连接数
+  max_open_conns: 100            # 最大打开连接数
+  conn_max_lifetime: 3600        # 连接最大生命周期(秒)
+  slow_query_threshold: 200      # 慢查询阈值(毫秒)
+  enable_logging: true           # 是否启用SQL日志
+  table_prefix: ""               # 表名前缀
 
-
-# JWT配置
+# JWT认证配置
 jwt:
-  secret_key: "your-secret-key"
-  expires_in: 24  # JWT有效期，单位小时
+  secret_key: "change-to-your-secure-secret-key" # JWT签名密钥，生产环境必须修改为强密钥
+  expires_in: 24                 # JWT令牌有效期，单位小时
+  refresh_expires_in: 168        # 刷新令牌有效期，单位小时
+  issuer: "template-app"         # JWT发行者
+  audience: "template-users"     # JWT接收者
+  blacklist_enabled: true        # 是否启用令牌黑名单
+  blacklist_cleanup_interval: 24 # 黑名单清理间隔(小时)
 
-# Redis配置
+# Redis缓存配置
 redis:
-  host: "localhost"  # 设置为空字符串可禁用Redis
-  port: 6379
-  password: ""
-  db: 0
+  host: "localhost"              # Redis主机地址，设置为空字符串将禁用Redis并自动降级为内存缓存
+  port: 6379                     # Redis端口
+  password: ""                   # Redis密码，无密码则留空
+  db: 0                          # Redis数据库索引，默认为0
+  pool_size: 10                  # 连接池大小
+  min_idle_conns: 5             # 最小空闲连接数
+  max_conn_age: 3600            # 连接最大生命周期(秒)
+  idle_timeout: 240             # 空闲连接超时时间(秒)
+  read_timeout: 3               # 读取超时时间(秒)
+  write_timeout: 3              # 写入超时时间(秒)
+  dial_timeout: 5               # 连接超时时间(秒)
 
 # 日志配置
 log:
-  level: "info"
-  path: "logs"
-  filename: "app.log"
-  max_size: 100
-  max_backups: 10
-  max_age: 7
-  compress: true
+  level: "info"                  # 日志级别: debug/info/warn/error
+  path: "logs"                   # 日志保存目录
+  filename: "app.log"            # 日志文件名
+  max_size: 100                  # 单日志文件最大大小，单位MB
+  max_backups: 10                # 最大保留日志文件数
+  max_age: 7                     # 日志文件最大保留天数
+  compress: true                 # 是否压缩旧日志文件
+  json_format: false             # 是否使用JSON格式输出
+  show_caller: true              # 是否显示调用者信息
+  show_line: true                # 是否显示行号
+  show_stack: false              # 是否显示堆栈信息
+  enable_console: true           # 是否同时输出到控制台
 
-# 邮件配置
+# 邮件服务配置
 mail:
-  host: "smtp.example.com"
-  port: 465  # 使用SSL加密端口
-  username: "your-email@example.com"
-  password: "your-password"
-  from: "your-email@example.com"
-  from_name: "你的应用名称"
-  reply_to: "your-email@example.com"
-  ssl: true  # 启用SSL加密
-  enabled: true  # 设置为false可禁用邮件服务 
-
-# 性能监控配置
-metrics:
-  enable_metrics: true
-  enable_pprof: false  # 生产环境禁用pprof
-  enable_rate_limit: true
-  metrics_log_interval: 10
-  rate_limit_requests: 60  # 限制每分钟60个请求
-  slow_query_threshold: 150  # 150ms以上视为慢查询
+  host: "smtp.example.com"       # SMTP服务器地址
+  port: 465                      # SMTP端口，通常SSL为465，TLS为587
+  username: "your@example.com"   # SMTP用户名/邮箱地址
+  password: "email-password"     # SMTP密码
+  from: "your@example.com"       # 发件人邮箱，通常与username相同
+  from_name: "应用名称"           # 发件人名称
+  reply_to: "your@example.com"   # 回复地址
+  ssl: true                      # 是否使用SSL加密，通常为true
+  enabled: true                  # 是否启用邮件服务，设为false则不发送邮件
+  template_path: "templates/mail" # 邮件模板路径
+  max_retries: 3                 # 发送失败最大重试次数
+  retry_interval: 5              # 重试间隔(秒)
 
 # 跨域(CORS)配置
 cors:
@@ -76,9 +105,30 @@ cors:
     - "Authorization"
   allow_credentials: true        # 是否允许请求携带凭证（Cookie等）
   max_age: 86400                 # 预检请求结果缓存时间，单位秒
+  expose_headers:                # 允许浏览器访问的响应头
+    - "Content-Length"
+    - "Content-Type"
 
 # 项目文档配置
 docs:
   enabled: true                  # 是否启用文档服务
   path: "/docs"                  # 文档访问路径
-  title: "项目文档"               # 文档标题 
+  title: "项目文档"               # 文档标题
+  description: "API文档"          # 文档描述
+  version: "1.0.0"              # API版本
+  contact_name: "API Support"    # 联系人名称
+  contact_email: "support@example.com" # 联系人邮箱
+  license_name: "MIT"            # 许可证名称
+  license_url: "https://opensource.org/licenses/MIT" # 许可证URL
+  terms_of_service: "https://example.com/terms" # 服务条款URL
+  host: "api.example.com"        # API主机地址
+  schemes:                       # 支持的协议
+    - "http"
+    - "https"
+  base_path: "/api/v1"          # API基础路径
+  consumes:                      # 支持的请求内容类型
+    - "application/json"
+    - "application/x-www-form-urlencoded"
+  produces:                      # 支持的响应内容类型
+    - "application/json"
+    - "application/xml" 

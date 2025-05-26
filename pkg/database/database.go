@@ -53,7 +53,7 @@ func InitDB() {
 			log.Fatal("连接SQLite数据库失败: %v", err)
 		}
 	} else {
-		// 使用MySQL数据库
+		// 尝试使用MySQL数据库
 		// 构建 DSN
 		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Asia%%2FShanghai",
 			cfg.Username,
@@ -67,7 +67,15 @@ func InitDB() {
 		// 连接数据库
 		db, err = gorm.Open(mysql.Open(dsn), gormConfig)
 		if err != nil {
-			log.Fatal("连接MySQL数据库失败: %v", err)
+			log.Error("连接MySQL数据库失败: %v", err)
+			log.Info("自动降级到SQLite数据库")
+			// 降级到SQLite
+			db, err = gorm.Open(sqlite.Open("app.db"), gormConfig)
+			if err != nil {
+				log.Fatal("连接SQLite数据库失败: %v", err)
+			}
+		} else {
+			log.Info("成功连接到MySQL数据库")
 		}
 	}
 

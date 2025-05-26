@@ -87,20 +87,6 @@ mail:
   max_retries: 3                 # 发送失败最大重试次数
   retry_interval: 5              # 重试间隔(秒)
 
-# 性能监控配置
-metrics:
-  enable_metrics: true           # 是否启用性能指标收集
-  enable_pprof: false            # 是否启用pprof性能分析，生产环境应设为false
-  enable_rate_limit: true        # 是否启用请求速率限制
-  metrics_log_interval: 10       # 指标收集日志记录间隔，单位分钟
-  rate_limit_requests: 60        # 速率限制窗口内允许的最大请求数
-  slow_query_threshold: 150      # 慢查询阈值，单位毫秒，超过此值的数据库查询将被记录
-  slow_response_threshold: 500   # 慢响应阈值，单位毫秒，超过此值的HTTP响应将被记录
-  enable_tracing: true           # 是否启用请求追踪
-  tracing_sample_rate: 0.1       # 追踪采样率(0-1)
-  enable_prometheus: true        # 是否启用Prometheus指标导出
-  prometheus_path: "/metrics"    # Prometheus指标路径
-
 # 跨域(CORS)配置
 cors:
   enabled: true                  # 是否启用CORS支持

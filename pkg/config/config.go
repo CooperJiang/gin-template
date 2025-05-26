@@ -24,7 +24,6 @@ type Config struct {
 	JWT      JWTConfig      `yaml:"jwt" env:"JWT"`
 	Log      LogConfig      `yaml:"log" env:"LOG"`
 	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
-	Metrics  MetricsConfig  `yaml:"metrics" env:"METRICS"`
 	CORS     CORSConfig     `yaml:"cors" env:"CORS"`
 	Docs     DocsConfig     `yaml:"docs" env:"DOCS"`
 }
@@ -84,17 +83,6 @@ type MailConfig struct {
 	ReplyTo  string `yaml:"reply_to" env:"REPLY_TO"`
 	SSL      bool   `yaml:"ssl" env:"SSL"`
 	Enabled  bool   `yaml:"enabled" env:"ENABLED"`
-}
-
-// MetricsConfig 性能监控配置
-type MetricsConfig struct {
-	EnableMetrics         bool `yaml:"enable_metrics" env:"ENABLE_METRICS"`
-	EnablePprof           bool `yaml:"enable_pprof" env:"ENABLE_PPROF"`
-	EnableRateLimit       bool `yaml:"enable_rate_limit" env:"ENABLE_RATE_LIMIT"`
-	MetricsLogInterval    int  `yaml:"metrics_log_interval" env:"METRICS_LOG_INTERVAL"`
-	RateLimitRequests     int  `yaml:"rate_limit_requests" env:"RATE_LIMIT_REQUESTS"`
-	SlowQueryThreshold    int  `yaml:"slow_query_threshold" env:"SLOW_QUERY_THRESHOLD"`
-	SlowResponseThreshold int  `yaml:"slow_response_threshold" env:"SLOW_RESPONSE_THRESHOLD"`
 }
 
 // CORSConfig 跨域(CORS)配置
@@ -167,9 +155,6 @@ func loadConfigFromEnv(cfg *Config) {
 
 	// 处理Mail配置的环境变量
 	loadEnvToStruct(envPrefix+"MAIL_", &cfg.Mail)
-
-	// 处理Metrics配置的环境变量
-	loadEnvToStruct(envPrefix+"METRICS_", &cfg.Metrics)
 
 	// 处理CORS配置的环境变量
 	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)

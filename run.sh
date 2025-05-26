@@ -140,17 +140,15 @@ show_status() {
             fi
         fi
         
-        # 使用curl检查健康状态
-        if command -v curl &>/dev/null; then
+        # 检查端口是否在监听
+        if command -v netstat &>/dev/null; then
             PORT=$(grep -o "port:.*" "$CONFIG_FILE" | awk '{print $2}' | tr -d ' ')
             if [ -n "$PORT" ]; then
-                echo -e "\n${YELLOW}正在检查健康状态...${NC}"
-                HEALTH_CHECK=$(curl -s "http://localhost:$PORT/health" || echo "无法连接")
-                if [[ "$HEALTH_CHECK" == *"status"* ]]; then
-                    echo -e "${GREEN}健康检查响应:${NC}"
-                    echo "$HEALTH_CHECK" | grep -o '"status":"[^"]*"' | cut -d'"' -f4
+                echo -e "\n${YELLOW}正在检查端口状态...${NC}"
+                if netstat -an | grep -q ":$PORT.*LISTEN"; then
+                    echo -e "${GREEN}端口 $PORT 正在监听${NC}"
                 else
-                    echo -e "${RED}健康检查失败: 无法连接到应用${NC}"
+                    echo -e "${RED}端口 $PORT 未在监听${NC}"
                 fi
             fi
         fi

@@ -27,7 +27,7 @@ func IsRedisEnabled() bool {
 func InitCache() {
 	// 尝试初始化Redis
 	if err := InitRedis(); err != nil {
-		logger.Error("Redis初始化失败: %v，将使用内存缓存", err)
+		// logger.Error("Redis初始化失败: %v，将使用内存缓存", err)
 		// Redis初始化失败，使用内存缓存
 		defaultCache = InitMemCache()
 		logger.Info("内存缓存初始化成功")
@@ -78,4 +78,4 @@ func Close() error {
 		return defaultCache.Close()
 	}
 	return nil
-} 
+}
