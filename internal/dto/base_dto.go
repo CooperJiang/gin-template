@@ -9,7 +9,7 @@ type BaseRequest struct {
 
 // BaseResponse 基础响应DTO
 type BaseResponse struct {
-	ID        uint      `json:"id"`         // 主键ID
+	ID        string    `json:"id"`         // 主键ID (UUID)
 	CreatedAt time.Time `json:"created_at"` // 创建时间
 	UpdatedAt time.Time `json:"updated_at"` // 更新时间
 }

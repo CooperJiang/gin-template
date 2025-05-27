@@ -186,7 +186,7 @@ docker-build: ## 构建Docker镜像
 .PHONY: docker-run
 docker-run: ## 运行Docker容器
 	@echo "$(GREEN)运行Docker容器...$(RESET)"
-	@docker run -p 8080:8080 --name $(APP_NAME) $(DOCKER_IMAGE)
+	@docker run -p 9000:9000 --name $(APP_NAME) $(DOCKER_IMAGE)
 
 .PHONY: docker-push
 docker-push: docker-build ## 推送Docker镜像到仓库

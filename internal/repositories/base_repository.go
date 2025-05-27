@@ -11,14 +11,14 @@ import (
 // BaseRepository 基础仓库接口
 type BaseRepository[T any] interface {
 	Create(ctx context.Context, entity *T) error
-	GetByID(ctx context.Context, id uint) (*T, error)
-	Update(ctx context.Context, id uint, updates map[string]interface{}) error
-	Delete(ctx context.Context, id uint) error
+	GetByID(ctx context.Context, id string) (*T, error)
+	Update(ctx context.Context, id string, updates map[string]interface{}) error
+	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, req *common.PaginationRequest, filters map[string]interface{}) ([]*T, int64, error)
 	Count(ctx context.Context, filters map[string]interface{}) (int64, error)
-	Exists(ctx context.Context, id uint) (bool, error)
+	Exists(ctx context.Context, id string) (bool, error)
 	BatchCreate(ctx context.Context, entities []*T) error
-	BatchDelete(ctx context.Context, ids []uint) error
+	BatchDelete(ctx context.Context, ids []string) error
 }
 
 // baseRepository 基础仓库实现
@@ -42,9 +42,14 @@ func (r *baseRepository[T]) Create(ctx context.Context, entity *T) error {
 }
 
 // GetByID 根据ID获取实体
-func (r *baseRepository[T]) GetByID(ctx context.Context, id uint) (*T, error) {
+func (r *baseRepository[T]) GetByID(ctx context.Context, id string) (*T, error) {
+	// 验证UUID格式
+	if !common.ValidateUUID(id) {
+		return nil, errors.New(errors.CodeInvalidParameter, "无效的ID格式")
+	}
+
 	var entity T
-	err := r.db.WithContext(ctx).First(&entity, id).Error
+	err := r.db.WithContext(ctx).Where("id = ?", id).First(&entity).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, errors.New(errors.CodeNotFound, "记录不存在")
@@ -55,7 +60,12 @@ func (r *baseRepository[T]) GetByID(ctx context.Context, id uint) (*T, error) {
 }
 
 // Update 更新实体
-func (r *baseRepository[T]) Update(ctx context.Context, id uint, updates map[string]interface{}) error {
+func (r *baseRepository[T]) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	// 验证UUID格式
+	if !common.ValidateUUID(id) {
+		return errors.New(errors.CodeInvalidParameter, "无效的ID格式")
+	}
+
 	var entity T
 	result := r.db.WithContext(ctx).Model(&entity).Where("id = ?", id).Updates(updates)
 	if result.Error != nil {
@@ -68,9 +78,14 @@ func (r *baseRepository[T]) Update(ctx context.Context, id uint, updates map[str
 }
 
 // Delete 删除实体
-func (r *baseRepository[T]) Delete(ctx context.Context, id uint) error {
+func (r *baseRepository[T]) Delete(ctx context.Context, id string) error {
+	// 验证UUID格式
+	if !common.ValidateUUID(id) {
+		return errors.New(errors.CodeInvalidParameter, "无效的ID格式")
+	}
+
 	var entity T
-	result := r.db.WithContext(ctx).Delete(&entity, id)
+	result := r.db.WithContext(ctx).Where("id = ?", id).Delete(&entity)
 	if result.Error != nil {
 		return errors.Wrap(result.Error, errors.CodeQueryFailed)
 	}
@@ -122,7 +137,12 @@ func (r *baseRepository[T]) Count(ctx context.Context, filters map[string]interf
 }
 
 // Exists 检查实体是否存在
-func (r *baseRepository[T]) Exists(ctx context.Context, id uint) (bool, error) {
+func (r *baseRepository[T]) Exists(ctx context.Context, id string) (bool, error) {
+	// 验证UUID格式
+	if !common.ValidateUUID(id) {
+		return false, errors.New(errors.CodeInvalidParameter, "无效的ID格式")
+	}
+
 	var count int64
 	err := r.db.WithContext(ctx).Model(new(T)).Where("id = ?", id).Count(&count).Error
 	if err != nil {
@@ -144,13 +164,20 @@ func (r *baseRepository[T]) BatchCreate(ctx context.Context, entities []*T) erro
 }
 
 // BatchDelete 批量删除实体
-func (r *baseRepository[T]) BatchDelete(ctx context.Context, ids []uint) error {
+func (r *baseRepository[T]) BatchDelete(ctx context.Context, ids []string) error {
 	if len(ids) == 0 {
 		return nil
 	}
 
+	// 验证所有UUID格式
+	for _, id := range ids {
+		if !common.ValidateUUID(id) {
+			return errors.New(errors.CodeInvalidParameter, "包含无效的ID格式")
+		}
+	}
+
 	var entity T
-	result := r.db.WithContext(ctx).Delete(&entity, ids)
+	result := r.db.WithContext(ctx).Where("id IN ?", ids).Delete(&entity)
 	if result.Error != nil {
 		return errors.Wrap(result.Error, errors.CodeQueryFailed)
 	}

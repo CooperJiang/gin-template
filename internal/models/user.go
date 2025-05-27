@@ -8,10 +8,7 @@ import (
 
 // User 用户模型
 type User struct {
-	ID        uint            `gorm:"primarykey" json:"id"`
-	CreatedAt common.JSONTime `json:"created_at"`
-	UpdatedAt common.JSONTime `json:"updated_at"`
-
+	BaseModel
 	Username string `gorm:"size:50;not null;uniqueIndex" json:"username"`
 	Password string `gorm:"size:100;not null" json:"-"`
 	Email    string `gorm:"size:100;uniqueIndex" json:"email"`
@@ -28,6 +25,11 @@ func (User) TableName() string {
 
 // BeforeCreate 创建前的钩子
 func (u *User) BeforeCreate(tx *gorm.DB) error {
+	// 调用基础模型的BeforeCreate
+	if err := u.BaseModel.BeforeCreate(tx); err != nil {
+		return err
+	}
+
 	if u.Status == 0 {
 		u.Status = common.UserStatusNormal
 	}

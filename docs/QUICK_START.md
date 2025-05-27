@@ -70,12 +70,12 @@ redis:
 make dev
 ```
 
-🎉 **恭喜！** 你的应用现在运行在 http://localhost:8080
+🎉 **恭喜！** 你的应用现在运行在 http://localhost:9000
 
 ### 第五步：测试API
 ```bash
 # 用户注册
-curl -X POST http://localhost:8080/api/v1/user/register \
+curl -X POST http://localhost:9000/api/v1/user/register \
   -H "Content-Type: application/json" \
   -d '{
     "username": "testuser",
@@ -115,7 +115,7 @@ make dev
 ### 测试新模块
 ```bash
 # 创建产品
-curl -X POST http://localhost:8080/api/v1/products \
+curl -X POST http://localhost:9000/api/v1/products \
   -H "Content-Type: application/json" \
   -d '{
     "name": "iPhone 15",
@@ -124,7 +124,7 @@ curl -X POST http://localhost:8080/api/v1/products \
   }'
 
 # 获取产品列表
-curl http://localhost:8080/api/v1/products
+curl http://localhost:9000/api/v1/products
 ```
 
 ## 🔧 常用命令
@@ -245,7 +245,7 @@ make profile
 # 生成Swagger文档
 make swagger
 
-# 访问文档: http://localhost:8080/swagger/index.html
+# 访问文档: http://localhost:9000/swagger/index.html
 ```
 
 ### 3. 数据库管理
@@ -283,7 +283,7 @@ make deploy-prod
 ### 环境变量配置
 ```bash
 # 设置环境变量
-export APP_APP_PORT=8080
+export APP_APP_PORT=9000
 export APP_DB_HOST=localhost
 export APP_REDIS_HOST=localhost
 ```
@@ -309,7 +309,7 @@ A: 在 `config.yaml` 中设置 `logger.level` 字段。
 A: 运行 `make test-unit` 或 `go test ./tests/unit/...`
 
 ### Q: 如何查看API文档？
-A: 运行 `make swagger` 生成文档，然后访问 http://localhost:8080/swagger/index.html
+A: 运行 `make swagger` 生成文档，然后访问 http://localhost:9000/swagger/index.html
 
 ### Q: 如何备份数据库？
 A: 运行 `make db-backup` 进行备份，`make db-restore` 进行恢复。

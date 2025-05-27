@@ -16,7 +16,7 @@ make setup
 make dev
 ```
 
-🎉 **就这么简单！** 你的应用现在运行在 http://localhost:8080
+🎉 **就这么简单！** 你的应用现在运行在 http://localhost:9000
 
 ### 🎯 5分钟创建你的第一个模块
 
@@ -171,7 +171,7 @@ make docker-run   # 运行Docker容器
 ```yaml
 app:
   name: "gin-template"
-  port: 8080
+  port: 9000
   mode: "debug"  # debug, release, test
 
 database:
@@ -204,7 +204,7 @@ email:
 支持通过环境变量覆盖配置，格式：`APP_[模块]_[配置项]`
 
 ```bash
-export APP_APP_PORT=8080
+export APP_APP_PORT=9000
 export APP_DB_HOST=localhost
 export APP_REDIS_HOST=localhost
 ```
@@ -297,7 +297,7 @@ docker-compose logs -f app
 make docker-build
 
 # 运行容器
-docker run -d --name gin-template -p 8080:8080 gin-template:latest
+docker run -d --name gin-template -p 9000:9000 gin-template:latest
 ```
 
 ## 📝 API文档
