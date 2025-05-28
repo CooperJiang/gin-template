@@ -32,8 +32,8 @@ echo -e "${YELLOW}创建目录结构...${NC}"
 mkdir -p "internal/controllers/${MODULE_NAME_LOWER}"
 mkdir -p "internal/services/${MODULE_NAME_LOWER}"
 mkdir -p "internal/repositories/${MODULE_NAME_LOWER}"
-mkdir -p "internal/dto/request/${MODULE_NAME_LOWER}"
-mkdir -p "internal/dto/response/${MODULE_NAME_LOWER}"
+mkdir -p "internal/dto/request"
+mkdir -p "internal/dto/response"
 
 # 创建模型文件
 echo -e "${YELLOW}创建模型文件...${NC}"
@@ -41,7 +41,7 @@ cat > "internal/models/${MODULE_NAME_LOWER}.go" << EOF
 package models
 
 import (
-	"time"
+	"template/pkg/common"
 	"gorm.io/gorm"
 )
 
@@ -55,29 +55,45 @@ type ${MODULE_NAME_TITLE} struct {
 
 // TableName 指定表名
 func (${MODULE_NAME_TITLE}) TableName() string {
-	return "${MODULE_NAME_LOWER}s"
+	return "${MODULE_NAME_LOWER}"
 }
 
 // BeforeCreate 创建前钩子
 func (m *${MODULE_NAME_TITLE}) BeforeCreate(tx *gorm.DB) error {
-	// 在这里添加创建前的逻辑
+	// 调用基础模型的BeforeCreate（生成UUID）
+	if err := m.BaseModel.BeforeCreate(tx); err != nil {
+		return err
+	}
+	
+	// 设置默认值
+	if m.Status == 0 {
+		m.Status = common.StatusActive
+	}
 	return nil
 }
 
 // BeforeUpdate 更新前钩子
 func (m *${MODULE_NAME_TITLE}) BeforeUpdate(tx *gorm.DB) error {
-	// 在这里添加更新前的逻辑
-	return nil
+	// 调用基础模型的BeforeUpdate
+	return m.BaseModel.BeforeUpdate(tx)
+}
+
+// IsActive 是否激活状态
+func (m *${MODULE_NAME_TITLE}) IsActive() bool {
+	return m.Status == common.StatusActive
 }
 EOF
 
 # 创建请求DTO
 echo -e "${YELLOW}创建请求DTO...${NC}"
-cat > "internal/dto/request/${MODULE_NAME_LOWER}/create.go" << EOF
-package ${MODULE_NAME_LOWER}
+cat > "internal/dto/request/${MODULE_NAME_LOWER}.go" << EOF
+package request
+
+import "template/internal/dto"
 
 // Create${MODULE_NAME_TITLE}Request 创建${MODULE_NAME_LOWER}请求
 type Create${MODULE_NAME_TITLE}Request struct {
+	dto.BaseRequest
 	Name        string \`json:"name" binding:"required,min=1,max=100"\`
 	Description string \`json:"description" binding:"max=500"\`
 }
@@ -91,13 +107,10 @@ func (r *Create${MODULE_NAME_TITLE}Request) GetValidationMessages() map[string]s
 		"Description.max": "描述长度不能超过500个字符",
 	}
 }
-EOF
-
-cat > "internal/dto/request/${MODULE_NAME_LOWER}/update.go" << EOF
-package ${MODULE_NAME_LOWER}
 
 // Update${MODULE_NAME_TITLE}Request 更新${MODULE_NAME_LOWER}请求
 type Update${MODULE_NAME_TITLE}Request struct {
+	dto.BaseRequest
 	Name        *string \`json:"name" binding:"omitempty,min=1,max=100"\`
 	Description *string \`json:"description" binding:"omitempty,max=500"\`
 	Status      *int    \`json:"status" binding:"omitempty,oneof=0 1"\`
@@ -112,18 +125,14 @@ func (r *Update${MODULE_NAME_TITLE}Request) GetValidationMessages() map[string]s
 		"Status.oneof":    "状态值必须是0或1",
 	}
 }
-EOF
-
-cat > "internal/dto/request/${MODULE_NAME_LOWER}/query.go" << EOF
-package ${MODULE_NAME_LOWER}
-
-import "template/pkg/common"
 
 // Query${MODULE_NAME_TITLE}Request 查询${MODULE_NAME_LOWER}请求
 type Query${MODULE_NAME_TITLE}Request struct {
-	common.PaginationRequest
+	dto.BaseRequest
 	Name   string \`form:"name" binding:"omitempty,max=100"\`
 	Status *int   \`form:"status" binding:"omitempty,oneof=0 1"\`
+	Page   int    \`form:"page" binding:"omitempty,min=1"\`
+	Size   int    \`form:"size" binding:"omitempty,min=1,max=100"\`
 }
 
 // GetValidationMessages 获取验证错误信息
@@ -131,49 +140,59 @@ func (r *Query${MODULE_NAME_TITLE}Request) GetValidationMessages() map[string]st
 	return map[string]string{
 		"Name.max":     "名称长度不能超过100个字符",
 		"Status.oneof": "状态值必须是0或1",
+		"Page.min":     "页码必须大于0",
+		"Size.min":     "每页数量必须大于0",
+		"Size.max":     "每页数量不能超过100",
 	}
 }
 EOF
 
 # 创建响应DTO
 echo -e "${YELLOW}创建响应DTO...${NC}"
-cat > "internal/dto/response/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_info.go" << EOF
-package ${MODULE_NAME_LOWER}
+cat > "internal/dto/response/${MODULE_NAME_LOWER}.go" << EOF
+package response
 
 import (
-	"time"
+	"template/internal/dto"
 	"template/internal/models"
+	"time"
 )
 
-// ${MODULE_NAME_TITLE}Response ${MODULE_NAME_LOWER}响应
-type ${MODULE_NAME_TITLE}Response struct {
-	ID          uint      \`json:"id"\`
-	Name        string    \`json:"name"\`
-	Description string    \`json:"description"\`
-	Status      int       \`json:"status"\`
-	CreatedAt   time.Time \`json:"created_at"\`
-	UpdatedAt   time.Time \`json:"updated_at"\`
+// ${MODULE_NAME_TITLE}Info ${MODULE_NAME_LOWER}信息
+type ${MODULE_NAME_TITLE}Info struct {
+	dto.BaseResponse
+	Name        string \`json:"name"\`
+	Description string \`json:"description"\`
+	Status      int    \`json:"status"\`
 }
 
-// From${MODULE_NAME_TITLE} 从模型转换为响应DTO
-func From${MODULE_NAME_TITLE}(${MODULE_NAME_LOWER} *models.${MODULE_NAME_TITLE}) *${MODULE_NAME_TITLE}Response {
-	return &${MODULE_NAME_TITLE}Response{
-		ID:          ${MODULE_NAME_LOWER}.ID,
+// FromModel 从模型转换
+func (r *${MODULE_NAME_TITLE}Info) FromModel(${MODULE_NAME_LOWER} models.${MODULE_NAME_TITLE}) *${MODULE_NAME_TITLE}Info {
+	return &${MODULE_NAME_TITLE}Info{
+		BaseResponse: dto.BaseResponse{
+			ID:        ${MODULE_NAME_LOWER}.ID.String(),
+			CreatedAt: time.Time(${MODULE_NAME_LOWER}.CreatedAt),
+			UpdatedAt: time.Time(${MODULE_NAME_LOWER}.UpdatedAt),
+		},
 		Name:        ${MODULE_NAME_LOWER}.Name,
 		Description: ${MODULE_NAME_LOWER}.Description,
 		Status:      ${MODULE_NAME_LOWER}.Status,
-		CreatedAt:   ${MODULE_NAME_LOWER}.CreatedAt,
-		UpdatedAt:   ${MODULE_NAME_LOWER}.UpdatedAt,
 	}
 }
 
-// From${MODULE_NAME_TITLE}List 从模型列表转换为响应DTO列表
-func From${MODULE_NAME_TITLE}List(${MODULE_NAME_LOWER}s []*models.${MODULE_NAME_TITLE}) []*${MODULE_NAME_TITLE}Response {
-	result := make([]*${MODULE_NAME_TITLE}Response, len(${MODULE_NAME_LOWER}s))
-	for i, ${MODULE_NAME_LOWER} := range ${MODULE_NAME_LOWER}s {
-		result[i] = From${MODULE_NAME_TITLE}(${MODULE_NAME_LOWER})
-	}
-	return result
+// ${MODULE_NAME_TITLE}ListResponse ${MODULE_NAME_LOWER}列表响应
+type ${MODULE_NAME_TITLE}ListResponse struct {
+	Items      []${MODULE_NAME_TITLE}Info \`json:"items"\`
+	Total      int64                      \`json:"total"\`
+	Page       int                        \`json:"page"\`
+	PageSize   int                        \`json:"page_size"\`
+	TotalPages int                        \`json:"total_pages"\`
+}
+
+// Create${MODULE_NAME_TITLE}Response 创建${MODULE_NAME_LOWER}响应
+type Create${MODULE_NAME_TITLE}Response struct {
+	Message string                \`json:"message"\`
+	Data    ${MODULE_NAME_TITLE}Info \`json:"data"\`
 }
 EOF
 
@@ -185,7 +204,7 @@ package ${MODULE_NAME_LOWER}
 import (
 	"context"
 	"template/internal/models"
-	"template/pkg/common"
+	"template/internal/repositories"
 	"template/pkg/errors"
 	
 	"gorm.io/gorm"
@@ -193,108 +212,40 @@ import (
 
 // ${MODULE_NAME_TITLE}Repository ${MODULE_NAME_LOWER}数据访问接口
 type ${MODULE_NAME_TITLE}Repository interface {
-	Create(ctx context.Context, ${MODULE_NAME_LOWER} *models.${MODULE_NAME_TITLE}) error
-	GetByID(ctx context.Context, id uint) (*models.${MODULE_NAME_TITLE}, error)
-	Update(ctx context.Context, id uint, updates map[string]interface{}) error
-	Delete(ctx context.Context, id uint) error
-	List(ctx context.Context, req *common.PaginationRequest, filters map[string]interface{}) ([]*models.${MODULE_NAME_TITLE}, int64, error)
-	ExistsByName(ctx context.Context, name string, excludeID ...uint) (bool, error)
+	repositories.BaseRepository[models.${MODULE_NAME_TITLE}]
+	GetByName(ctx context.Context, name string) (*models.${MODULE_NAME_TITLE}, error)
+	ExistsByName(ctx context.Context, name string, excludeID ...string) (bool, error)
 }
 
 // ${MODULE_NAME_LOWER}Repository ${MODULE_NAME_LOWER}数据访问实现
 type ${MODULE_NAME_LOWER}Repository struct {
+	repositories.BaseRepository[models.${MODULE_NAME_TITLE}]
 	db *gorm.DB
 }
 
 // New${MODULE_NAME_TITLE}Repository 创建${MODULE_NAME_LOWER}数据访问实例
 func New${MODULE_NAME_TITLE}Repository(db *gorm.DB) ${MODULE_NAME_TITLE}Repository {
 	return &${MODULE_NAME_LOWER}Repository{
-		db: db,
+		BaseRepository: repositories.NewBaseRepository[models.${MODULE_NAME_TITLE}](db),
+		db:             db,
 	}
 }
 
-// Create 创建${MODULE_NAME_LOWER}
-func (r *${MODULE_NAME_LOWER}Repository) Create(ctx context.Context, ${MODULE_NAME_LOWER} *models.${MODULE_NAME_TITLE}) error {
-	if err := r.db.WithContext(ctx).Create(${MODULE_NAME_LOWER}).Error; err != nil {
-		return errors.Wrap(err, errors.CodeDBQueryFailed)
-	}
-	return nil
-}
-
-// GetByID 根据ID获取${MODULE_NAME_LOWER}
-func (r *${MODULE_NAME_LOWER}Repository) GetByID(ctx context.Context, id uint) (*models.${MODULE_NAME_TITLE}, error) {
+// GetByName 根据名称获取${MODULE_NAME_LOWER}
+func (r *${MODULE_NAME_LOWER}Repository) GetByName(ctx context.Context, name string) (*models.${MODULE_NAME_TITLE}, error) {
 	var ${MODULE_NAME_LOWER} models.${MODULE_NAME_TITLE}
-	err := r.db.WithContext(ctx).First(&${MODULE_NAME_LOWER}, id).Error
+	err := r.db.WithContext(ctx).Where("name = ?", name).First(&${MODULE_NAME_LOWER}).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if err == gorm.ErrRecordNotFound {
 			return nil, errors.New(errors.CodeNotFound, "${MODULE_NAME_TITLE}不存在")
 		}
-		return nil, errors.Wrap(err, errors.CodeDBQueryFailed)
+		return nil, errors.Wrap(err, errors.CodeQueryFailed)
 	}
 	return &${MODULE_NAME_LOWER}, nil
 }
 
-// Update 更新${MODULE_NAME_LOWER}
-func (r *${MODULE_NAME_LOWER}Repository) Update(ctx context.Context, id uint, updates map[string]interface{}) error {
-	result := r.db.WithContext(ctx).Model(&models.${MODULE_NAME_TITLE}{}).Where("id = ?", id).Updates(updates)
-	if result.Error != nil {
-		return errors.Wrap(result.Error, errors.CodeDBQueryFailed)
-	}
-	if result.RowsAffected == 0 {
-		return errors.New(errors.CodeNotFound, "${MODULE_NAME_TITLE}不存在")
-	}
-	return nil
-}
-
-// Delete 删除${MODULE_NAME_LOWER}
-func (r *${MODULE_NAME_LOWER}Repository) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&models.${MODULE_NAME_TITLE}{}, id)
-	if result.Error != nil {
-		return errors.Wrap(result.Error, errors.CodeDBQueryFailed)
-	}
-	if result.RowsAffected == 0 {
-		return errors.New(errors.CodeNotFound, "${MODULE_NAME_TITLE}不存在")
-	}
-	return nil
-}
-
-// List 获取${MODULE_NAME_LOWER}列表
-func (r *${MODULE_NAME_LOWER}Repository) List(ctx context.Context, req *common.PaginationRequest, filters map[string]interface{}) ([]*models.${MODULE_NAME_TITLE}, int64, error) {
-	var ${MODULE_NAME_LOWER}s []*models.${MODULE_NAME_TITLE}
-	var total int64
-	
-	query := r.db.WithContext(ctx).Model(&models.${MODULE_NAME_TITLE}{})
-	
-	// 应用过滤条件
-	for key, value := range filters {
-		switch key {
-		case "name":
-			if name, ok := value.(string); ok && name != "" {
-				query = query.Where("name LIKE ?", "%"+name+"%")
-			}
-		case "status":
-			if status, ok := value.(int); ok {
-				query = query.Where("status = ?", status)
-			}
-		}
-	}
-	
-	// 获取总数
-	if err := query.Count(&total).Error; err != nil {
-		return nil, 0, errors.Wrap(err, errors.CodeDBQueryFailed)
-	}
-	
-	// 分页查询
-	offset := (req.Page - 1) * req.PageSize
-	if err := query.Offset(offset).Limit(req.PageSize).Order("created_at DESC").Find(&${MODULE_NAME_LOWER}s).Error; err != nil {
-		return nil, 0, errors.Wrap(err, errors.CodeDBQueryFailed)
-	}
-	
-	return ${MODULE_NAME_LOWER}s, total, nil
-}
-
 // ExistsByName 检查名称是否存在
-func (r *${MODULE_NAME_LOWER}Repository) ExistsByName(ctx context.Context, name string, excludeID ...uint) (bool, error) {
+func (r *${MODULE_NAME_LOWER}Repository) ExistsByName(ctx context.Context, name string, excludeID ...string) (bool, error) {
 	var count int64
 	query := r.db.WithContext(ctx).Model(&models.${MODULE_NAME_TITLE}{}).Where("name = ?", name)
 	
@@ -304,7 +255,7 @@ func (r *${MODULE_NAME_LOWER}Repository) ExistsByName(ctx context.Context, name 
 	
 	err := query.Count(&count).Error
 	if err != nil {
-		return false, errors.Wrap(err, errors.CodeDBQueryFailed)
+		return false, errors.Wrap(err, errors.CodeQueryFailed)
 	}
 	
 	return count > 0, nil
@@ -320,19 +271,19 @@ import (
 	"context"
 	"template/internal/models"
 	"template/internal/repositories/${MODULE_NAME_LOWER}"
-	requestDto "template/internal/dto/request/${MODULE_NAME_LOWER}"
-	responseDto "template/internal/dto/response/${MODULE_NAME_LOWER}"
+	"template/internal/dto/request"
+	"template/internal/dto/response"
 	"template/pkg/common"
 	"template/pkg/errors"
 )
 
 // ${MODULE_NAME_TITLE}Service ${MODULE_NAME_LOWER}服务接口
 type ${MODULE_NAME_TITLE}Service interface {
-	Create(ctx context.Context, req *requestDto.Create${MODULE_NAME_TITLE}Request) (*responseDto.${MODULE_NAME_TITLE}Response, error)
-	GetByID(ctx context.Context, id uint) (*responseDto.${MODULE_NAME_TITLE}Response, error)
-	Update(ctx context.Context, id uint, req *requestDto.Update${MODULE_NAME_TITLE}Request) (*responseDto.${MODULE_NAME_TITLE}Response, error)
-	Delete(ctx context.Context, id uint) error
-	List(ctx context.Context, req *requestDto.Query${MODULE_NAME_TITLE}Request) (*common.PaginationResponse, error)
+	Create(ctx context.Context, req *request.Create${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}Info, error)
+	GetByID(ctx context.Context, id string) (*response.${MODULE_NAME_TITLE}Info, error)
+	Update(ctx context.Context, id string, req *request.Update${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}Info, error)
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, req *request.Query${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}ListResponse, error)
 }
 
 // ${MODULE_NAME_LOWER}Service ${MODULE_NAME_LOWER}服务实现
@@ -348,7 +299,7 @@ func New${MODULE_NAME_TITLE}Service(${MODULE_NAME_LOWER}Repo ${MODULE_NAME_LOWER
 }
 
 // Create 创建${MODULE_NAME_LOWER}
-func (s *${MODULE_NAME_LOWER}Service) Create(ctx context.Context, req *requestDto.Create${MODULE_NAME_TITLE}Request) (*responseDto.${MODULE_NAME_TITLE}Response, error) {
+func (s *${MODULE_NAME_LOWER}Service) Create(ctx context.Context, req *request.Create${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}Info, error) {
 	// 检查名称是否已存在
 	exists, err := s.${MODULE_NAME_LOWER}Repo.ExistsByName(ctx, req.Name)
 	if err != nil {
@@ -362,39 +313,39 @@ func (s *${MODULE_NAME_LOWER}Service) Create(ctx context.Context, req *requestDt
 	${MODULE_NAME_LOWER} := &models.${MODULE_NAME_TITLE}{
 		Name:        req.Name,
 		Description: req.Description,
-		Status:      1, // 默认启用
+		Status:      common.StatusActive, // 默认启用
 	}
 	
 	if err := s.${MODULE_NAME_LOWER}Repo.Create(ctx, ${MODULE_NAME_LOWER}); err != nil {
 		return nil, err
 	}
 	
-	return responseDto.From${MODULE_NAME_TITLE}(${MODULE_NAME_LOWER}), nil
+	return (&response.${MODULE_NAME_TITLE}Info{}).FromModel(*${MODULE_NAME_LOWER}), nil
 }
 
 // GetByID 根据ID获取${MODULE_NAME_LOWER}
-func (s *${MODULE_NAME_LOWER}Service) GetByID(ctx context.Context, id uint) (*responseDto.${MODULE_NAME_TITLE}Response, error) {
+func (s *${MODULE_NAME_LOWER}Service) GetByID(ctx context.Context, id string) (*response.${MODULE_NAME_TITLE}Info, error) {
 	${MODULE_NAME_LOWER}, err := s.${MODULE_NAME_LOWER}Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	
-	return responseDto.From${MODULE_NAME_TITLE}(${MODULE_NAME_LOWER}), nil
+	return (&response.${MODULE_NAME_TITLE}Info{}).FromModel(*${MODULE_NAME_LOWER}), nil
 }
 
 // Update 更新${MODULE_NAME_LOWER}
-func (s *${MODULE_NAME_LOWER}Service) Update(ctx context.Context, id uint, req *requestDto.Update${MODULE_NAME_TITLE}Request) (*responseDto.${MODULE_NAME_TITLE}Response, error) {
+func (s *${MODULE_NAME_LOWER}Service) Update(ctx context.Context, id string, req *request.Update${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}Info, error) {
 	// 检查${MODULE_NAME_LOWER}是否存在
 	existing, err := s.${MODULE_NAME_LOWER}Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	
-	// 构建更新字段
+	// 构建更新数据
 	updates := make(map[string]interface{})
 	
 	if req.Name != nil {
-		// 检查新名称是否已存在
+		// 检查名称是否已被其他记录使用
 		exists, err := s.${MODULE_NAME_LOWER}Repo.ExistsByName(ctx, *req.Name, id)
 		if err != nil {
 			return nil, err
@@ -420,57 +371,71 @@ func (s *${MODULE_NAME_LOWER}Service) Update(ctx context.Context, id uint, req *
 		}
 	}
 	
-	// 返回更新后的数据
+	// 获取更新后的数据
 	updated, err := s.${MODULE_NAME_LOWER}Repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	
-	return responseDto.From${MODULE_NAME_TITLE}(updated), nil
+	return (&response.${MODULE_NAME_TITLE}Info{}).FromModel(*updated), nil
 }
 
 // Delete 删除${MODULE_NAME_LOWER}
-func (s *${MODULE_NAME_LOWER}Service) Delete(ctx context.Context, id uint) error {
+func (s *${MODULE_NAME_LOWER}Service) Delete(ctx context.Context, id string) error {
 	// 检查${MODULE_NAME_LOWER}是否存在
 	_, err := s.${MODULE_NAME_LOWER}Repo.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
 	
-	// 执行删除
 	return s.${MODULE_NAME_LOWER}Repo.Delete(ctx, id)
 }
 
 // List 获取${MODULE_NAME_LOWER}列表
-func (s *${MODULE_NAME_LOWER}Service) List(ctx context.Context, req *requestDto.Query${MODULE_NAME_TITLE}Request) (*common.PaginationResponse, error) {
-	// 构建过滤条件
-	filters := make(map[string]interface{})
-	
-	if req.Name != "" {
-		filters["name"] = req.Name
+func (s *${MODULE_NAME_LOWER}Service) List(ctx context.Context, req *request.Query${MODULE_NAME_TITLE}Request) (*response.${MODULE_NAME_TITLE}ListResponse, error) {
+	// 设置默认分页参数
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.Size <= 0 {
+		req.Size = 20
 	}
 	
+	// 构建分页请求
+	paginationReq := &common.PaginationRequest{
+		Page:     req.Page,
+		PageSize: req.Size,
+	}
+	
+	// 构建过滤条件
+	filters := make(map[string]interface{})
+	if req.Name != "" {
+		filters["keyword"] = req.Name
+	}
 	if req.Status != nil {
 		filters["status"] = *req.Status
 	}
 	
 	// 查询数据
-	${MODULE_NAME_LOWER}s, total, err := s.${MODULE_NAME_LOWER}Repo.List(ctx, &req.PaginationRequest, filters)
+	${MODULE_NAME_LOWER}s, total, err := s.${MODULE_NAME_LOWER}Repo.List(ctx, paginationReq, filters)
 	if err != nil {
 		return nil, err
 	}
 	
 	// 转换为响应DTO
-	items := responseDto.From${MODULE_NAME_TITLE}List(${MODULE_NAME_LOWER}s)
+	items := make([]response.${MODULE_NAME_TITLE}Info, len(${MODULE_NAME_LOWER}s))
+	for i, ${MODULE_NAME_LOWER} := range ${MODULE_NAME_LOWER}s {
+		items[i] = *(&response.${MODULE_NAME_TITLE}Info{}).FromModel(*${MODULE_NAME_LOWER})
+	}
 	
-	return &common.PaginationResponse{
-		Items: items,
-		Pagination: common.PaginationInfo{
-			Page:       req.Page,
-			PageSize:   req.PageSize,
-			Total:      total,
-			TotalPages: (total + int64(req.PageSize) - 1) / int64(req.PageSize),
-		},
+	totalPages := int((total + int64(req.Size) - 1) / int64(req.Size))
+	
+	return &response.${MODULE_NAME_TITLE}ListResponse{
+		Items:      items,
+		Total:      total,
+		Page:       req.Page,
+		PageSize:   req.Size,
+		TotalPages: totalPages,
 	}, nil
 }
 EOF
@@ -481,9 +446,8 @@ cat > "internal/controllers/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_controller
 package ${MODULE_NAME_LOWER}
 
 import (
-	"strconv"
 	"template/internal/services/${MODULE_NAME_LOWER}"
-	requestDto "template/internal/dto/request/${MODULE_NAME_LOWER}"
+	"template/internal/dto/request"
 	"template/pkg/common"
 	"template/pkg/errors"
 	
@@ -508,12 +472,12 @@ func New${MODULE_NAME_TITLE}Controller(${MODULE_NAME_LOWER}Service ${MODULE_NAME
 // @Tags ${MODULE_NAME_TITLE}
 // @Accept json
 // @Produce json
-// @Param request body requestDto.Create${MODULE_NAME_TITLE}Request true "创建${MODULE_NAME_LOWER}请求"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
+// @Param request body request.Create${MODULE_NAME_TITLE}Request true "创建${MODULE_NAME_LOWER}请求"
+// @Success 200 {object} errors.Response
+// @Failure 400 {object} errors.Response
 // @Router /api/v1/${MODULE_NAME_LOWER}s [post]
 func (c *${MODULE_NAME_TITLE}Controller) Create(ctx *gin.Context) {
-	req, err := common.ValidateRequest[requestDto.Create${MODULE_NAME_TITLE}Request](ctx)
+	req, err := common.ValidateRequest[request.Create${MODULE_NAME_TITLE}Request](ctx)
 	if err != nil {
 		errors.HandleError(ctx, err)
 		return
@@ -525,7 +489,7 @@ func (c *${MODULE_NAME_TITLE}Controller) Create(ctx *gin.Context) {
 		return
 	}
 	
-	common.Success(ctx, result, "创建成功")
+	errors.ResponseSuccess(ctx, result, "创建成功")
 }
 
 // GetByID 根据ID获取${MODULE_NAME_LOWER}
@@ -534,26 +498,25 @@ func (c *${MODULE_NAME_TITLE}Controller) Create(ctx *gin.Context) {
 // @Tags ${MODULE_NAME_TITLE}
 // @Accept json
 // @Produce json
-// @Param id path int true "${MODULE_NAME_TITLE} ID"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
+// @Param id path string true "${MODULE_NAME_TITLE} ID (UUID)"
+// @Success 200 {object} errors.Response
+// @Failure 400 {object} errors.Response
+// @Failure 404 {object} errors.Response
 // @Router /api/v1/${MODULE_NAME_LOWER}s/{id} [get]
 func (c *${MODULE_NAME_TITLE}Controller) GetByID(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID"))
+	id := ctx.Param("id")
+	if !common.ValidateUUID(id) {
+		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID格式"))
 		return
 	}
 	
-	result, err := c.${MODULE_NAME_LOWER}Service.GetByID(ctx.Request.Context(), uint(id))
+	result, err := c.${MODULE_NAME_LOWER}Service.GetByID(ctx.Request.Context(), id)
 	if err != nil {
 		errors.HandleError(ctx, err)
 		return
 	}
 	
-	common.Success(ctx, result, "获取成功")
+	errors.ResponseSuccess(ctx, result, "获取成功")
 }
 
 // Update 更新${MODULE_NAME_LOWER}
@@ -562,33 +525,32 @@ func (c *${MODULE_NAME_TITLE}Controller) GetByID(ctx *gin.Context) {
 // @Tags ${MODULE_NAME_TITLE}
 // @Accept json
 // @Produce json
-// @Param id path int true "${MODULE_NAME_TITLE} ID"
-// @Param request body requestDto.Update${MODULE_NAME_TITLE}Request true "更新${MODULE_NAME_LOWER}请求"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
+// @Param id path string true "${MODULE_NAME_TITLE} ID (UUID)"
+// @Param request body request.Update${MODULE_NAME_TITLE}Request true "更新${MODULE_NAME_LOWER}请求"
+// @Success 200 {object} errors.Response
+// @Failure 400 {object} errors.Response
+// @Failure 404 {object} errors.Response
 // @Router /api/v1/${MODULE_NAME_LOWER}s/{id} [put]
 func (c *${MODULE_NAME_TITLE}Controller) Update(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID"))
+	id := ctx.Param("id")
+	if !common.ValidateUUID(id) {
+		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID格式"))
 		return
 	}
 	
-	req, err := common.ValidateRequest[requestDto.Update${MODULE_NAME_TITLE}Request](ctx)
-	if err != nil {
-		errors.HandleError(ctx, err)
-		return
-	}
-	
-	result, err := c.${MODULE_NAME_LOWER}Service.Update(ctx.Request.Context(), uint(id), req)
+	req, err := common.ValidateRequest[request.Update${MODULE_NAME_TITLE}Request](ctx)
 	if err != nil {
 		errors.HandleError(ctx, err)
 		return
 	}
 	
-	common.Success(ctx, result, "更新成功")
+	result, err := c.${MODULE_NAME_LOWER}Service.Update(ctx.Request.Context(), id, req)
+	if err != nil {
+		errors.HandleError(ctx, err)
+		return
+	}
+	
+	errors.ResponseSuccess(ctx, result, "更新成功")
 }
 
 // Delete 删除${MODULE_NAME_LOWER}
@@ -597,26 +559,25 @@ func (c *${MODULE_NAME_TITLE}Controller) Update(ctx *gin.Context) {
 // @Tags ${MODULE_NAME_TITLE}
 // @Accept json
 // @Produce json
-// @Param id path int true "${MODULE_NAME_TITLE} ID"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
-// @Failure 404 {object} common.Response
+// @Param id path string true "${MODULE_NAME_TITLE} ID (UUID)"
+// @Success 200 {object} errors.Response
+// @Failure 400 {object} errors.Response
+// @Failure 404 {object} errors.Response
 // @Router /api/v1/${MODULE_NAME_LOWER}s/{id} [delete]
 func (c *${MODULE_NAME_TITLE}Controller) Delete(ctx *gin.Context) {
-	idStr := ctx.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
-	if err != nil {
-		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID"))
+	id := ctx.Param("id")
+	if !common.ValidateUUID(id) {
+		errors.HandleError(ctx, errors.New(errors.CodeInvalidParameter, "无效的ID格式"))
 		return
 	}
 	
-	err = c.${MODULE_NAME_LOWER}Service.Delete(ctx.Request.Context(), uint(id))
+	err := c.${MODULE_NAME_LOWER}Service.Delete(ctx.Request.Context(), id)
 	if err != nil {
 		errors.HandleError(ctx, err)
 		return
 	}
 	
-	common.Success(ctx, nil, "删除成功")
+	errors.ResponseSuccess(ctx, nil, "删除成功")
 }
 
 // List 获取${MODULE_NAME_LOWER}列表
@@ -626,25 +587,17 @@ func (c *${MODULE_NAME_TITLE}Controller) Delete(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
+// @Param size query int false "每页数量" default(20)
 // @Param name query string false "名称搜索"
 // @Param status query int false "状态筛选"
-// @Success 200 {object} common.Response
-// @Failure 400 {object} common.Response
+// @Success 200 {object} errors.Response
+// @Failure 400 {object} errors.Response
 // @Router /api/v1/${MODULE_NAME_LOWER}s [get]
 func (c *${MODULE_NAME_TITLE}Controller) List(ctx *gin.Context) {
-	req, err := common.ValidateRequest[requestDto.Query${MODULE_NAME_TITLE}Request](ctx)
+	req, err := common.ValidateRequest[request.Query${MODULE_NAME_TITLE}Request](ctx)
 	if err != nil {
 		errors.HandleError(ctx, err)
 		return
-	}
-	
-	// 设置默认分页参数
-	if req.Page <= 0 {
-		req.Page = 1
-	}
-	if req.PageSize <= 0 {
-		req.PageSize = 20
 	}
 	
 	result, err := c.${MODULE_NAME_LOWER}Service.List(ctx.Request.Context(), req)
@@ -653,12 +606,13 @@ func (c *${MODULE_NAME_TITLE}Controller) List(ctx *gin.Context) {
 		return
 	}
 	
-	common.Success(ctx, result, "获取成功")
+	errors.ResponseSuccess(ctx, result, "获取成功")
 }
 EOF
 
 # 创建路由文件
 echo -e "${YELLOW}创建路由文件...${NC}"
+mkdir -p "internal/routes/api/v1"
 cat > "internal/routes/api/v1/${MODULE_NAME_LOWER}.go" << EOF
 package v1
 
@@ -694,25 +648,51 @@ EOF
 echo -e "${YELLOW}创建数据库迁移文件...${NC}"
 mkdir -p internal/migrations
 timestamp=$(date +%Y%m%d%H%M%S)
-cat > "internal/migrations/${timestamp}_create_${MODULE_NAME_LOWER}s_table.sql" << EOF
+cat > "internal/migrations/${timestamp}_create_${MODULE_NAME_LOWER}_table.sql" << EOF
 -- +migrate Up
-CREATE TABLE ${MODULE_NAME_LOWER}s (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+-- 创建${MODULE_NAME_LOWER}表
+CREATE TABLE ${MODULE_NAME_LOWER} (
+    id CHAR(36) PRIMARY KEY,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    deleted_at DATETIME NULL,
     name VARCHAR(100) NOT NULL,
     description VARCHAR(500) DEFAULT '',
-    status TINYINT DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
+    status INT DEFAULT 1,
     
-    INDEX idx_name (name),
-    INDEX idx_status (status),
-    INDEX idx_deleted_at (deleted_at)
+    KEY idx_name (name),
+    KEY idx_status (status),
+    KEY idx_deleted_at (deleted_at)
 );
 
 -- +migrate Down
-DROP TABLE IF EXISTS ${MODULE_NAME_LOWER}s;
+DROP TABLE IF EXISTS ${MODULE_NAME_LOWER};
 EOF
+
+# 添加常量定义
+echo -e "${YELLOW}更新常量定义...${NC}"
+if [ ! -f "pkg/constants/common.go" ]; then
+    mkdir -p pkg/constants
+    cat > "pkg/constants/common.go" << EOF
+package constants
+
+// 通用状态常量
+const (
+	StatusInactive = 0 // 未激活
+	StatusActive   = 1 // 激活
+)
+EOF
+else
+    # 检查是否已存在状态常量
+    if ! grep -q "StatusActive" pkg/constants/common.go; then
+        echo "" >> pkg/constants/common.go
+        echo "// 通用状态常量" >> pkg/constants/common.go
+        echo "const (" >> pkg/constants/common.go
+        echo "	StatusInactive = 0 // 未激活" >> pkg/constants/common.go
+        echo "	StatusActive   = 1 // 激活" >> pkg/constants/common.go
+        echo ")" >> pkg/constants/common.go
+    fi
+fi
 
 # 创建测试文件
 echo -e "${YELLOW}创建测试文件...${NC}"
@@ -724,8 +704,9 @@ import (
 	"context"
 	"testing"
 	"template/internal/models"
-	requestDto "template/internal/dto/request/${MODULE_NAME_LOWER}"
+	"template/internal/dto/request"
 	"template/internal/services/${MODULE_NAME_LOWER}"
+	"template/pkg/common"
 	"template/pkg/errors"
 	
 	"github.com/stretchr/testify/assert"
@@ -742,17 +723,20 @@ func (m *Mock${MODULE_NAME_TITLE}Repository) Create(ctx context.Context, ${MODUL
 	return args.Error(0)
 }
 
-func (m *Mock${MODULE_NAME_TITLE}Repository) GetByID(ctx context.Context, id uint) (*models.${MODULE_NAME_TITLE}, error) {
+func (m *Mock${MODULE_NAME_TITLE}Repository) GetByID(ctx context.Context, id string) (*models.${MODULE_NAME_TITLE}, error) {
 	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
 	return args.Get(0).(*models.${MODULE_NAME_TITLE}), args.Error(1)
 }
 
-func (m *Mock${MODULE_NAME_TITLE}Repository) Update(ctx context.Context, id uint, updates map[string]interface{}) error {
+func (m *Mock${MODULE_NAME_TITLE}Repository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	args := m.Called(ctx, id, updates)
 	return args.Error(0)
 }
 
-func (m *Mock${MODULE_NAME_TITLE}Repository) Delete(ctx context.Context, id uint) error {
+func (m *Mock${MODULE_NAME_TITLE}Repository) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -762,7 +746,35 @@ func (m *Mock${MODULE_NAME_TITLE}Repository) List(ctx context.Context, req *comm
 	return args.Get(0).([]*models.${MODULE_NAME_TITLE}), args.Get(1).(int64), args.Error(2)
 }
 
-func (m *Mock${MODULE_NAME_TITLE}Repository) ExistsByName(ctx context.Context, name string, excludeID ...uint) (bool, error) {
+func (m *Mock${MODULE_NAME_TITLE}Repository) Count(ctx context.Context, filters map[string]interface{}) (int64, error) {
+	args := m.Called(ctx, filters)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *Mock${MODULE_NAME_TITLE}Repository) Exists(ctx context.Context, id string) (bool, error) {
+	args := m.Called(ctx, id)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *Mock${MODULE_NAME_TITLE}Repository) BatchCreate(ctx context.Context, entities []*models.${MODULE_NAME_TITLE}) error {
+	args := m.Called(ctx, entities)
+	return args.Error(0)
+}
+
+func (m *Mock${MODULE_NAME_TITLE}Repository) BatchDelete(ctx context.Context, ids []string) error {
+	args := m.Called(ctx, ids)
+	return args.Error(0)
+}
+
+func (m *Mock${MODULE_NAME_TITLE}Repository) GetByName(ctx context.Context, name string) (*models.${MODULE_NAME_TITLE}, error) {
+	args := m.Called(ctx, name)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.${MODULE_NAME_TITLE}), args.Error(1)
+}
+
+func (m *Mock${MODULE_NAME_TITLE}Repository) ExistsByName(ctx context.Context, name string, excludeID ...string) (bool, error) {
 	args := m.Called(ctx, name, excludeID)
 	return args.Bool(0), args.Error(1)
 }
@@ -773,14 +785,14 @@ func Test${MODULE_NAME_TITLE}Service_Create(t *testing.T) {
 	
 	tests := []struct {
 		name    string
-		req     *requestDto.Create${MODULE_NAME_TITLE}Request
+		req     *request.Create${MODULE_NAME_TITLE}Request
 		setup   func()
 		wantErr bool
 		errCode errors.ErrorCode
 	}{
 		{
 			name: "正常创建",
-			req: &requestDto.Create${MODULE_NAME_TITLE}Request{
+			req: &request.Create${MODULE_NAME_TITLE}Request{
 				Name:        "测试${MODULE_NAME_LOWER}",
 				Description: "测试描述",
 			},
@@ -792,7 +804,7 @@ func Test${MODULE_NAME_TITLE}Service_Create(t *testing.T) {
 		},
 		{
 			name: "名称已存在",
-			req: &requestDto.Create${MODULE_NAME_TITLE}Request{
+			req: &request.Create${MODULE_NAME_TITLE}Request{
 				Name:        "已存在的${MODULE_NAME_LOWER}",
 				Description: "测试描述",
 			},
@@ -814,7 +826,9 @@ func Test${MODULE_NAME_TITLE}Service_Create(t *testing.T) {
 			if tt.wantErr {
 				assert.Error(t, err)
 				if tt.errCode != 0 {
-					assert.True(t, errors.Is(err, tt.errCode))
+					customErr, ok := err.(*errors.CustomError)
+					assert.True(t, ok)
+					assert.Equal(t, tt.errCode, customErr.Code)
 				}
 				assert.Nil(t, result)
 			} else {
@@ -833,15 +847,13 @@ echo -e "${GREEN}模块创建完成！${NC}"
 echo ""
 echo -e "${BLUE}已创建的文件:${NC}"
 echo "  - internal/models/${MODULE_NAME_LOWER}.go"
-echo "  - internal/dto/request/${MODULE_NAME_LOWER}/create.go"
-echo "  - internal/dto/request/${MODULE_NAME_LOWER}/update.go"
-echo "  - internal/dto/request/${MODULE_NAME_LOWER}/query.go"
-echo "  - internal/dto/response/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_info.go"
+echo "  - internal/dto/request/${MODULE_NAME_LOWER}.go"
+echo "  - internal/dto/response/${MODULE_NAME_LOWER}.go"
 echo "  - internal/repositories/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_repository.go"
 echo "  - internal/services/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_service.go"
 echo "  - internal/controllers/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_controller.go"
 echo "  - internal/routes/api/v1/${MODULE_NAME_LOWER}.go"
-echo "  - internal/migrations/${timestamp}_create_${MODULE_NAME_LOWER}s_table.sql"
+echo "  - internal/migrations/${timestamp}_create_${MODULE_NAME_LOWER}_table.sql"
 echo "  - tests/unit/services/${MODULE_NAME_LOWER}_service_test.go"
 echo ""
 echo -e "${YELLOW}下一步操作:${NC}"
@@ -854,5 +866,15 @@ echo ""
 echo "3. 运行测试:"
 echo "   make test"
 echo ""
-echo -e "${GREEN}模块 ${MODULE_NAME_TITLE} 创建完成！${NC}"
+echo "4. 启动开发服务器:"
+echo "   make dev"
+echo ""
+echo -e "${GREEN}🎉 模块 ${MODULE_NAME_TITLE} 创建完成！${NC}"
+echo -e "${BLUE}📝 特性说明:${NC}"
+echo "  ✅ 使用UUID主键，确保数据安全"
+echo "  ✅ 完整的CRUD操作"
+echo "  ✅ 统一的错误处理"
+echo "  ✅ 参数验证和响应格式"
+echo "  ✅ 单元测试模板"
+echo "  ✅ Swagger API文档注释"
 EOF 
