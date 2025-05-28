@@ -36,23 +36,95 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	userInfo, token, err := user.Login(req.Account, req.Password)
+	userInfo, token, expiresAt, err := user.Login(req.Account, req.Password)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
 	}
 
+	// 安全地获取用户信息
+	username, _ := userInfo["username"].(string)
+	email, _ := userInfo["email"].(string)
+	avatar, _ := userInfo["avatar"].(string)
+	status, _ := userInfo["status"].(int)
+
 	resp := response.LoginResponse{
-		Token: token,
+		Token:     token,
+		ExpiresAt: expiresAt,
 		User: response.UserInfo{
-			Username: userInfo["username"].(string),
-			Email:    userInfo["email"].(string),
-			Avatar:   userInfo["avatar"].(string),
-			Status:   userInfo["status"].(int),
+			Username: username,
+			Email:    email,
+			Avatar:   avatar,
+			Status:   status,
 		},
 	}
 
 	errors.ResponseSuccess(c, resp, "登录成功")
+}
+
+// GetUserInfo 获取用户信息
+func GetUserInfo(c *gin.Context) {
+	// 从中间件获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		errors.HandleError(c, errors.New(errors.CodeUnauthorized, "未授权"))
+		return
+	}
+
+	userInfo, err := user.GetUserInfo(userID.(string))
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	errors.ResponseSuccess(c, userInfo, "获取用户信息成功")
+}
+
+// UpdateProfile 更新用户资料
+func UpdateProfile(c *gin.Context) {
+	// 从中间件获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		errors.HandleError(c, errors.New(errors.CodeUnauthorized, "未授权"))
+		return
+	}
+
+	req, err := common.ValidateRequest[request.UpdateProfileRequest](c)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	userInfo, err := user.UpdateProfile(userID.(string), req.Username, req.Email, req.Avatar)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	errors.ResponseSuccess(c, userInfo, "更新资料成功")
+}
+
+// ChangePassword 修改密码
+func ChangePassword(c *gin.Context) {
+	// 从中间件获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		errors.HandleError(c, errors.New(errors.CodeUnauthorized, "未授权"))
+		return
+	}
+
+	req, err := common.ValidateRequest[request.ChangePasswordRequest](c)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	if err := user.ChangePassword(userID.(string), req.OldPassword, req.NewPassword); err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	errors.ResponseSuccess(c, nil, "密码修改成功")
 }
 
 // SendRegistrationCode 发送注册验证码

@@ -1,12 +1,10 @@
 # Go语言特定的忽略文件
-# 二进制文件
+# 二进制文件和编译输出
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# 编译输出
 *.test
 *.out
 *.o
@@ -16,6 +14,7 @@ main
 
 # 依赖管理
 vendor/
+/node_modules/
 
 # 项目特定文件
 *.db
@@ -71,73 +70,168 @@ tmp/
 .env
 __debug_bin
 
-# 编译生成的文件
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-*.test
-*.out
-
 # 构建目录
 /build/
 /dist/
 /bin/
 
-# 日志文件
-/logs/
-*.log
-
 # SQLite数据库文件
-*.db
 *.sqlite
 *.sqlite3
 
-# 环境配置文件（只保留示例配置）
-config.*.yaml
-!config.example.yaml
-.env
-.env.*
-
 # 部署配置文件（敏感信息）
-deploy.conf
 *.pem
 *.key
 
-# 临时文件
-*.tmp
-.DS_Store
-tmp/
-.tmp/
-.temp/
-
-# IDE 和编辑器文件
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# 依赖目录
-/vendor/
-/node_modules/
-
 # 特定于Go的忽略
 go.work
-
-# 特定于部署的文件
-*.tar.gz
-*.zip
 
 # 编译时生成的前端文件
 /internal/static/dist/
 /internal/static/assets/
 
 # Air工具的临时文件
-.air.toml.tmp
 /tmp-air-*/
+
+# 前端项目相关忽略文件
+# Node.js 依赖
+web/node_modules/
+web/dist/
+web/dist-ssr/
+web/build/
+web/out/
+
+# 前端缓存和临时文件
+web/.cache/
+web/.parcel-cache/
+web/.next/
+web/.nuxt/
+web/.vite/
+web/.rollup.cache/
+web/.turbo/
+
+# 前端环境文件
+web/.env
+web/.env.local
+web/.env.development.local
+web/.env.test.local
+web/.env.production.local
+
+# 前端测试和覆盖率
+web/coverage/
+web/.nyc_output/
+web/test-results/
+web/playwright-report/
+
+# 前端工具缓存
+web/.eslintcache
+web/.stylelintcache
+web/*.tsbuildinfo
+
+# 前端包管理器文件（可选，根据团队需要决定是否忽略）
+# web/package-lock.json
+# web/yarn.lock
+# web/pnpm-lock.yaml
+
+# 前端构建产物和打包文件
+web/*.tgz
+web/*.tar.gz
+web/bundle-analyzer-report.html
+
+# 前端自动生成文件
+web/auto-imports.d.ts
+web/components.d.ts
+
+# 前端部署相关
+web/.vercel/
+web/.netlify/
+web/.firebase/
+
+# 前端PWA相关
+web/sw.*
+web/workbox-*.js
+
+# 前端扩展开发
+web/*.crx
 
 # 其他不需要提交的文件
 TODO.md
-NOTES.md 
+NOTES.md
+
+# 打包的二进制文件和归档文件
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tgz
+*.tbz2
+*.txz
+*.zip
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+*.Z
+*.lz
+*.lzma
+*.lzo
+*.rz
+*.sz
+*.dz
+
+# 各种平台的可执行文件
+*.msi
+*.deb
+*.rpm
+*.dmg
+*.pkg
+*.app
+*.AppImage
+*.snap
+*.flatpak
+
+# 移动应用打包文件
+*.apk
+*.aab
+*.ipa
+
+# 容器镜像文件
+*.tar.docker
+*.oci
+
+# 虚拟机镜像
+*.iso
+*.img
+*.vdi
+*.vmdk
+*.qcow2
+
+# 数据库备份文件
+*.sql.gz
+*.dump
+*.backup
+
+# 大型媒体文件（根据项目需要调整）
+# *.mp4
+# *.avi
+# *.mov
+# *.wmv
+# *.flv
+# *.webm
+# *.mp3
+# *.wav
+# *.flac
+# *.aac
+# *.ogg
+
+# 文档和设计文件的大型版本
+# *.psd
+# *.ai
+# *.sketch
+# *.fig
+
+# 开发工具生成的大型文件
+*.heap
+*.prof
+*.trace 

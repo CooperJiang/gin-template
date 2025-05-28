@@ -16,6 +16,15 @@ func RegisterUserRoutes(r *gin.RouterGroup) {
 	r.POST("/send-reset-password-code", userController.SendResetPasswordCode)
 	r.POST("/reset-password", userController.ResetPassword)
 
+	// 需要认证的路由
+	protected := r.Group("")
+	protected.Use(middleware.RequireAuth())
+	{
+		protected.GET("/info", userController.GetUserInfo)
+		protected.PUT("/profile", userController.UpdateProfile)
+		protected.POST("/change-password", userController.ChangePassword)
+	}
+
 	// 用户路由组，需要登录才能访问
 	userGroup := r.Group("/user")
 	userGroup.Use(middleware.RequireAuth())
