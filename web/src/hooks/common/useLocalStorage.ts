@@ -1,6 +1,9 @@
 import { ref, watch, type Ref } from 'vue'
 
-export function useLocalStorage<T>(key: string, defaultValue: T): [Ref<T>, (newValue: T) => void, () => void] {
+export function useLocalStorage<T>(
+  key: string,
+  defaultValue: T,
+): [Ref<T>, (newValue: T) => void, () => void] {
   // Try to get initial value from localStorage
   const storedValue = localStorage.getItem(key)
   let initialValue = defaultValue
@@ -17,9 +20,13 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [Ref<T>, (newV
   const value = ref<T>(initialValue) as Ref<T>
 
   // Watch for changes and update localStorage
-  watch(value, (newValue) => {
-    localStorage.setItem(key, JSON.stringify(newValue))
-  }, { deep: true })
+  watch(
+    value,
+    (newValue) => {
+      localStorage.setItem(key, JSON.stringify(newValue))
+    },
+    { deep: true },
+  )
 
   const setValue = (newValue: T) => {
     value.value = newValue

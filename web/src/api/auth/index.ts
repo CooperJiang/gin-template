@@ -7,17 +7,15 @@ import type {
   ResetPasswordRequest,
   ChangePasswordRequest,
   UpdateProfileRequest,
-  User
+  User,
 } from '@/types'
 
 export const authApi = {
   // 登录
-  login: (data: LoginRequest) =>
-    ApiClient.post<LoginResponse>('/user/login', data),
+  login: (data: LoginRequest) => ApiClient.post<LoginResponse>('/user/login', data),
 
   // 注册
-  register: (data: RegisterRequest) =>
-    ApiClient.post('/user/register', data),
+  register: (data: RegisterRequest) => ApiClient.post('/user/register', data),
 
   // 发送注册验证码
   sendRegistrationCode: (data: SendCodeRequest) =>
@@ -27,19 +25,19 @@ export const authApi = {
   sendResetPasswordCode: (data: SendCodeRequest) =>
     ApiClient.post('/user/send-reset-password-code', data),
 
+  // 发送修改邮箱验证码
+  sendChangeEmailCode: (data: SendCodeRequest) =>
+    ApiClient.post('/user/send-change-email-code', data),
+
   // 重置密码
-  resetPassword: (data: ResetPasswordRequest) =>
-    ApiClient.post('/user/reset-password', data),
+  resetPassword: (data: ResetPasswordRequest) => ApiClient.post('/user/reset-password', data),
 
   // 获取用户信息
-  getUserInfo: () =>
-    ApiClient.get<User>('/user/info'),
+  getUserInfo: () => ApiClient.get<User>('/user/info'),
 
   // 更新用户资料
-  updateProfile: (data: UpdateProfileRequest) =>
-    ApiClient.put<User>('/user/profile', data),
+  updateProfile: (data: UpdateProfileRequest) => ApiClient.put<User>('/user/profile', data),
 
   // 修改密码
-  changePassword: (data: ChangePasswordRequest) =>
-    ApiClient.post('/user/change-password', data)
+  changePassword: (data: ChangePasswordRequest) => ApiClient.post('/user/change-password', data),
 }

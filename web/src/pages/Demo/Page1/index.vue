@@ -7,9 +7,7 @@
 
     <div class="bg-white rounded-lg shadow p-6">
       <h2 class="text-lg font-semibold mb-4">页面内容</h2>
-      <p class="text-gray-700">
-        这是页面1的内容。您可以通过左侧菜单导航到子页面：
-      </p>
+      <p class="text-gray-700">这是页面1的内容。您可以通过左侧菜单导航到子页面：</p>
       <ul class="mt-4 space-y-2">
         <li>
           <router-link to="/demo/page1/page1-1" class="text-blue-600 hover:text-blue-800">
@@ -28,4 +26,8 @@
 
 <script setup lang="ts">
 // 页面1组件
+
+defineOptions({
+  name: 'Page1Page',
+})
 </script>

@@ -20,11 +20,11 @@ app:
 # 数据库配置
 database:
   driver: "mysql"                # 数据库类型: mysql/sqlite，如设置为"sqlite"或mysql参数不全，将自动使用SQLite
-  host: "localhost"              # MySQL主机地址，空字符串表示使用SQLite
+  host: "127.0.0.1"              # MySQL主机地址，空字符串表示使用SQLite
   port: 3306                     # MySQL端口
-  username: "dbuser"             # MySQL用户名
-  password: "dbpassword"         # MySQL密码
-  name: "template_db"            # 数据库名称
+  username: "root"              # MySQL用户名
+  password: "123456"            # MySQL密码
+  name: "gin_template"            # 数据库名称
   charset: "utf8mb4"             # 字符集，推荐utf8mb4以支持emoji等特殊字符
   max_idle_conns: 10             # 最大空闲连接数
   max_open_conns: 100            # 最大打开连接数

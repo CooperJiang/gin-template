@@ -193,6 +193,28 @@ func SendResetPasswordCode(email string) error {
 	return nil
 }
 
+// SendChangeEmailCode 发送修改邮箱验证码
+func SendChangeEmailCode(userID, newEmail string) error {
+	// 检查新邮箱是否已被其他用户使用
+	existingUser, err := FindUserByEmail(newEmail)
+	if err == nil && existingUser.ID.String() != userID {
+		return errors.New(errors.CodeEmailExists, "该邮箱已被其他用户使用")
+	}
+
+	// 生成修改邮箱验证码
+	code := generateVerificationCode(newEmail, common.CodeTypeChangeEmail)
+	if code == "" {
+		return errors.New(errors.CodeInternal, "生成验证码失败")
+	}
+
+	// 发送验证码邮件
+	if err := sendVerificationEmail(newEmail, code, common.CodeTypeChangeEmail); err != nil {
+		return fmt.Errorf("发送验证码失败: %v", err)
+	}
+
+	return nil
+}
+
 // ValidateCode 验证验证码
 func ValidateCode(email, code, codeType string) bool {
 	key := fmt.Sprintf("%s:%s:code", email, codeType)
@@ -265,6 +287,8 @@ func sendVerificationEmail(emailAddr string, code string, codeType string) error
 	var subject string
 	if codeType == common.CodeTypeRegister {
 		subject = "注册验证码"
+	} else if codeType == common.CodeTypeChangeEmail {
+		subject = "修改邮箱验证码"
 	} else {
 		subject = "重置密码验证码"
 	}
@@ -351,7 +375,7 @@ func GetUserInfo(userID string) (map[string]interface{}, error) {
 }
 
 // UpdateProfile 更新用户资料
-func UpdateProfile(userID, username, email, avatar string) (map[string]interface{}, error) {
+func UpdateProfile(userID, username, email, avatar, code string) (map[string]interface{}, error) {
 	db := database.GetDB()
 	if db == nil {
 		return nil, errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
@@ -369,6 +393,14 @@ func UpdateProfile(userID, username, email, avatar string) (map[string]interface
 		updateData["username"] = username
 	}
 	if email != "" {
+		// 如果修改邮箱，需要验证验证码
+		if code != "" {
+			// 验证验证码
+			if !ValidateCode(email, code, common.CodeTypeChangeEmail) {
+				return nil, errors.New(errors.CodeInvalidVerifyCode, "验证码无效或已过期")
+			}
+		}
+
 		// 检查邮箱是否已被其他用户使用
 		var count int64
 		db.Model(&models.User{}).Where("email = ? AND id != ?", email, userID).Count(&count)

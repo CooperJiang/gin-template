@@ -4,7 +4,7 @@ import type {
   CreateUserRequest,
   UpdateUserRequest,
   QueryUserRequest,
-  PaginationResponse
+  PaginationResponse,
 } from '@/types'
 
 export const userApi = {
@@ -56,5 +56,5 @@ export const userApi = {
     new_today: number
   }> {
     return ApiClient.get('/users/stats')
-  }
+  },
 }

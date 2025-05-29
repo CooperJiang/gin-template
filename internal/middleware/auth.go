@@ -55,6 +55,8 @@ func RequireAuth() gin.HandlerFunc {
 
 		// 将用户信息存储到上下文中
 		c.Set(ContextPayloadKey, claims)
+		// 同时设置user_id便于控制器直接获取
+		c.Set("user_id", claims.UserID)
 		c.Next()
 	}
 }

@@ -19,4 +19,25 @@ export default defineConfigWithVueTs(
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
   skipFormatting,
+
+  // 自定义规则
+  {
+    name: 'app/custom-rules',
+    rules: {
+      // 允许页面组件使用单个单词命名（如 index.vue）
+      'vue/multi-word-component-names': ['error', {
+        ignores: ['index', 'Dashboard', 'Login', 'Register', 'Profile', 'Debug']
+      }],
+
+      // 完全关闭 any 类型检查（在某些情况下 any 类型是合理的）
+      '@typescript-eslint/no-explicit-any': 'off',
+
+      // 放宽未使用变量的限制，允许以下划线开头的变量
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true
+      }]
+    }
+  }
 )

@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center">
+  <div
+    class="flex items-center cursor-pointer hover:opacity-80 transition-opacity duration-150"
+    @click="handleLogoClick"
+  >
     <div class="flex-shrink-0">
       <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
         <span class="text-white font-bold text-sm">GM</span>
@@ -9,14 +12,32 @@
   </div>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  title?: string
-  showText?: boolean
-}
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useRouter } from 'vue-router'
 
-withDefaults(defineProps<Props>(), {
-  title: '管理后台',
-  showText: true
+export default defineComponent({
+  name: 'AppLogo',
+  props: {
+    title: {
+      type: String,
+      default: '管理后台',
+    },
+    showText: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  setup() {
+    const router = useRouter()
+
+    const handleLogoClick = () => {
+      router.push('/dashboard')
+    }
+
+    return {
+      handleLogoClick,
+    }
+  },
 })
 </script>

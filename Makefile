@@ -9,6 +9,12 @@ BINARY_NAME := $(APP_NAME)
 BINARY_PATH := ./bin/$(BINARY_NAME)
 MAIN_PATH := ./cmd/main.go
 
+# 前端配置
+WEB_DIR := ./web
+STATIC_DIR := ./internal/static
+DIST_DIR := $(WEB_DIR)/dist
+TARGET_DIST_DIR := $(STATIC_DIR)/dist
+
 # Docker配置
 DOCKER_IMAGE := $(APP_NAME):$(VERSION)
 DOCKER_REGISTRY := your-registry.com
@@ -19,6 +25,99 @@ GREEN := \033[32m
 YELLOW := \033[33m
 BLUE := \033[34m
 RESET := \033[0m
+
+# ========================================
+# 前端构建命令
+# ========================================
+
+.PHONY: web-install
+web-install: ## 安装前端依赖
+	@echo "$(GREEN)安装前端依赖...$(RESET)"
+	@if [ ! -d "$(WEB_DIR)" ]; then \
+		echo "$(RED)错误: web目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(WEB_DIR) && npm install
+	@echo "$(GREEN)前端依赖安装完成$(RESET)"
+
+.PHONY: web-dev
+web-dev: ## 启动前端开发服务器
+	@echo "$(GREEN)启动前端开发服务器...$(RESET)"
+	@if [ ! -d "$(WEB_DIR)" ]; then \
+		echo "$(RED)错误: web目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(WEB_DIR) && npm run dev
+
+.PHONY: web-build
+web-build: ## 构建前端项目并部署到static目录
+	@echo "$(GREEN)构建前端项目...$(RESET)"
+	@./scripts/build_frontend.sh
+
+.PHONY: web-lint
+web-lint: ## 检查前端代码
+	@echo "$(GREEN)检查前端代码...$(RESET)"
+	@if [ ! -d "$(WEB_DIR)" ]; then \
+		echo "$(RED)错误: web目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(WEB_DIR) && npm run lint
+
+.PHONY: web-format
+web-format: ## 格式化前端代码
+	@echo "$(GREEN)格式化前端代码...$(RESET)"
+	@if [ ! -d "$(WEB_DIR)" ]; then \
+		echo "$(RED)错误: web目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(WEB_DIR) && npm run format
+
+.PHONY: web-type-check
+web-type-check: ## 前端类型检查
+	@echo "$(GREEN)运行前端类型检查...$(RESET)"
+	@if [ ! -d "$(WEB_DIR)" ]; then \
+		echo "$(RED)错误: web目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(WEB_DIR) && npm run type-check
+
+.PHONY: web-clean
+web-clean: ## 清理前端构建文件
+	@echo "$(YELLOW)清理前端构建文件...$(RESET)"
+	@rm -rf $(DIST_DIR)
+	@rm -rf $(TARGET_DIST_DIR)
+	@if [ -d "$(WEB_DIR)" ]; then \
+		cd $(WEB_DIR) && npm run clean; \
+	fi
+	@echo "$(GREEN)前端文件清理完成$(RESET)"
+
+.PHONY: web-check
+web-check: web-type-check web-lint ## 完整前端代码检查
+
+# ========================================
+# 全栈构建命令
+# ========================================
+
+.PHONY: fullstack-build
+fullstack-build: web-build build ## 构建完整的全栈应用 (前端+后端)
+	@echo "$(GREEN)全栈应用构建完成!$(RESET)"
+	@echo "$(BLUE)二进制文件: $(BINARY_PATH)$(RESET)"
+	@echo "$(BLUE)静态文件已嵌入到二进制文件中$(RESET)"
+
+.PHONY: fullstack-dev
+fullstack-dev: ## 启动全栈开发环境 (并行启动前后端)
+	@echo "$(GREEN)启动全栈开发环境...$(RESET)"
+	@echo "$(YELLOW)后端将在 :8080 端口启动$(RESET)"
+	@echo "$(YELLOW)前端将在 :3000 端口启动$(RESET)"
+	@echo "$(BLUE)按 Ctrl+C 停止所有服务$(RESET)"
+	@trap 'kill 0' INT; \
+	make web-dev & \
+	make dev & \
+	wait
+
+.PHONY: fullstack-clean
+fullstack-clean: clean web-clean ## 清理所有构建文件 (前端+后端)
+	@echo "$(GREEN)全栈清理完成$(RESET)"
 
 .PHONY: help
 help: ## 显示帮助信息

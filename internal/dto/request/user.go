@@ -60,7 +60,7 @@ type ResetPasswordRequest struct {
 	dto.BaseRequest
 	Email       string `json:"email" binding:"required,email"`
 	Code        string `json:"code" binding:"required,len=6"`
-	NewPassword string `json:"new_password" binding:"required,min=6,max=20"`
+	NewPassword string `json:"newPassword" binding:"required,min=6,max=20"`
 }
 
 // GetValidationMessages 获取验证消息
@@ -82,6 +82,7 @@ type UpdateProfileRequest struct {
 	Username string `json:"username,omitempty" binding:"omitempty,min=2,max=20"`
 	Email    string `json:"email,omitempty" binding:"omitempty,email"`
 	Avatar   string `json:"avatar,omitempty"`
+	Code     string `json:"code,omitempty"`
 }
 
 // GetValidationMessages 获取验证消息
@@ -96,8 +97,8 @@ func (r *UpdateProfileRequest) GetValidationMessages() map[string]string {
 // ChangePasswordRequest 修改密码请求
 type ChangePasswordRequest struct {
 	dto.BaseRequest
-	OldPassword string `json:"old_password" binding:"required"`
-	NewPassword string `json:"new_password" binding:"required,min=6,max=20"`
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required,min=6,max=20"`
 }
 
 // GetValidationMessages 获取验证消息

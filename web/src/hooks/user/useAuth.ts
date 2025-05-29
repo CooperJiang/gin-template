@@ -1,13 +1,13 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '../../api/auth'
-import { useLocalStorage } from '../common'
+import { useAuthStorage } from '../common'
+import { STORAGE_KEYS } from '../../utils/storage'
 import type {
   LoginRequest,
   RegisterRequest,
-  SendCodeRequest,
   ResetPasswordRequest,
-  User
+  User,
 } from '../../types'
 
 export function useAuth() {
@@ -15,9 +15,9 @@ export function useAuth() {
   const loading = ref(false)
   const error = ref('')
 
-  // 使用localStorage存储用户信息和token
-  const [token, setToken, removeToken] = useLocalStorage<string | null>('auth_token', null)
-  const [user, setUser, removeUser] = useLocalStorage<User | null>('auth_user', null)
+  // 使用安全存储存储用户信息和token (7天过期)
+  const [token, setToken, removeToken] = useAuthStorage<string | null>(STORAGE_KEYS.AUTH_TOKEN, null)
+  const [user, setUser, removeUser] = useAuthStorage<User | null>(STORAGE_KEYS.AUTH_USER, null)
 
   // 计算属性
   const isAuthenticated = computed(() => !!token.value && !!user.value)
@@ -30,12 +30,16 @@ export function useAuth() {
 
       const response = await authApi.login(credentials)
 
-      setToken(response.token)
-      setUser(response.user)
+      // 从响应中提取数据
+      const responseData = (response as any).data || response
+
+      setToken(responseData.token)
+      setUser(responseData.user)
 
       return response
-    } catch (err: any) {
-      error.value = err.message || '登录失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '登录失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -50,8 +54,9 @@ export function useAuth() {
 
       const response = await authApi.register(userData)
       return response
-    } catch (err: any) {
-      error.value = err.message || '注册失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '注册失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -66,8 +71,9 @@ export function useAuth() {
 
       const response = await authApi.sendRegistrationCode({ email })
       return response
-    } catch (err: any) {
-      error.value = err.message || '发送验证码失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '发送验证码失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -82,8 +88,9 @@ export function useAuth() {
 
       const response = await authApi.sendResetPasswordCode({ email })
       return response
-    } catch (err: any) {
-      error.value = err.message || '发送验证码失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '发送验证码失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -98,8 +105,9 @@ export function useAuth() {
 
       const response = await authApi.resetPassword(data)
       return response
-    } catch (err: any) {
-      error.value = err.message || '重置密码失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '重置密码失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -107,21 +115,26 @@ export function useAuth() {
   }
 
   // 登出
-  const logout = () => {
+  const logout = (shouldRedirect: boolean = true) => {
     removeToken()
     removeUser()
-    router.push('/login')
+    if (shouldRedirect) {
+      router.push('/login')
+    }
   }
 
   // 获取用户信息
   const getUserInfo = async () => {
     try {
       loading.value = true
-      const userInfo = await authApi.getUserInfo()
+      const response = await authApi.getUserInfo()
+      // 从响应中提取数据
+      const userInfo = (response as any).data || response
       setUser(userInfo)
       return userInfo
-    } catch (err: any) {
-      error.value = err.message || '获取用户信息失败'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : '获取用户信息失败'
+      error.value = errorMessage
       throw err
     } finally {
       loading.value = false
@@ -143,6 +156,6 @@ export function useAuth() {
     sendResetPasswordCode,
     resetPassword,
     logout,
-    getUserInfo
+    getUserInfo,
   }
 }

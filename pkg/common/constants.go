@@ -8,6 +8,8 @@ const (
 	CodeTypeRegister = "register"
 	// CodeTypeResetPassword 重置密码验证码
 	CodeTypeResetPassword = "reset_password"
+	// CodeTypeChangeEmail 修改邮箱验证码
+	CodeTypeChangeEmail = "change_email"
 )
 
 // 系统常量

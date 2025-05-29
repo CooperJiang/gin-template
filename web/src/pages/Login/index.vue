@@ -80,31 +80,22 @@
           </button>
         </div>
       </form>
-
-      <!-- 错误提示 -->
-      <div v-if="error" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-        {{ error }}
-      </div>
-
-      <!-- 成功提示 -->
-      <div
-        v-if="success"
-        class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded"
-      >
-        {{ success }}
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, defineOptions } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '../../hooks/user/useAuth'
+import { useMessage } from '../../composables/useMessage'
+import SecureStorage, { STORAGE_KEYS, EXPIRY_TIME } from '../../utils/storage'
 import type { LoginRequest } from '../../types'
 
 const router = useRouter()
+const route = useRoute()
 const { login, loading: authLoading } = useAuth()
+const { success, error } = useMessage()
 
 const form = ref<LoginRequest & { remember: boolean }>({
   account: '',
@@ -112,81 +103,89 @@ const form = ref<LoginRequest & { remember: boolean }>({
   remember: false,
 })
 
-const error = ref('')
-const success = ref('')
-
-// 记住我功能相关
-const REMEMBER_KEY = 'login_remember'
-const REMEMBER_EXPIRE_DAYS = 30
-
 // 保存记住我信息
 const saveRememberInfo = () => {
   if (form.value.remember) {
     const rememberData = {
       account: form.value.account,
-      password: form.value.password,
-      expire: Date.now() + (REMEMBER_EXPIRE_DAYS * 24 * 60 * 60 * 1000) // 30天后过期
+      password: form.value.password
     }
-    localStorage.setItem(REMEMBER_KEY, JSON.stringify(rememberData))
+    // 使用安全存储，30天过期
+    SecureStorage.setItem(STORAGE_KEYS.REMEMBER_LOGIN, rememberData, {
+      encrypt: true,
+      expiry: 30 * EXPIRY_TIME.DAY
+    })
   } else {
-    localStorage.removeItem(REMEMBER_KEY)
+    SecureStorage.removeItem(STORAGE_KEYS.REMEMBER_LOGIN)
   }
 }
 
 // 恢复记住我信息
 const loadRememberInfo = () => {
   try {
-    const rememberData = localStorage.getItem(REMEMBER_KEY)
+    const rememberData = SecureStorage.getItem<{account: string; password: string}>(STORAGE_KEYS.REMEMBER_LOGIN)
     if (rememberData) {
-      const data = JSON.parse(rememberData)
-      // 检查是否过期
-      if (data.expire && Date.now() < data.expire) {
-        form.value.account = data.account || ''
-        form.value.password = data.password || ''
-        form.value.remember = true
-      } else {
-        // 过期则删除
-        localStorage.removeItem(REMEMBER_KEY)
-      }
+      form.value.account = rememberData.account || ''
+      form.value.password = rememberData.password || ''
+      form.value.remember = true
     }
   } catch (error) {
     console.error('恢复记住我信息失败:', error)
-    localStorage.removeItem(REMEMBER_KEY)
+    SecureStorage.removeItem(STORAGE_KEYS.REMEMBER_LOGIN)
   }
 }
 
 const handleLogin = async () => {
-  try {
-    error.value = ''
-    success.value = ''
+  if (!validateForm()) return
 
+  authLoading.value = true
+  try {
     const loginData = {
       account: form.value.account,
-      password: form.value.password
+      password: form.value.password,
     }
 
-    console.log('发送登录请求:', loginData)
-
-    const response = await login(loginData)
+    await login(loginData)
 
     // 保存记住我信息
     saveRememberInfo()
 
-    success.value = '登录成功！'
+    success('登录成功！正在跳转...', 2000)
+
+    // 登录成功后确保认证状态完全更新再跳转
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     // 登录成功后跳转到dashboard
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1000)
-
-  } catch (err: any) {
+    const redirectTo = (route.query.redirect as string) || '/dashboard'
+    await router.push(redirectTo)
+  } catch (err: unknown) {
     console.error('登录错误详情:', err)
-    error.value = err.message || '登录失败，请检查账户名和密码'
+    const errorMessage = err instanceof Error ? err.message : '登录失败，请检查账户名和密码'
+    error(errorMessage)
+  } finally {
+    authLoading.value = false
   }
 }
 
 // 页面加载时恢复记住我信息
 onMounted(() => {
   loadRememberInfo()
+})
+
+// 登录处理
+const validateForm = (): boolean => {
+  if (!form.value.account.trim()) {
+    error('请输入账户名或邮箱')
+    return false
+  }
+  if (!form.value.password.trim()) {
+    error('请输入密码')
+    return false
+  }
+  return true
+}
+
+defineOptions({
+  name: 'LoginPage',
 })
 </script>

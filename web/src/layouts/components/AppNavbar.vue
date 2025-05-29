@@ -9,11 +9,9 @@
         <Bars3Icon class="h-6 w-6" />
       </button>
 
-      <!-- 页面标题 -->
+      <!-- 面包屑导航 -->
       <div class="flex-1 lg:flex-none">
-        <h1 class="text-lg font-semibold text-gray-900">
-          {{ pageTitle }}
-        </h1>
+        <GlobalAppBreadcrumb />
       </div>
 
       <!-- 右侧工具栏 -->
@@ -60,43 +58,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '../../hooks/user/useAuth'
-import {
-  Bars3Icon,
-  BellIcon,
-  UserIcon
-} from '@heroicons/vue/24/outline'
-import { navigationConfig } from '../config/navigation'
+import { Bars3Icon, BellIcon, UserIcon } from '@heroicons/vue/24/outline'
 
 defineEmits<{
   toggleSidebar: []
 }>()
 
-const route = useRoute()
 const router = useRouter()
 const { logout } = useAuth()
 
 const userMenuOpen = ref(false)
-
-// 页面标题
-const pageTitle = computed(() => {
-  const findTitle = (items: any[], path: string): string => {
-    for (const item of items) {
-      if (item.href === path) {
-        return item.name
-      }
-      if (item.children) {
-        const childTitle = findTitle(item.children, path)
-        if (childTitle) return childTitle
-      }
-    }
-    return '管理后台'
-  }
-
-  return findTitle(navigationConfig, route.path)
-})
 
 const toggleUserMenu = () => {
   userMenuOpen.value = !userMenuOpen.value

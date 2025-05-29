@@ -3,6 +3,7 @@ import { onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuth } from './hooks/user/useAuth'
 import AdminLayout from './layouts/AdminLayout.vue'
+import MessageContainer from './components/MessageContainer'
 
 const route = useRoute()
 const { getUserInfo, isAuthenticated } = useAuth()
@@ -33,6 +34,9 @@ onMounted(async () => {
 
     <!-- 默认布局（登录、注册等页面） -->
     <router-view v-else />
+
+    <!-- 全局消息提示容器 -->
+    <MessageContainer />
   </div>
 </template>
 

@@ -2,9 +2,7 @@
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          重置密码
-        </h2>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">重置密码</h2>
         <p class="mt-2 text-center text-sm text-gray-600">
           请输入您的邮箱地址，我们将发送验证码到您的邮箱
         </p>
@@ -27,7 +25,9 @@
 
           <!-- 验证码输入 -->
           <div>
-            <label for="verificationCode" class="block text-sm font-medium text-gray-700">验证码</label>
+            <label for="verificationCode" class="block text-sm font-medium text-gray-700"
+              >验证码</label
+            >
             <div class="flex space-x-2">
               <input
                 id="verificationCode"
@@ -63,7 +63,9 @@
           </div>
 
           <div>
-            <label for="confirm_password" class="block text-sm font-medium text-gray-700">确认新密码</label>
+            <label for="confirm_password" class="block text-sm font-medium text-gray-700"
+              >确认新密码</label
+            >
             <input
               id="confirm_password"
               v-model="form.confirm_password"
@@ -83,7 +85,9 @@
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="loading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div
+                class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+              ></div>
             </span>
             {{ loading ? '重置中...' : '重置密码' }}
           </button>
@@ -102,7 +106,10 @@
       </div>
 
       <!-- 成功提示 -->
-      <div v-if="success" class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+      <div
+        v-if="success"
+        class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded"
+      >
         {{ success }}
       </div>
     </div>
@@ -110,19 +117,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, defineOptions } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../../hooks/user/useAuth'
-import type { ResetPasswordRequest } from '../../types'
 
 const router = useRouter()
 const { resetPassword, sendResetPasswordCode, loading } = useAuth()
 
-const form = ref<{ email: string; verificationCode: string; newPassword: string; confirm_password: string }>({
+const form = ref<{
+  email: string
+  verificationCode: string
+  newPassword: string
+  confirm_password: string
+}>({
   email: '',
   verificationCode: '',
   newPassword: '',
-  confirm_password: ''
+  confirm_password: '',
 })
 
 const error = ref('')
@@ -131,11 +142,13 @@ const countdown = ref(0)
 
 // 计算属性
 const isFormValid = computed(() => {
-  return form.value.email.trim() !== '' &&
-         form.value.verificationCode.trim() !== '' &&
-         form.value.newPassword.trim() !== '' &&
-         form.value.confirm_password.trim() !== '' &&
-         form.value.newPassword === form.value.confirm_password
+  return (
+    form.value.email.trim() !== '' &&
+    form.value.verificationCode.trim() !== '' &&
+    form.value.newPassword.trim() !== '' &&
+    form.value.confirm_password.trim() !== '' &&
+    form.value.newPassword === form.value.confirm_password
+  )
 })
 
 const canSendCode = computed(() => {
@@ -167,9 +180,8 @@ const handleSendCode = async () => {
         clearInterval(timer)
       }
     }, 1000)
-
-  } catch (err: any) {
-    error.value = err.message || '发送验证码失败'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : '发送验证码失败'
   }
 }
 
@@ -187,7 +199,7 @@ const handleResetPassword = async () => {
     await resetPassword({
       email: form.value.email,
       code: form.value.verificationCode,
-      newPassword: form.value.newPassword
+      newPassword: form.value.newPassword,
     })
 
     success.value = '密码重置成功！即将跳转到登录页面'
@@ -196,9 +208,12 @@ const handleResetPassword = async () => {
     setTimeout(() => {
       router.push('/login')
     }, 2000)
-
-  } catch (err: any) {
-    error.value = err.message || '重置密码失败，请检查输入信息'
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : '重置密码失败，请检查输入信息'
   }
 }
+
+defineOptions({
+  name: 'ForgotPasswordPage',
+})
 </script>

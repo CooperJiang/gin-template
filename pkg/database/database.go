@@ -96,6 +96,12 @@ func InitDB() {
 func autoMigrate() error {
 	return db.AutoMigrate(
 		&models.User{},
+		&models.UploadFile{},
+		&models.ChunkInfo{},
+		// 文件权限管理模型
+		&models.FileShare{},
+		&models.FilePermission{},
+		&models.TemporaryAccess{},
 		// 在这里添加其他模型
 	)
 }

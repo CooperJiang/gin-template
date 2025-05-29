@@ -1,5 +1,5 @@
 // 基础响应类型
-export interface BaseResponse<T = any> {
+export interface BaseResponse<T = unknown> {
   code: number
   message: string
   data: T
@@ -31,14 +31,15 @@ export interface BaseModel {
 
 // 用户相关类型
 export interface User {
-  id: string
+  id?: string
   username: string
   email: string
-  status: 'active' | 'inactive' | 'banned'
-  role: 'admin' | 'user'
+  status: number // 后端返回的是数字：1=正常，2=禁用，3=删除
+  role?: number // 用户角色：1=管理员，2=普通用户
   avatar?: string
-  created_at: string
-  updated_at: string
+  bio?: string // 用户简介
+  created_at?: string
+  updated_at?: string
 }
 
 export interface CreateUserRequest {
@@ -116,18 +117,19 @@ export interface UpdateProfileRequest {
   username?: string
   email?: string
   avatar?: string
+  code?: string // 修改邮箱时需要的验证码
 }
 
 // 通用状态枚举
 export enum Status {
   INACTIVE = 0,
-  ACTIVE = 1
+  ACTIVE = 1,
 }
 
 export enum UserRole {
   SUPER_ADMIN = 1,
   ADMIN = 2,
-  USER = 3
+  USER = 3,
 }
 
 // 表格列定义
@@ -136,7 +138,7 @@ export interface TableColumn {
   title: string
   width?: string
   sortable?: boolean
-  render?: (value: any, record: any) => string
+  render?: (value: unknown, record: Record<string, unknown>) => string
 }
 
 // 表单字段定义
@@ -146,8 +148,8 @@ export interface FormField {
   type: 'text' | 'email' | 'password' | 'number' | 'select' | 'textarea'
   required?: boolean
   placeholder?: string
-  options?: { label: string; value: any }[]
-  rules?: any[]
+  options?: { label: string; value: string | number }[]
+  rules?: Array<(value: unknown) => boolean | string>
 }
 
 // 菜单项类型
@@ -160,17 +162,18 @@ export interface MenuItem {
 }
 
 // API响应类型
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number
   message: string
   data: T
+  success: boolean
 }
 
 // 错误类型
 export interface ApiError {
   code: number
   message: string
-  details?: any
+  details?: Record<string, unknown>
 }
 
 export interface PaginatedResponse<T> {
@@ -178,4 +181,35 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   limit: number
+}
+
+// API 分页查询参数
+export interface PageQuery {
+  page?: number
+  limit?: number
+  search?: string
+}
+
+// API 分页响应
+export interface PageResponse<T> {
+  list: T[]
+  total: number
+  page: number
+  limit: number
+}
+
+// HTTP 请求配置
+export interface RequestConfig {
+  timeout?: number
+  headers?: Record<string, string>
+  params?: Record<string, unknown>
+  data?: unknown
+}
+
+// HTTP 响应类型
+export interface HttpResponse<T = unknown> {
+  data: T
+  status: number
+  statusText: string
+  headers: Record<string, string>
 }

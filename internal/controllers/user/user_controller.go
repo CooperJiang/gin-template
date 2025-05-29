@@ -95,7 +95,7 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	userInfo, err := user.UpdateProfile(userID.(string), req.Username, req.Email, req.Avatar)
+	userInfo, err := user.UpdateProfile(userID.(string), req.Username, req.Email, req.Avatar, req.Code)
 	if err != nil {
 		errors.HandleError(c, err)
 		return
@@ -173,4 +173,27 @@ func ResetPassword(c *gin.Context) {
 	}
 
 	errors.ResponseSuccess(c, nil, "密码重置成功")
+}
+
+// SendChangeEmailCode 发送修改邮箱验证码
+func SendChangeEmailCode(c *gin.Context) {
+	// 从中间件获取用户ID
+	userID, exists := c.Get("user_id")
+	if !exists {
+		errors.HandleError(c, errors.New(errors.CodeUnauthorized, "未授权"))
+		return
+	}
+
+	req, err := common.ValidateRequest[request.SendCodeRequest](c)
+	if err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	if err := user.SendChangeEmailCode(userID.(string), req.Email); err != nil {
+		errors.HandleError(c, err)
+		return
+	}
+
+	errors.ResponseSuccess(c, nil, "验证码已发送")
 }

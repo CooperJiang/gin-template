@@ -1,26 +1,24 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+  <div class="h-screen bg-gray-50 flex overflow-hidden">
     <!-- 侧边栏 -->
     <AppSidebar :is-open="sidebarOpen" @toggle="toggleSidebar" />
 
     <!-- 主内容区域 -->
-    <div class="flex-1 flex flex-col lg:ml-0">
+    <div class="flex-1 flex flex-col lg:ml-0 h-full">
       <!-- 顶部导航栏 -->
       <AppNavbar @toggle-sidebar="toggleSidebar" />
 
       <!-- 主内容 -->
-      <main class="flex-1 overflow-auto">
+      <main class="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <div class="p-4 sm:p-6 lg:p-8">
           <router-view />
         </div>
       </main>
 
-      <!-- Footer (可选) -->
-      <footer v-if="showFooter" class="bg-white border-t border-gray-200 px-4 py-3">
+      <!-- Footer -->
+      <footer class="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between text-sm text-gray-500">
-          <div>
-            © 2025 管理系统. All rights reserved.
-          </div>
+          <div>© 2025 管理系统. All rights reserved.</div>
           <div class="flex space-x-4">
             <span>版本 v1.0.0</span>
             <span>•</span>
@@ -40,23 +38,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import AppSidebar from './components/AppSidebar.vue'
+import { ref, defineOptions } from 'vue'
 import AppNavbar from './components/AppNavbar.vue'
-
-interface Props {
-  showFooter?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  showFooter: true
-})
+import AppSidebar from './components/AppSidebar.vue'
 
 const sidebarOpen = ref(false)
 
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value
 }
+
+defineOptions({
+  name: 'AdminLayout',
+})
 </script>
 
 <style scoped>

@@ -10,6 +10,8 @@ dist/css/* dist/js/* dist/components/* dist/utils/* dist/plugins/* dist/public/*
 */
 
 //go:embed  dist/*.html
+
+//go:embed  dist/assets/* dist/favicon.ico dist/index.html
 var DistDir embed.FS
 
 // GetDistFS 返回嵌入的静态文件系统

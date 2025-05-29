@@ -5,6 +5,7 @@ import (
 	"template/internal/cron"
 	"template/internal/middleware"
 	"template/internal/routes"
+	uploadService "template/internal/services/upload"
 	"template/internal/services/user"
 	"template/pkg/cache"
 	"template/pkg/config"
@@ -42,6 +43,7 @@ func main() {
 
 	// 初始化基础服务
 	user.InitUserService()
+	uploadService.InitUploadService()
 
 	// 设置 gin 模式
 	gin.SetMode(config.GetConfig().App.Mode)

@@ -23,6 +23,7 @@ func RegisterUserRoutes(r *gin.RouterGroup) {
 		protected.GET("/info", userController.GetUserInfo)
 		protected.PUT("/profile", userController.UpdateProfile)
 		protected.POST("/change-password", userController.ChangePassword)
+		protected.POST("/send-change-email-code", userController.SendChangeEmailCode)
 	}
 
 	// 用户路由组，需要登录才能访问
