@@ -85,6 +85,53 @@
         </div>
       </div>
     </div>
+
+    <!-- API 说明 -->
+    <div class="demo-section">
+      <h4 class="demo-title">Composable API 说明</h4>
+      <p class="demo-description">
+        Message组件通过 <code class="bg-gray-100 px-1 rounded">useMessage()</code> composable使用，提供以下方法：
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-300 px-4 py-2 text-left">方法名</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">说明</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">参数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="method in methodsApi" :key="method.name" class="hover:bg-gray-50">
+              <td class="border border-gray-300 px-4 py-2 font-mono text-blue-600">{{ method.name }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ method.description }}</td>
+              <td class="border border-gray-300 px-4 py-2 font-mono text-green-600">{{ method.params }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 使用示例 -->
+    <div class="demo-section">
+      <h4 class="demo-title">使用示例</h4>
+      <div class="bg-gray-900 text-gray-100 p-4 rounded text-sm font-mono overflow-x-auto">
+        <div class="text-green-400">// 导入composable</div>
+        <div class="text-blue-400">import</div> <div class="text-white">{ useMessage }</div> <div class="text-blue-400">from</div> <div class="text-yellow-400">'@/composables/useMessage'</div>
+        <br /><br />
+        <div class="text-green-400">// 在setup中使用</div>
+        <div class="text-blue-400">const</div> <div class="text-white">{ success, error, warning, info, clearMessages } = useMessage()</div>
+        <br /><br />
+        <div class="text-green-400">// 显示消息</div>
+        <div class="text-white">success('操作成功！')</div>
+        <div class="text-white">error('操作失败！', 5000) // 5秒后自动关闭</div>
+        <div class="text-white">warning('注意事项')</div>
+        <div class="text-white">info('提示信息')</div>
+        <br />
+        <div class="text-green-400">// 清空所有消息</div>
+        <div class="text-white">clearMessages()</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -147,4 +194,21 @@ const clearAllMessages = () => {
   clearMessages()
   info('所有消息已清空', 1500)
 }
+
+// API 文档数据
+const propsApi = [
+  { name: '-', description: 'Message组件通过composable使用，无直接Props', type: '-', default: '-' },
+]
+
+const eventsApi = [
+  { name: '-', description: 'Message组件通过composable使用，无直接Events', type: '-', default: '-' },
+]
+
+const methodsApi = [
+  { name: 'success', description: '显示成功消息', params: '(message: string, duration?: number)' },
+  { name: 'error', description: '显示错误消息', params: '(message: string, duration?: number)' },
+  { name: 'warning', description: '显示警告消息', params: '(message: string, duration?: number)' },
+  { name: 'info', description: '显示信息消息', params: '(message: string, duration?: number)' },
+  { name: 'clearMessages', description: '清空所有消息', params: '()' },
+]
 </script>

@@ -272,6 +272,54 @@
         </div>
       </div>
     </div>
+
+    <!-- API 说明 -->
+    <div class="demo-section">
+      <h4 class="demo-title">Props API 说明</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-300 px-4 py-2 text-left">参数</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">说明</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">类型</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">默认值</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="prop in propsApi" :key="prop.name" class="hover:bg-gray-50">
+              <td class="border border-gray-300 px-4 py-2 font-mono text-blue-600">{{ prop.name }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ prop.description }}</td>
+              <td class="border border-gray-300 px-4 py-2 font-mono text-green-600">{{ prop.type }}</td>
+              <td class="border border-gray-300 px-4 py-2 font-mono text-orange-600">{{ prop.default }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Events API 说明 -->
+    <div class="demo-section">
+      <h4 class="demo-title">Events API 说明</h4>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-300 text-sm">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-300 px-4 py-2 text-left">事件名</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">说明</th>
+              <th class="border border-gray-300 px-4 py-2 text-left">参数</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="event in eventsApi" :key="event.name" class="hover:bg-gray-50">
+              <td class="border border-gray-300 px-4 py-2 font-mono text-blue-600">{{ event.name }}</td>
+              <td class="border border-gray-300 px-4 py-2">{{ event.description }}</td>
+              <td class="border border-gray-300 px-4 py-2 font-mono text-green-600">{{ event.params }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -324,4 +372,56 @@ const copyIconName = async (iconName: string) => {
     console.error('复制失败:', err)
   }
 }
+
+// API 文档数据
+const propsApi = [
+  { name: 'name', description: '图标名称', type: 'IconName', default: '必填' },
+  { name: 'size', description: '图标尺寸', type: "'xs' | 'sm' | 'md' | 'lg' | 'xl'", default: "'md'" },
+  { name: 'color', description: '图标颜色', type: 'string', default: "'currentColor'" },
+  { name: 'variant', description: '图标变体', type: "'outline' | 'solid'", default: "'outline'" },
+]
+
+const eventsApi = [
+  { name: 'click', description: '点击图标时触发', params: '(event: MouseEvent)' },
+]
+
+const slotsApi = [
+  { name: '-', description: '此组件没有插槽', params: '-' },
+]
 </script>
+
+<style scoped>
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.icon-item {
+  @apply p-3 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 cursor-pointer;
+}
+
+.icon-item:hover .icon-name {
+  @apply text-blue-600 font-medium;
+}
+
+.icon-name {
+  @apply text-xs text-gray-600 mt-2 text-center truncate;
+}
+
+.demo-section {
+  @apply bg-white rounded-lg border border-gray-200 p-6 mb-6;
+}
+
+.demo-title {
+  @apply text-lg font-semibold text-gray-900 mb-4;
+}
+
+.demo-description {
+  @apply text-sm text-gray-600 mb-4;
+}
+
+.demo-container {
+  @apply bg-gray-50 p-4 rounded border border-gray-200;
+}
+</style>

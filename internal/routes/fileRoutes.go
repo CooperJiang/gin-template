@@ -16,8 +16,14 @@ func RegisterFileRoutes(router *gin.Engine) {
 		authFiles := files.Group("")
 		authFiles.Use(middleware.FileAuthMiddleware())
 		{
-			authFiles.GET("/download/:fileId", fileController.DownloadFile)     // 下载文件
-			authFiles.GET("/preview/:fileId", fileController.PreviewFile)      // 预览文件
+			// 支持两种URL格式：
+			// 1. 简单格式：/files/download/uuid 和 /files/preview/uuid
+			authFiles.GET("/download/:fileId", fileController.DownloadFile)
+			authFiles.GET("/preview/:fileId", fileController.PreviewFile)
+
+			// 2. 带文件名格式：/files/download/uuid/filename.ext 和 /files/preview/uuid/filename.ext
+			authFiles.GET("/download/:fileId/:filename", fileController.DownloadFile)
+			authFiles.GET("/preview/:fileId/:filename", fileController.PreviewFile)
 		}
 	}
 }

@@ -207,4 +207,29 @@ const removeStorageItem = (key: string) => {
 onMounted(() => {
   refreshStats()
 })
+
+// API 文档数据
+const propsApi = [
+  { name: '-', description: 'Storage组件通过composable使用，无直接Props', type: '-', default: '-' },
+]
+
+const eventsApi = [
+  { name: '-', description: 'Storage组件通过composable使用，无直接Events', type: '-', default: '-' },
+]
+
+const methodsApi = [
+  { name: 'set', description: '存储数据', params: '(key: string, value: any, options?: StorageOptions)' },
+  { name: 'get', description: '获取数据', params: '(key: string): any' },
+  { name: 'remove', description: '删除数据', params: '(key: string): void' },
+  { name: 'clear', description: '清空所有数据', params: '(): void' },
+  { name: 'has', description: '检查是否存在', params: '(key: string): boolean' },
+  { name: 'keys', description: '获取所有键名', params: '(): string[]' },
+  { name: 'size', description: '获取存储项数量', params: '(): number' },
+]
+
+const optionsApi = [
+  { name: 'encrypt', description: '是否加密存储', type: 'boolean', default: 'false' },
+  { name: 'ttl', description: '过期时间(毫秒)', type: 'number', default: 'undefined' },
+  { name: 'storage', description: '存储类型', type: "'localStorage' | 'sessionStorage'", default: "'localStorage'" },
+]
 </script>

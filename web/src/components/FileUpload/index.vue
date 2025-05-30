@@ -26,14 +26,34 @@
 
       <div class="upload-content">
         <div class="upload-icon-wrapper">
-          <GlobalIcon name="cloud" size="2xl" class="upload-icon" />
-          <GlobalIcon name="arrow-up" size="lg" class="upload-arrow" />
+          <div class="upload-icon-container">
+            <GlobalIcon name="cloud-arrow-up" size="3xl" class="upload-icon" />
+            <div class="upload-icon-bg"></div>
+            <div class="upload-icon-pulse"></div>
+          </div>
         </div>
         <div class="upload-text">
-          <h3 class="upload-title">点击或拖拽文件到此区域上传</h3>
+          <h3 class="upload-title">
+            <span class="upload-title-main">拖拽文件到这里</span>
+            <span class="upload-title-sub">或点击选择文件</span>
+          </h3>
           <p class="upload-subtitle">
             {{ uploadTips }}
           </p>
+          <div class="upload-features">
+            <div class="feature-item">
+              <GlobalIcon name="lightning-bolt" size="sm" class="feature-icon" />
+              <span>秒传检测</span>
+            </div>
+            <div class="feature-item">
+              <GlobalIcon name="shield-check" size="sm" class="feature-icon" />
+              <span>安全加密</span>
+            </div>
+            <div class="feature-item">
+              <GlobalIcon name="clock" size="sm" class="feature-icon" />
+              <span>断点续传</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -219,8 +239,6 @@ const uploadTips = computed(() => {
 onMounted(async () => {
   try {
     uploadConfig.value = await getUploadConfig()
-    console.log('上传配置获取成功:', uploadConfig.value)
-    console.log('allowedMimeTypes:', uploadConfig.value?.allowedMimeTypes)
   } catch (error) {
     console.error('获取上传配置失败:', error)
     // 设置默认配置
@@ -481,7 +499,6 @@ const uploadFile = async (fileInfo: FileInfo) => {
       fileList.value[fileIndex].progress = 100
     }
 
-    console.log('文件上传成功:', fileInfo.name)
     emit('upload:success', fileInfo, task)
   } catch (error) {
     console.error('文件上传失败:', fileInfo.name, error)
@@ -655,16 +672,32 @@ defineExpose({
   @apply relative border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer transition-all duration-300 ease-in-out;
   @apply hover:border-primary-400 hover:bg-primary-50 focus-within:border-primary-500 focus-within:bg-primary-50;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.upload-dragger::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-primary-50 to-transparent opacity-0 transition-opacity duration-300;
+}
+
+.upload-dragger:hover::before {
+  @apply opacity-100;
 }
 
 .upload-dragger--disabled {
-  @apply cursor-not-allowed opacity-50;
+  @apply cursor-not-allowed opacity-50 grayscale;
   @apply hover:border-gray-300 hover:bg-transparent focus-within:border-gray-300 focus-within:bg-transparent;
 }
 
 .upload-dragger--dragging {
   @apply border-primary-500 bg-primary-100 scale-105;
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3), 0 10px 10px -5px rgba(59, 130, 246, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.3), 0 10px 10px -5px rgba(59, 130, 246, 0.1);
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.upload-dragger--dragging::before {
+  @apply opacity-100;
 }
 
 .upload-input {
@@ -679,20 +712,53 @@ defineExpose({
   @apply relative mb-6;
 }
 
-.upload-icon {
-  @apply w-16 h-16 text-gray-400 transition-colors duration-300;
+.upload-icon-container {
+  @apply relative w-20 h-20 mx-auto mb-4;
 }
 
-.upload-arrow {
-  @apply absolute -top-1 -right-1 w-6 h-6 text-primary-500 animate-bounce;
+.upload-icon {
+  @apply absolute w-full h-full text-gray-400 transition-all duration-300 z-10;
+}
+
+.upload-icon-bg {
+  @apply absolute inset-2 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 transition-all duration-300;
+}
+
+.upload-icon-pulse {
+  @apply absolute inset-1 rounded-full bg-gradient-to-br from-primary-200 to-primary-300 opacity-0 transition-all duration-300;
+  animation: iconPulse 2s infinite ease-in-out;
 }
 
 .upload-dragger:hover .upload-icon {
-  @apply text-primary-500;
+  @apply text-primary-500 scale-110;
 }
 
-.upload-dragger:hover .upload-arrow {
-  @apply text-primary-600;
+.upload-dragger:hover .upload-icon-bg {
+  @apply from-primary-100 to-primary-200;
+}
+
+.upload-dragger:hover .upload-icon-pulse {
+  @apply opacity-100;
+}
+
+.upload-dragger--dragging .upload-icon {
+  @apply text-primary-600 scale-125;
+}
+
+.upload-dragger--dragging .upload-icon-pulse {
+  @apply opacity-100;
+  animation: iconPulse 1s infinite ease-in-out;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
 }
 
 .upload-text {
@@ -703,8 +769,29 @@ defineExpose({
   @apply text-xl font-semibold text-gray-800 mb-2;
 }
 
+.upload-title-main {
+  @apply block;
+}
+
+.upload-title-sub {
+  @apply block text-sm text-gray-600 leading-relaxed;
+}
+
 .upload-subtitle {
   @apply text-sm text-gray-600 leading-relaxed;
+}
+
+.upload-features {
+  @apply flex items-center justify-center space-x-6 mt-4 pt-4 border-t border-gray-200;
+}
+
+.feature-item {
+  @apply flex items-center space-x-1.5 text-xs text-gray-600 font-medium;
+  @apply transition-colors duration-200 hover:text-primary-600;
+}
+
+.feature-icon {
+  @apply w-4 h-4;
 }
 
 .upload-list {

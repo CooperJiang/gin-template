@@ -296,8 +296,6 @@ const uploadStats = computed(() => {
 
 // 处理文件列表变化
 const handleFileListChange = (fileList: FileInfo[]) => {
-  console.log('文件列表变化:', fileList)
-
   // 添加新文件到日志
   fileList.forEach(file => {
     const existingLog = uploadLogs.value.find(log => log.id === file.id)
@@ -371,4 +369,31 @@ const formatTime = (timestamp: number) => {
     second: '2-digit'
   })
 }
+
+// API 文档数据
+const propsApi = [
+  { name: 'accept', description: '接受的文件类型', type: 'string', default: '"*/*"' },
+  { name: 'multiple', description: '是否支持多选', type: 'boolean', default: 'false' },
+  { name: 'maxSize', description: '最大文件大小(MB)', type: 'number', default: '100' },
+  { name: 'disabled', description: '是否禁用', type: 'boolean', default: 'false' },
+  { name: 'uploadUrl', description: '上传地址', type: 'string', default: '"/api/upload"' },
+  { name: 'chunkSize', description: '分片大小(MB)', type: 'number', default: '2' },
+  { name: 'showProgress', description: '是否显示进度', type: 'boolean', default: 'true' },
+  { name: 'autoUpload', description: '是否自动上传', type: 'boolean', default: 'true' },
+]
+
+const eventsApi = [
+  { name: 'success', description: '上传成功时触发', params: '(response: any, file: File)' },
+  { name: 'error', description: '上传失败时触发', params: '(error: Error, file: File)' },
+  { name: 'progress', description: '上传进度变化时触发', params: '(progress: number, file: File)' },
+  { name: 'before-upload', description: '上传前触发', params: '(file: File)' },
+]
+
+const methodsApi = [
+  { name: 'upload', description: '手动开始上传', params: '()' },
+  { name: 'pause', description: '暂停上传', params: '()' },
+  { name: 'resume', description: '恢复上传', params: '()' },
+  { name: 'cancel', description: '取消上传', params: '()' },
+  { name: 'clear', description: '清空文件列表', params: '()' },
+]
 </script>

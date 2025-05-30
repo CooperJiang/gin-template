@@ -113,7 +113,7 @@ func (s *UploadService) SimpleUpload(file *multipart.FileHeader, userID string) 
 			MimeType:   existingFile.MimeType,
 			Extension:  existingFile.Extension,
 			MD5Hash:    existingFile.MD5Hash,
-			FilePath:   fmt.Sprintf("/files/preview/%s", existingFile.ID.String()),
+			FilePath:   fmt.Sprintf("/files/preview/%s/%s", existingFile.ID.String(), existingFile.Filename),
 			UploadedAt: *existingFile.UploadedAt,
 		}, nil
 	}
@@ -160,7 +160,7 @@ func (s *UploadService) SimpleUpload(file *multipart.FileHeader, userID string) 
 		MimeType:   uploadFile.MimeType,
 		Extension:  uploadFile.Extension,
 		MD5Hash:    uploadFile.MD5Hash,
-		FilePath:   fmt.Sprintf("/files/preview/%s", uploadFile.ID.String()),
+		FilePath:   fmt.Sprintf("/files/preview/%s/%s", uploadFile.ID.String(), uploadFile.Filename),
 		UploadedAt: *uploadFile.UploadedAt,
 	}, nil
 }
@@ -382,7 +382,7 @@ func (s *UploadService) MergeChunks(fileID string) (*response.ChunkMergeResponse
 		MimeType:   uploadFile.MimeType,
 		Extension:  uploadFile.Extension,
 		MD5Hash:    uploadFile.MD5Hash,
-		FilePath:   fmt.Sprintf("/files/preview/%s", uploadFile.ID.String()),
+		FilePath:   fmt.Sprintf("/files/preview/%s/%s", uploadFile.ID.String(), uploadFile.Filename),
 		UploadedAt: *uploadFile.UploadedAt,
 	}, nil
 }

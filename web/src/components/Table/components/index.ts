@@ -1,0 +1,7 @@
+export { default as TableLoading } from './TableLoading.vue'
+export { default as TableEmpty } from './TableEmpty.vue'
+export { default as TableCell } from './TableCell.vue'
+export { default as TableRow } from './TableRow.vue'
+export { default as TableHeader } from './TableHeader.vue'
+export { default as TableBody } from './TableBody.vue'
+export { default as TablePagination } from './TablePagination.vue'
