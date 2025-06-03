@@ -58,6 +58,26 @@ const router = createRouter({
       },
     },
     {
+      path: '/element-table-test',
+      name: 'element-table-test',
+      component: () => import('@/pages/Debug/components/ElementTableTest.vue'),
+      meta: {
+        requiresAuth: true,
+        layout: 'admin',
+        breadcrumb: 'Element表格测试',
+      },
+    },
+    {
+      path: '/simple-table-test',
+      name: 'simple-table-test',
+      component: () => import('@/pages/Debug/components/SimpleTableTest.vue'),
+      meta: {
+        requiresAuth: true,
+        layout: 'admin',
+        breadcrumb: '简单表格测试',
+      },
+    },
+    {
       path: '/demo/page1',
       name: 'demo-page1',
       component: () => import('@/pages/Demo/Page1/index.vue'),

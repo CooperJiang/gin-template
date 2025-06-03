@@ -1,17 +1,104 @@
 <template>
   <div class="space-y-8">
-    <!-- 基础表格 -->
-    <div class="demo-section">
-      <h4 class="demo-title">基础表格</h4>
-      <p class="demo-description">最基本的表格展示，支持排序</p>
+    <!-- 简单功能测试 -->
+    <GlobalCodeDemo
+      title="功能测试 - Element UI 风格"
+      description="测试 GlobalTableColumn 子组件是否正常工作"
+      :code="simpleTestCode"
+    >
+      <GlobalTable :data="simpleTestData" :bordered="true">
+        <GlobalTableColumn prop="name" label="姓名" />
+        <GlobalTableColumn prop="age" label="年龄" :width="100" />
+        <GlobalTableColumn label="操作" :width="100">
+          <template #default="{ row }">
+            <button @click="alert(`点击了${row.name}`)" class="text-blue-600">点击</button>
+          </template>
+        </GlobalTableColumn>
+      </GlobalTable>
+    </GlobalCodeDemo>
 
-      <div class="demo-container">
-        <GlobalTable
-          :columns="basicColumns"
-          :data="basicData"
-          :loading="basicLoading"
-        />
+    <!-- Slot 方式表格 -->
+    <GlobalCodeDemo
+      title="自定义渲染表格 (类似 Element UI 风格)"
+      description="使用 render 函数自定义列渲染，支持灵活的内容展示和操作按钮"
+      :code="slotTableCode"
+    >
+      <GlobalTable
+        :data="slotTableData"
+        :columns="slotTableColumns"
+        :loading="false"
+        :bordered="true"
+        size="medium"
+      />
+    </GlobalCodeDemo>
+
+    <!-- 真正的 Element UI 风格表格 -->
+    <GlobalCodeDemo
+      title="Element UI 风格表格 (子组件方式)"
+      description="使用 GlobalTableColumn 子组件定义表格列，完全仿照 Element UI 的使用方式"
+      :code="elementStyleTableCode"
+    >
+      <div class="p-4 bg-green-50 border border-green-200 rounded-lg mb-4">
+        <h4 class="text-green-800 font-semibold mb-2">✅ Element UI 风格已支持</h4>
+        <div class="text-sm text-green-700 space-y-1">
+          <div>✅ 子组件方式定义列 (GlobalTableColumn)</div>
+          <div>✅ slot 自定义渲染</div>
+          <div>✅ 完整的列属性支持</div>
+          <div>✅ 与 Element UI 使用方式一致</div>
+        </div>
       </div>
+
+      <!-- 真正的 Element UI 风格实现 -->
+      <GlobalTable
+        :data="elementTableData"
+        :loading="false"
+        :bordered="true"
+        size="medium"
+        style="width: 100%"
+      >
+        <GlobalTableColumn prop="id" label="ID" :width="80" />
+        <GlobalTableColumn prop="name" label="姓名" :sortable="true" />
+        <GlobalTableColumn prop="age" label="年龄" :width="100" align="center" />
+        <GlobalTableColumn prop="email" label="邮箱" :ellipsis="true" />
+        <GlobalTableColumn prop="department" label="部门" />
+        <GlobalTableColumn label="状态" :width="120" align="center">
+          <template #default="{ row }">
+            <span
+              :class="[
+                'px-2 py-1 rounded-full text-xs',
+                row.status === '正常' ? 'bg-green-100 text-green-800' :
+                row.status === '禁用' ? 'bg-red-100 text-red-800' :
+                'bg-yellow-100 text-yellow-800'
+              ]"
+            >
+              {{ row.status || '正常' }}
+            </span>
+          </template>
+        </GlobalTableColumn>
+        <GlobalTableColumn label="操作" :width="180" align="center">
+          <template #default="{ row }">
+            <GlobalButton size="sm" @click="handleEdit(row)" class="mr-2">
+              编辑
+            </GlobalButton>
+            <GlobalButton size="sm" variant="outline" @click="handleDelete(row)">
+              删除
+            </GlobalButton>
+          </template>
+        </GlobalTableColumn>
+      </GlobalTable>
+    </GlobalCodeDemo>
+
+    <!-- 基础表格 -->
+    <GlobalCodeDemo
+      title="基础表格"
+      description="最基本的表格展示，支持排序和加载状态"
+      :code="basicTableCode"
+    >
+      <GlobalTable
+        :columns="basicColumns"
+        :data="basicData"
+        :loading="basicLoading"
+      />
 
       <div class="mt-4 flex gap-2">
         <GlobalButton
@@ -30,13 +117,14 @@
           切换加载状态
         </GlobalButton>
       </div>
-    </div>
+    </GlobalCodeDemo>
 
     <!-- 选择功能 -->
-    <div class="demo-section">
-      <h4 class="demo-title">行选择功能</h4>
-      <p class="demo-description">支持多选和单选，可以禁用特定行</p>
-
+    <GlobalCodeDemo
+      title="行选择功能"
+      description="支持多选和单选，可以禁用特定行"
+      :code="selectionTableCode"
+    >
       <div class="mb-4 space-y-2">
         <div class="text-sm text-gray-600">
           已选择: {{ selectedRowKeys.length }} 项
@@ -62,25 +150,24 @@
         </div>
       </div>
 
-      <div class="demo-container">
-        <GlobalTable
-          :columns="selectionColumns"
-          :data="selectionData"
-          :row-selection="{
-            type: selectionType,
-            selectedRowKeys: selectedRowKeys,
-            onChange: handleSelectionChange,
-            getCheckboxProps: getCheckboxProps
-          }"
-        />
-      </div>
-    </div>
+      <GlobalTable
+        :columns="selectionColumns"
+        :data="selectionData"
+        :row-selection="{
+          type: selectionType,
+          selectedRowKeys: selectedRowKeys,
+          onChange: handleSelectionChange,
+          getCheckboxProps: getCheckboxProps
+        }"
+      />
+    </GlobalCodeDemo>
 
     <!-- 表格配置 -->
-    <div class="demo-section">
-      <h4 class="demo-title">表格配置</h4>
-      <p class="demo-description">不同尺寸、边框、斑马纹等样式配置</p>
-
+    <GlobalCodeDemo
+      title="表格配置"
+      description="不同尺寸、边框、斑马纹等样式配置"
+      :code="configTableCode"
+    >
       <!-- 配置选项 -->
       <div class="mb-4 grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
         <div>
@@ -129,112 +216,12 @@
         </div>
       </div>
 
-      <div class="demo-container">
-        <GlobalTable
-          :columns="configColumns"
-          :data="configData"
-          v-bind="tableConfig"
-        />
-      </div>
-    </div>
-
-    <!-- 固定高度和滚动 -->
-    <div class="demo-section">
-      <h4 class="demo-title">固定高度和滚动</h4>
-      <p class="demo-description">表格固定高度，内容区域可滚动</p>
-
-      <div class="demo-container">
-        <GlobalTable
-          :columns="scrollColumns"
-          :data="scrollData"
-          height="300"
-          :scroll="{ x: 1200 }"
-        />
-      </div>
-    </div>
-
-    <!-- 分页表格 -->
-    <div class="demo-section">
-      <h4 class="demo-title">分页表格</h4>
-      <p class="demo-description">集成分页组件，支持数据分页展示</p>
-
-      <div class="demo-container">
-        <GlobalTable
-          :columns="paginationColumns"
-          :data="paginationData"
-          :pagination="{
-            current: currentPage,
-            pageSize: pageSize,
-            total: totalItems,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: true
-          }"
-          @change="handleTableChange"
-        />
-      </div>
-    </div>
-
-    <!-- 自定义渲染 -->
-    <div class="demo-section">
-      <h4 class="demo-title">自定义渲染</h4>
-      <p class="demo-description">自定义单元格内容渲染，支持组件和HTML</p>
-
-      <div class="demo-container">
-        <GlobalTable
-          :columns="customColumns"
-          :data="customData"
-          @row-click="handleRowClick"
-        />
-      </div>
-    </div>
-
-    <!-- 空数据状态 -->
-    <div class="demo-section">
-      <h4 class="demo-title">空数据状态</h4>
-      <p class="demo-description">没有数据时的展示效果</p>
-
-      <div class="demo-container">
-        <GlobalTable
-          :columns="basicColumns"
-          :data="[]"
-          empty-text="没有找到任何数据"
-        />
-      </div>
-    </div>
-
-    <!-- 使用说明 -->
-    <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-lg border border-indigo-200">
-      <h4 class="text-lg font-semibold text-indigo-900 mb-4 flex items-center gap-2">
-        <GlobalIcon name="book-open" size="sm" color="text-indigo-600" />
-        使用说明
-      </h4>
-
-      <div class="space-y-4 text-sm text-indigo-800">
-        <div>
-          <h5 class="font-semibold mb-2">基本用法</h5>
-          <div class="bg-white p-3 rounded border border-indigo-200 font-mono text-xs">
-            <div>&lt;GlobalTable</div>
-            <div class="ml-2">:columns="columns"</div>
-            <div class="ml-2">:data="tableData"</div>
-            <div class="ml-2">:loading="loading"</div>
-            <div class="ml-2">@row-click="handleRowClick"</div>
-            <div>/&gt;</div>
-          </div>
-        </div>
-
-        <div>
-          <h5 class="font-semibold mb-2">列定义示例</h5>
-          <div class="bg-white p-3 rounded border border-indigo-200 font-mono text-xs">
-            <div>const columns = [</div>
-            <div class="ml-2">{'{'} key: 'name', title: '姓名', sortable: true {'}'},</div>
-            <div class="ml-2">{'{'} key: 'age', title: '年龄', align: 'center' {'}'},</div>
-            <div class="ml-2">{'{'} key: 'action', title: '操作', render: (_, record) => h(Button, {'{'} onClick: () => edit(record) {'}'}, '编辑') {'}'}</div>
-            <div>]</div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <GlobalTable
+        :columns="configColumns"
+        :data="configData"
+        v-bind="tableConfig"
+      />
+    </GlobalCodeDemo>
 
     <!-- API 说明 -->
     <div class="demo-section">
@@ -250,21 +237,6 @@
         />
       </div>
     </div>
-
-    <!-- Events API 说明 -->
-    <div class="demo-section">
-      <h4 class="demo-title">Events API 说明</h4>
-      <p class="demo-description">表格组件支持的事件回调</p>
-
-      <div class="demo-container">
-        <GlobalTable
-          :columns="eventsApiColumns"
-          :data="eventsApi"
-          :bordered="true"
-          size="small"
-        />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -275,12 +247,103 @@ defineOptions({
   name: 'TableTest'
 })
 
+// Slot 方式表格数据
+const slotTableData = ref([
+  { id: 1, name: '张三', age: 28, email: 'zhangsan@example.com', status: '正常' },
+  { id: 2, name: '李四', age: 32, email: 'lisi@example.com', status: '禁用' },
+  { id: 3, name: '王五', age: 25, email: 'wangwu@example.com', status: '待审' },
+  { id: 4, name: '赵六', age: 29, email: 'zhaoliu@example.com', status: '正常' },
+])
+
+// Element UI 风格表格数据
+const elementTableData = ref([
+  { id: 1, name: '张三', age: 28, email: 'zhangsan@example.com', department: '技术部' },
+  { id: 2, name: '李四', age: 32, email: 'lisi@example.com', department: '产品部' },
+  { id: 3, name: '王五', age: 25, email: 'wangwu@example.com', department: '设计部' },
+  { id: 4, name: '赵六', age: 29, email: 'zhaoliu@example.com', department: '运营部' },
+])
+
+// Element UI 风格表格列定义
+const elementStyleColumns = [
+  { key: 'id', title: 'ID', width: 80 },
+  { key: 'name', title: '姓名' },
+  { key: 'age', title: '年龄', width: 100, align: 'center' },
+  { key: 'email', title: '邮箱' },
+  { key: 'department', title: '部门' },
+  {
+    key: 'action',
+    title: '操作',
+    width: 180,
+    align: 'center',
+    render: (_: any, record: any) => {
+      return h('div', {
+        class: 'space-x-2'
+      }, [
+        h('button', {
+          class: 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600',
+          onClick: () => handleEdit(record)
+        }, '编辑'),
+        h('button', {
+          class: 'px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600',
+          onClick: () => handleDelete(record)
+        }, '删除')
+      ])
+    }
+  }
+]
+
+// Slot 方式表格列定义 (使用 render 函数)
+const slotTableColumns = [
+  { key: 'id', title: 'ID', width: 80, sortable: true },
+  { key: 'name', title: '姓名', sortable: true },
+  { key: 'age', title: '年龄', width: 100, align: 'center' },
+  { key: 'email', title: '邮箱', ellipsis: true },
+  {
+    key: 'status',
+    title: '状态',
+    width: 120,
+    align: 'center',
+    render: (value: string) => {
+      const colors = {
+        '正常': 'bg-green-100 text-green-800',
+        '禁用': 'bg-red-100 text-red-800',
+        '待审': 'bg-yellow-100 text-yellow-800',
+      }
+      // 使用Vue的h函数创建VNode
+      return h('span', {
+        class: `px-2 py-1 rounded-full text-xs ${colors[value as keyof typeof colors] || 'bg-gray-100 text-gray-800'}`
+      }, value)
+    }
+  },
+  {
+    key: 'action',
+    title: '操作',
+    width: 150,
+    align: 'center',
+    render: (_: any, record: any) => {
+      // 使用Vue的h函数创建VNode
+      return h('div', {
+        class: 'space-x-2'
+      }, [
+        h('button', {
+          class: 'px-2 py-1 text-xs text-blue-600 border border-blue-300 rounded hover:bg-blue-50',
+          onClick: () => handleEdit(record)
+        }, '编辑'),
+        h('button', {
+          class: 'px-2 py-1 text-xs text-red-600 border border-red-300 rounded hover:bg-red-50',
+          onClick: () => handleDelete(record)
+        }, '删除')
+      ])
+    }
+  }
+]
+
 // 基础表格数据
 const basicLoading = ref(false)
 const basicColumns = [
   { key: 'id', title: 'ID', width: 80, sortable: true },
   { key: 'name', title: '姓名', sortable: true },
-  { key: 'age', title: '年龄', width: 100, align: 'center' as const, sortable: true },
+  { key: 'age', title: '年龄', width: 100, align: 'center', sortable: true },
   { key: 'email', title: '邮箱', ellipsis: true },
   { key: 'department', title: '部门' },
 ]
@@ -295,7 +358,7 @@ const basicData = ref([
 
 // 选择功能
 const selectedRowKeys = ref<(string | number)[]>([])
-const selectionType = ref<'checkbox' | 'radio'>('checkbox')
+const selectionType = ref('checkbox')
 
 const selectionColumns = [
   { key: 'id', title: 'ID', width: 80 },
@@ -314,7 +377,7 @@ const selectionData = ref([
 
 // 表格配置
 const tableConfig = reactive({
-  size: 'medium' as 'small' | 'medium' | 'large',
+  size: 'medium',
   bordered: true,
   striped: false,
   hoverable: true,
@@ -323,7 +386,7 @@ const tableConfig = reactive({
 const configColumns = [
   { key: 'name', title: '名称' },
   { key: 'type', title: '类型' },
-  { key: 'size', title: '大小', align: 'right' as const },
+  { key: 'size', title: '大小', align: 'right' },
   { key: 'date', title: '日期' },
 ]
 
@@ -332,100 +395,6 @@ const configData = ref([
   { name: 'image.jpg', type: '图片', size: '1.8MB', date: '2024-01-14' },
   { name: 'video.mp4', type: '视频', size: '15.6MB', date: '2024-01-13' },
   { name: 'archive.zip', type: '压缩包', size: '8.9MB', date: '2024-01-12' },
-])
-
-// 滚动表格
-const scrollColumns = [
-  { key: 'id', title: 'ID', width: 80, fixed: 'left' as const },
-  { key: 'name', title: '姓名', width: 120, fixed: 'left' as const },
-  { key: 'field1', title: '字段1', width: 150 },
-  { key: 'field2', title: '字段2', width: 150 },
-  { key: 'field3', title: '字段3', width: 150 },
-  { key: 'field4', title: '字段4', width: 150 },
-  { key: 'field5', title: '字段5', width: 150 },
-  { key: 'field6', title: '字段6', width: 150 },
-  { key: 'action', title: '操作', width: 120, fixed: 'right' as const },
-]
-
-const scrollData = ref(
-  Array.from({ length: 20 }, (_, i) => ({
-    id: i + 1,
-    name: `用户${i + 1}`,
-    field1: `数据${i + 1}-1`,
-    field2: `数据${i + 1}-2`,
-    field3: `数据${i + 1}-3`,
-    field4: `数据${i + 1}-4`,
-    field5: `数据${i + 1}-5`,
-    field6: `数据${i + 1}-6`,
-    action: '操作',
-  }))
-)
-
-// 分页数据
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalItems = ref(50)
-
-const paginationColumns = [
-  { key: 'id', title: 'ID', width: 80 },
-  { key: 'title', title: '标题' },
-  { key: 'category', title: '分类' },
-  { key: 'views', title: '浏览量', align: 'right' as const },
-  { key: 'date', title: '创建时间' },
-]
-
-const paginationData = ref([
-  { id: 1, title: '文章标题1', category: '技术', views: 1234, date: '2024-01-15' },
-  { id: 2, title: '文章标题2', category: '产品', views: 856, date: '2024-01-14' },
-  { id: 3, title: '文章标题3', category: '设计', views: 743, date: '2024-01-13' },
-  { id: 4, title: '文章标题4', category: '运营', views: 692, date: '2024-01-12' },
-  { id: 5, title: '文章标题5', category: '市场', views: 581, date: '2024-01-11' },
-])
-
-// 自定义渲染
-const customColumns = [
-  { key: 'name', title: '姓名' },
-  {
-    key: 'avatar',
-    title: '头像',
-    width: 80,
-    render: () => h('div', { class: 'w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs' }, 'A')
-  },
-  {
-    key: 'status',
-    title: '状态',
-    render: (value: string) => {
-      const colors = {
-        '正常': 'bg-green-100 text-green-800',
-        '禁用': 'bg-red-100 text-red-800',
-        '待审': 'bg-yellow-100 text-yellow-800',
-      }
-      return h('span', {
-        class: `px-2 py-1 rounded-full text-xs ${colors[value as keyof typeof colors] || 'bg-gray-100 text-gray-800'}`
-      }, value)
-    }
-  },
-  {
-    key: 'action',
-    title: '操作',
-    render: (_, record: any) => h('div', { class: 'space-x-2' }, [
-      h('button', {
-        class: 'text-blue-600 hover:text-blue-800 text-sm',
-        onClick: () => handleEdit(record)
-      }, '编辑'),
-      h('button', {
-        class: 'text-red-600 hover:text-red-800 text-sm',
-        onClick: () => handleDelete(record)
-      }, '删除'),
-    ])
-  },
-]
-
-const customData = ref([
-  { id: 1, name: '张三', status: '正常' },
-  { id: 2, name: '李四', status: '禁用' },
-  { id: 3, name: '王五', status: '待审' },
-  { id: 4, name: '赵六', status: '正常' },
 ])
 
 // 事件处理
@@ -445,7 +414,7 @@ const toggleBasicLoading = () => {
   basicLoading.value = !basicLoading.value
 }
 
-const handleSelectionChange = (keys: (string | number)[], rows: any[]) => {
+const handleSelectionChange = (keys: any[], rows: any[]) => {
   selectedRowKeys.value = keys
   console.log('选择变化:', keys, rows)
 }
@@ -458,16 +427,6 @@ const getCheckboxProps = (record: any) => {
   return {
     disabled: record.status === '禁用'
   }
-}
-
-const handleTableChange = (pagination: any, filters: any, sorter: any) => {
-  currentPage.value = pagination.page
-  pageSize.value = pagination.pageSize
-  console.log('表格变化:', pagination, filters, sorter)
-}
-
-const handleRowClick = (record: any, index: number, event: Event) => {
-  console.log('行点击:', record, index, event)
 }
 
 const handleEdit = (record: any) => {
@@ -487,59 +446,174 @@ const propsApi = [
   { name: 'bordered', description: '是否有边框', type: 'boolean', default: 'true' },
   { name: 'striped', description: '是否显示斑马纹', type: 'boolean', default: 'false' },
   { name: 'hoverable', description: '是否可悬停', type: 'boolean', default: 'true' },
-  { name: 'height', description: '表格高度', type: 'number | string', default: 'undefined' },
   { name: 'rowSelection', description: '行选择配置', type: 'object', default: 'undefined' },
-  { name: 'pagination', description: '分页配置', type: 'boolean | object', default: 'false' },
   { name: 'emptyText', description: '空数据文案', type: 'string', default: "'暂无数据'" },
-  { name: 'rowKey', description: '行数据的Key', type: 'string | function', default: "'id'" },
-]
-
-const eventsApi = [
-  { name: 'row-click', description: '点击行时触发', params: '(record, index, event)' },
-  { name: 'row-dblclick', description: '双击行时触发', params: '(record, index, event)' },
-  { name: 'selection-change', description: '选择变化时触发', params: '(selectedRowKeys, selectedRows)' },
-  { name: 'change', description: '分页、排序、筛选变化时触发', params: '(pagination, filters, sorter)' },
-  { name: 'header-click', description: '点击表头时触发', params: '(column, event)' },
 ]
 
 // API 表格列定义
 const propsApiColumns = [
-  {
-    key: 'name',
-    title: '参数',
-    width: 150,
-    render: (value: string) => h('code', { class: 'text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm' }, value)
-  },
+  { key: 'name', title: '参数', width: 150 },
   { key: 'description', title: '说明' },
-  {
-    key: 'type',
-    title: '类型',
-    width: 200,
-    render: (value: string) => h('code', { class: 'text-green-600 bg-green-50 px-2 py-1 rounded text-sm' }, value)
-  },
-  {
-    key: 'default',
-    title: '默认值',
-    width: 120,
-    render: (value: string) => h('code', { class: 'text-orange-600 bg-orange-50 px-2 py-1 rounded text-sm' }, value)
-  },
+  { key: 'type', title: '类型', width: 200 },
+  { key: 'default', title: '默认值', width: 120 },
 ]
 
-const eventsApiColumns = [
+// 代码示例字符串 - 简化版本
+const slotTableCode = `// 自定义渲染表格示例 (类似 Element UI 风格)
+const columns = [
+  { key: 'id', title: 'ID', width: 80, sortable: true },
+  { key: 'name', title: '姓名', sortable: true },
+  { key: 'age', title: '年龄', width: 100, align: 'center' },
   {
-    key: 'name',
-    title: '事件名',
+    key: 'status',
+    title: '状态',
+    width: 120,
+    align: 'center',
+    render: (value) => {
+      const colors = {
+        '正常': 'bg-green-100 text-green-800',
+        '禁用': 'bg-red-100 text-red-800'
+      }
+      // 返回 VNode 对象而不是 HTML 字符串
+      return {
+        type: 'span',
+        props: {
+          class: \`px-2 py-1 rounded-full text-xs \${colors[value]}\`
+        },
+        children: value
+      }
+    }
+  },
+  {
+    key: 'action',
+    title: '操作',
     width: 150,
-    render: (value: string) => h('code', { class: 'text-blue-600 bg-blue-50 px-2 py-1 rounded text-sm' }, value)
-  },
-  { key: 'description', title: '说明' },
-  {
-    key: 'params',
-    title: '参数',
-    width: 250,
-    render: (value: string) => h('code', { class: 'text-green-600 bg-green-50 px-2 py-1 rounded text-sm' }, value)
-  },
+    align: 'center',
+    render: (_, record) => {
+      // 返回 VNode 对象，支持事件处理
+      return {
+        type: 'div',
+        props: { class: 'space-x-2' },
+        children: [
+          {
+            type: 'button',
+            props: {
+              class: 'px-2 py-1 text-xs text-blue-600 border border-blue-300 rounded',
+              onClick: () => handleEdit(record)
+            },
+            children: '编辑'
+          }
+        ]
+      }
+    }
+  }
 ]
+
+<GlobalTable :data="tableData" :columns="columns" />`
+
+const basicTableCode = `// 基础表格示例
+<GlobalTable
+  :columns="basicColumns"
+  :data="basicData"
+  :loading="basicLoading"
+/>
+
+const basicColumns = [
+  { key: 'id', title: 'ID', width: 80, sortable: true },
+  { key: 'name', title: '姓名', sortable: true },
+  { key: 'age', title: '年龄', width: 100, align: 'center' },
+  { key: 'email', title: '邮箱', ellipsis: true }
+]`
+
+const selectionTableCode = `// 行选择表格示例
+<GlobalTable
+  :columns="selectionColumns"
+  :data="selectionData"
+  :row-selection="{
+    type: 'checkbox',
+    selectedRowKeys: selectedRowKeys,
+    onChange: handleSelectionChange
+  }"
+/>`
+
+const configTableCode = `// 表格配置示例
+<GlobalTable
+  :columns="configColumns"
+  :data="configData"
+  :size="tableConfig.size"
+  :bordered="tableConfig.bordered"
+  :striped="tableConfig.striped"
+  :hoverable="tableConfig.hoverable"
+/>`
+
+const elementStyleTableCode = `// Element UI 风格表格示例 (子组件方式)
+<GlobalTable
+  :data="elementTableData"
+  :loading="false"
+  :bordered="true"
+  size="medium"
+  style="width: 100%"
+>
+  <GlobalTableColumn prop="id" label="ID" :width="80" />
+  <GlobalTableColumn prop="name" label="姓名" :sortable="true" />
+  <GlobalTableColumn prop="age" label="年龄" :width="100" align="center" />
+  <GlobalTableColumn prop="email" label="邮箱" :ellipsis="true" />
+  <GlobalTableColumn prop="department" label="部门" />
+
+  <!-- 自定义状态列 -->
+  <GlobalTableColumn label="状态" :width="120" align="center">
+    <template #default="{ row }">
+      <span
+        :class="[
+          'px-2 py-1 rounded-full text-xs',
+          row.status === '正常' ? 'bg-green-100 text-green-800' :
+          row.status === '禁用' ? 'bg-red-100 text-red-800' :
+          'bg-yellow-100 text-yellow-800'
+        ]"
+      >
+        \{{ row.status || '正常' }}
+      </span>
+    </template>
+  </GlobalTableColumn>
+
+  <!-- 操作列 -->
+  <GlobalTableColumn label="操作" :width="180" align="center">
+    <template #default="{ row }">
+      <GlobalButton size="sm" @click="handleEdit(row)" class="mr-2">
+        编辑
+      </GlobalButton>
+      <GlobalButton size="sm" variant="outline" @click="handleDelete(row)">
+        删除
+      </GlobalButton>
+    </template>
+  </GlobalTableColumn>
+</GlobalTable>
+
+// 数据定义
+const elementTableData = ref([
+  { id: 1, name: '张三', age: 28, email: 'zhangsan@example.com', department: '技术部' },
+  { id: 2, name: '李四', age: 32, email: 'lisi@example.com', department: '产品部' },
+  { id: 3, name: '王五', age: 25, email: 'wangwu@example.com', department: '设计部' },
+  { id: 4, name: '赵六', age: 29, email: 'zhaoliu@example.com', department: '运营部' },
+])`
+
+const simpleTestCode = `// 简单功能测试示例
+<GlobalTable :data="simpleTestData" :bordered="true">
+  <GlobalTableColumn prop="name" label="姓名" />
+  <GlobalTableColumn prop="age" label="年龄" :width="100" />
+  <GlobalTableColumn label="操作" :width="100">
+    <template #default="{ row }">
+      <button @click="alert(\`点击了\${row.name}\`)" class="text-blue-600">点击</button>
+    </template>
+  </GlobalTableColumn>
+</GlobalTable>`
+
+const simpleTestData = ref([
+  { name: '张三', age: 28 },
+  { name: '李四', age: 32 },
+  { name: '王五', age: 25 },
+  { name: '赵六', age: 29 },
+])
 </script>
 
 <style scoped>

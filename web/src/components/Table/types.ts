@@ -12,6 +12,8 @@ export interface TableColumn {
   render?: (value: any, record: any, index: number) => any
   ellipsis?: boolean
   resizable?: boolean
+  customSlot?: boolean
+  slotFn?: (props: any) => any
 }
 
 export interface TableData {
@@ -32,7 +34,7 @@ export interface FilterInfo {
 }
 
 export interface TableProps {
-  columns: TableColumn[]
+  columns?: TableColumn[]
   data: TableData[]
   loading?: boolean
   size?: 'small' | 'medium' | 'large'

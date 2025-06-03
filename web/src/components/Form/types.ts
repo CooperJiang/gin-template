@@ -37,81 +37,93 @@ export interface FormOption {
 }
 
 export interface FormRule {
-  // 校验类型
-  type?: 'required' | 'email' | 'url' | 'number' | 'pattern' | 'custom'
-
-  // 校验消息
+  required?: boolean
   message?: string
-
-  // 长度校验
+  trigger?: 'blur' | 'change' | 'submit'
+  type?: 'string' | 'number' | 'boolean' | 'method' | 'regexp' | 'integer' | 'float' | 'array' | 'object' | 'enum' | 'date' | 'url' | 'hex' | 'email'
+  pattern?: RegExp
   min?: number
   max?: number
-
-  // 正则表达式
-  pattern?: RegExp
-
-  // 自定义校验函数
-  validator?: (value: any, formData: Record<string, any>) => boolean | string
-
-  // 触发时机
-  trigger?: 'blur' | 'change' | 'submit'
+  len?: number
+  enum?: (string | number | boolean | null | undefined)[]
+  validator?: (rule: FormRule, value: any, callback: (error?: string | Error) => void, source?: Record<string, any>, options?: any) => void
+  asyncValidator?: (rule: FormRule, value: any, callback: (error?: string | Error) => void, source?: Record<string, any>, options?: any) => Promise<void>
 }
 
+export interface FormItemRule extends FormRule {
+  trigger?: 'blur' | 'change' | 'submit' | ('blur' | 'change' | 'submit')[]
+}
+
+export type FormRules = Record<string, FormItemRule | FormItemRule[]>
+
 export interface FormProps {
-  // 表单数据
-  modelValue?: Record<string, any>
-
-  // 表单项配置
-  items: FormItem[]
-
-  // 布局配置
-  layout?: 'vertical' | 'horizontal' | 'inline'
+  model: Record<string, any>
+  rules?: FormRules
+  inline?: boolean
+  labelPosition?: 'left' | 'right' | 'top'
   labelWidth?: string | number
-
-  // 尺寸
-  size?: 'small' | 'medium' | 'large'
-
-  // 行为控制
-  showResetButton?: boolean
-  showSubmitButton?: boolean
-  submitText?: string
-  resetText?: string
-  submitLoading?: boolean
-
-  // 校验配置
-  validateOnChange?: boolean
-  validateOnBlur?: boolean
-  showErrorMessage?: boolean
-
-  // 样式配置
-  bordered?: boolean
+  labelSuffix?: string
+  hideRequiredAsterisk?: boolean
+  showMessage?: boolean
+  inlineMessage?: boolean
+  statusIcon?: boolean
+  validateOnRuleChange?: boolean
+  size?: 'large' | 'default' | 'small'
   disabled?: boolean
 }
 
 export interface FormEmits {
-  'update:modelValue': [value: Record<string, any>]
-  'submit': [value: Record<string, any>]
-  'reset': []
-  'validate': [valid: boolean, errors: Record<string, string[]>]
-  'field-change': [field: string, value: any]
-  'field-blur': [field: string, value: any]
+  (e: 'validate', prop: string, isValid: boolean, message: string): void
+}
+
+export interface FormItemProps {
+  label?: string
+  prop?: string
+  labelWidth?: string | number
+  required?: boolean
+  rules?: FormItemRule | FormItemRule[]
+  error?: string
+  showMessage?: boolean
+  inlineMessage?: boolean
+  size?: 'large' | 'default' | 'small'
+  for?: string
+}
+
+export interface FormItemEmits {
+  // FormItem 通常不需要额外的 emit
 }
 
 export interface FormInstance {
-  validate: () => Promise<{ valid: boolean; errors: Record<string, string[]> }>
-  validateField: (field: string) => Promise<{ valid: boolean; errors: string[] }>
-  resetValidation: () => void
-  reset: () => void
-  getFieldValue: (field: string) => any
-  setFieldValue: (field: string, value: any) => void
+  validate: (callback?: (isValid: boolean, invalidFields?: Record<string, FormItemRule[]>) => void) => Promise<boolean>
+  validateField: (props: string | string[], callback?: (errorMessage?: string) => void) => Promise<boolean>
+  resetFields: () => void
+  clearValidation: (props?: string | string[]) => void
+  scrollToField: (prop: string) => void
+}
+
+export interface FormItemInstance {
+  prop?: string
+  errorMessage?: string
+  $el?: HTMLElement
+  validate: (trigger?: string, callback?: (errorMessage?: string) => void) => Promise<boolean>
+  resetField: () => void
+  clearValidation: () => void
 }
 
 export interface FormContext {
-  formData: Record<string, any>
-  errors: Record<string, string[]>
-  layout: string
-  size: string
-  disabled: boolean
-  validateField: (field: string) => void
-  updateField: (field: string, value: any) => void
+  model: Record<string, any>
+  rules?: FormRules
+  labelPosition?: 'left' | 'right' | 'top'
+  labelWidth?: string | number
+  labelSuffix?: string
+  inline?: boolean
+  size?: 'large' | 'default' | 'small'
+  showMessage?: boolean
+  inlineMessage?: boolean
+  statusIcon?: boolean
+  hideRequiredAsterisk?: boolean
+  disabled?: boolean
+  validateOnRuleChange?: boolean
+  addField: (field: FormItemInstance) => void
+  removeField: (field: FormItemInstance) => void
 }

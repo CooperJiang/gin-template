@@ -13,7 +13,7 @@
     <div
       ref="triggerRef"
       :class="[
-        'flex items-center min-h-[40px] px-3 border rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-50',
+        'flex items-center min-h-[40px] px-3 border-2 rounded-lg transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-opacity-50',
         sizeClasses,
         variantClasses,
         statusClasses,
@@ -121,10 +121,7 @@
           'fixed bg-white border border-gray-200 rounded-lg shadow-lg py-1',
           'transform transition-all duration-200 ease-out'
         ]"
-        :style="{
-          ...dropdownStyle,
-          width: dropdownStyle.width || initialDropdownWidth
-        }"
+        :style="dropdownStyleComputed"
       >
         <!-- 选项列表 -->
         <div
@@ -242,7 +239,7 @@ const searchQuery = ref('')
 const highlightIndex = ref(-1)
 
 // 初始化下拉样式
-const dropdownStyle = ref({})
+const dropdownStyle = ref<Record<string, string>>({})
 
 // 计算属性
 const selectedOptions = computed(() => {
@@ -295,6 +292,19 @@ const initialDropdownWidth = computed(() => {
   return rect.width > 0 ? `${rect.width}px` : '200px'
 })
 
+// 计算下拉框的宽度
+const dropdownWidth = computed(() => {
+  return dropdownStyle.value.width || initialDropdownWidth.value
+})
+
+// 计算下拉框的完整样式
+const dropdownStyleComputed = computed(() => {
+  return {
+    ...dropdownStyle.value,
+    width: dropdownWidth.value
+  }
+})
+
 // 样式计算
 const sizeClasses = computed(() => {
   const sizes = {
@@ -307,9 +317,9 @@ const sizeClasses = computed(() => {
 
 const variantClasses = computed(() => {
   const variants = {
-    default: 'bg-white border-gray-300',
-    bordered: 'bg-white border-2 border-gray-300',
-    filled: 'bg-gray-50 border-gray-300'
+    default: 'bg-white border-gray-300 hover:border-gray-400',
+    bordered: 'bg-white border-gray-400 hover:border-gray-500',
+    filled: 'bg-gray-50 border-gray-300 hover:border-gray-400'
   }
   return variants[props.variant]
 })

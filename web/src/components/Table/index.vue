@@ -29,7 +29,7 @@
 
             <!-- 数据列 -->
             <th
-              v-for="column in columns"
+              v-for="column in mergedColumns"
               :key="column.key"
               :class="getHeaderCellClass(column)"
               :style="getColumnStyle(column)"
@@ -106,17 +106,20 @@
 
             <!-- 数据列 -->
             <td
-              v-for="column in columns"
+              v-for="column in mergedColumns"
               :key="column.key"
               :class="getBodyCellClass(column)"
               :style="getColumnStyle(column)"
             >
               <div :class="getCellContentClass(column)">
-                <!-- 自定义渲染 -->
-                <component
-                  v-if="column.render"
-                  :is="getRenderContent(column, record, index)"
-                />
+                <!-- 自定义插槽渲染 - 直接执行函数不创建component -->
+                <template v-if="column.customSlot && column.slotFn">
+                  {{ renderSlotContent(column, record, index) }}
+                </template>
+                <!-- 标准render函数 -->
+                <template v-else-if="column.render">
+                  {{ renderColumnContent(column, record, index) }}
+                </template>
                 <!-- 默认渲染 -->
                 <span v-else :class="{ 'truncate': column.ellipsis }">
                   {{ getCellValue(column, record) }}
@@ -135,11 +138,16 @@
         @change="handlePaginationChange"
       />
     </div>
+
+    <!-- 隐藏的slot用于收集子组件 -->
+    <div style="display: none;">
+      <slot />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, useSlots, onMounted, nextTick } from 'vue'
 import type { TableProps, TableEmits, SortInfo, TableData, TableColumn } from './types'
 
 defineOptions({
@@ -147,6 +155,7 @@ defineOptions({
 })
 
 const props = withDefaults(defineProps<TableProps>(), {
+  columns: () => [],
   loading: false,
   size: 'medium',
   bordered: true,
@@ -162,14 +171,88 @@ const props = withDefaults(defineProps<TableProps>(), {
 
 const emit = defineEmits<TableEmits>()
 
+// 获取插槽内容
+const slots = useSlots()
+
 // 内部状态
 const selectedRowKeys = ref<(string | number)[]>(props.rowSelection?.selectedRowKeys || [])
 const currentSortInfo = ref<SortInfo>({ column: '', order: null })
+const slotColumns = ref<TableColumn[]>([])
+
+// 从插槽中提取列配置 - 完全避免匿名组件
+const extractColumnsFromSlots = async () => {
+  await nextTick()
+
+  if (!slots.default) return []
+
+  const vnodes = slots.default()
+  const columns: TableColumn[] = []
+
+  vnodes.forEach((vnode) => {
+    // 检查是否是我们的 GlobalTableColumn 组件
+    if (vnode && vnode.props && vnode.type) {
+      const vnodeProps = vnode.props as any
+
+      // 简单检查：如果有 prop 或 label 属性，就认为是列组件
+      if (vnodeProps.prop || vnodeProps.label) {
+        const children = vnode.children as any
+
+        const column: TableColumn = {
+          key: vnodeProps.prop || `column_${columns.length}`,
+          title: vnodeProps.label || '',
+          dataIndex: vnodeProps.prop,
+          width: vnodeProps.width,
+          minWidth: vnodeProps.minWidth,
+          maxWidth: vnodeProps.maxWidth,
+          align: vnodeProps.align || 'left',
+          sortable: vnodeProps.sortable || false,
+          filterable: vnodeProps.filterable || false,
+          fixed: vnodeProps.fixed,
+          ellipsis: vnodeProps.ellipsis || vnodeProps.showOverflowTooltip || false,
+          // 完全避免render函数，改用简单的值显示
+          render: undefined
+        }
+
+        // 如果有自定义插槽，我们存储插槽信息但不创建render函数
+        if (children?.default) {
+          column.customSlot = true
+          column.slotFn = children.default
+        }
+
+        columns.push(column)
+      }
+    }
+  })
+
+  return columns
+}
+
+// 合并的列配置
+const mergedColumns = computed(() => {
+  // 如果有props传入的columns，优先使用
+  if (props.columns && props.columns.length > 0) {
+    return props.columns
+  }
+  // 否则使用从插槽提取的列配置
+  return slotColumns.value
+})
+
+// 初始化时提取列配置
+onMounted(async () => {
+  const extracted = await extractColumnsFromSlots()
+  slotColumns.value = extracted
+})
+
+// 监听slots变化
+watch(() => slots.default, async () => {
+  const extracted = await extractColumnsFromSlots()
+  slotColumns.value = extracted
+}, { deep: true })
 
 // 计算属性
 const hasSelection = computed(() => !!props.rowSelection)
 const totalColumns = computed(() => {
-  let count = props.columns.length
+  let count = mergedColumns.value.length
   if (hasSelection.value) count++
   return count
 })
@@ -435,6 +518,43 @@ const handleRowSelect = (record: TableData, event: Event) => {
 
 const handlePaginationChange = (page: number, pageSize: number) => {
   emit('change', { page, pageSize }, props.filterInfo || {}, currentSortInfo.value)
+}
+
+// 渲染插槽内容 - 返回字符串而不是组件
+const renderSlotContent = (column: TableColumn, record: TableData, index: number) => {
+  if (column.slotFn) {
+    try {
+      const result = column.slotFn({ row: record, column, $index: index })
+      // 如果是对象（VNode），返回文本内容
+      if (typeof result === 'object' && result) {
+        return '[Custom Content]'
+      }
+      return result || ''
+    } catch (error) {
+      console.warn('Slot render error:', error)
+      return getCellValue(column, record)
+    }
+  }
+  return getCellValue(column, record)
+}
+
+// 渲染列内容 - 返回字符串而不是组件
+const renderColumnContent = (column: TableColumn, record: TableData, index: number) => {
+  if (column.render) {
+    try {
+      const value = getCellValue(column, record)
+      const result = column.render(value, record, index)
+      // 如果是对象（VNode），返回文本内容
+      if (typeof result === 'object' && result) {
+        return '[Rendered Content]'
+      }
+      return result || value
+    } catch (error) {
+      console.warn('Render function error:', error)
+      return getCellValue(column, record)
+    }
+  }
+  return getCellValue(column, record)
 }
 
 // 监听外部变化

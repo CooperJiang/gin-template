@@ -19,7 +19,7 @@
       :name="name"
       :class="switchClass"
       @click="handleClick"
-      @keydown.space.prevent="handleClick"
+      @keydown.space.prevent="handleKeydown"
     >
       <!-- 开关滑块 -->
       <span :class="thumbClass">
@@ -205,6 +205,14 @@ const handleClick = (event: MouseEvent) => {
   emit('update:modelValue', newValue)
   emit('change', newValue)
   emit('click', event)
+}
+
+const handleKeydown = (event: KeyboardEvent) => {
+  if (props.disabled || props.loading) return
+
+  const newValue = isActive.value ? props.inactiveValue : props.activeValue
+  emit('update:modelValue', newValue)
+  emit('change', newValue)
 }
 
 // 实例方法

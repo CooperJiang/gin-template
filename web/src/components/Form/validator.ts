@@ -1,22 +1,28 @@
-import type { FormRule, FormItem } from './types'
+import type { FormItemRule } from './types'
+
+export interface ValidationResult {
+  valid: boolean
+  errors: string[]
+}
 
 // 内置验证规则
-export const builtInValidators = {
+const builtInValidators = {
   required: (value: any): boolean => {
     if (Array.isArray(value)) {
       return value.length > 0
     }
-    return value !== null && value !== undefined && String(value).trim() !== ''
+    if (typeof value === 'string') {
+      return value.trim().length > 0
+    }
+    return value !== null && value !== undefined && value !== ''
   },
 
   email: (value: string): boolean => {
-    if (!value) return true // 空值由 required 规则处理
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(value)
   },
 
   url: (value: string): boolean => {
-    if (!value) return true
     try {
       new URL(value)
       return true
@@ -26,98 +32,210 @@ export const builtInValidators = {
   },
 
   number: (value: any): boolean => {
-    if (!value) return true
-    return !isNaN(Number(value))
+    if (value === '' || value === null || value === undefined) return false
+    return !isNaN(Number(value)) && isFinite(Number(value))
   },
 
-  pattern: (value: string, pattern: RegExp): boolean => {
-    if (!value) return true
-    return pattern.test(value)
+  integer: (value: any): boolean => {
+    if (value === '' || value === null || value === undefined) return false
+    return Number.isInteger(Number(value))
+  },
+
+  float: (value: any): boolean => {
+    if (value === '' || value === null || value === undefined) return false
+    const num = Number(value)
+    return !isNaN(num) && isFinite(num) && !Number.isInteger(num)
+  },
+
+  array: (value: any): boolean => {
+    return Array.isArray(value)
+  },
+
+  object: (value: any): boolean => {
+    return typeof value === 'object' && value !== null && !Array.isArray(value)
+  },
+
+  boolean: (value: any): boolean => {
+    return typeof value === 'boolean'
+  },
+
+  string: (value: any): boolean => {
+    return typeof value === 'string'
+  },
+
+  date: (value: any): boolean => {
+    return value instanceof Date || !isNaN(Date.parse(value))
+  },
+
+  hex: (value: string): boolean => {
+    return /^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(value)
   }
 }
 
-// 默认错误消息
-export const defaultMessages = {
-  required: '此字段为必填项',
-  email: '请输入有效的邮箱地址',
-  url: '请输入有效的URL地址',
-  number: '请输入有效的数字',
-  pattern: '输入格式不正确',
-  min: '长度不能少于 {min} 个字符',
-  max: '长度不能超过 {max} 个字符'
-}
-
-// 验证单个字段
-export async function validateField(
+// 验证单个规则
+export const validateRule = async (
   value: any,
-  rules: FormRule[],
-  formData: Record<string, any> = {}
-): Promise<{ valid: boolean; errors: string[] }> {
-  const errors: string[] = []
+  rule: FormItemRule,
+  source: Record<string, any>
+): Promise<ValidationResult> => {
+  try {
+    // required 验证
+    if (rule.required && !builtInValidators.required(value)) {
+      return {
+        valid: false,
+        errors: [rule.message || '此字段是必填项']
+      }
+    }
 
-  for (const rule of rules) {
-    let isValid = true
-    let errorMessage = ''
+    // 如果值为空且不是必填项，则跳过其他验证
+    if (!rule.required && (value === '' || value === null || value === undefined)) {
+      return { valid: true, errors: [] }
+    }
 
-    switch (rule.type) {
-      case 'required':
-        isValid = builtInValidators.required(value)
-        errorMessage = rule.message || defaultMessages.required
-        break
-
-      case 'email':
-        isValid = builtInValidators.email(value)
-        errorMessage = rule.message || defaultMessages.email
-        break
-
-      case 'url':
-        isValid = builtInValidators.url(value)
-        errorMessage = rule.message || defaultMessages.url
-        break
-
-      case 'number':
-        isValid = builtInValidators.number(value)
-        errorMessage = rule.message || defaultMessages.number
-        break
-
-      case 'pattern':
-        if (rule.pattern) {
-          isValid = builtInValidators.pattern(value, rule.pattern)
-          errorMessage = rule.message || defaultMessages.pattern
+    // 类型验证
+    if (rule.type && rule.type !== 'string') {
+      const typeValidator = builtInValidators[rule.type as keyof typeof builtInValidators]
+      if (typeValidator && !typeValidator(value)) {
+        return {
+          valid: false,
+          errors: [rule.message || `请输入正确的${rule.type}格式`]
         }
-        break
-
-      case 'custom':
-        if (rule.validator) {
-          const result = rule.validator(value, formData)
-          if (typeof result === 'boolean') {
-            isValid = result
-            errorMessage = rule.message || '验证失败'
-          } else {
-            isValid = false
-            errorMessage = result
-          }
-        }
-        break
+      }
     }
 
     // 长度验证
-    if (isValid && (rule.min !== undefined || rule.max !== undefined)) {
-      const length = Array.isArray(value) ? value.length : String(value || '').length
-
-      if (rule.min !== undefined && length < rule.min) {
-        isValid = false
-        errorMessage = rule.message || defaultMessages.min.replace('{min}', String(rule.min))
-      }
-
-      if (rule.max !== undefined && length > rule.max) {
-        isValid = false
-        errorMessage = rule.message || defaultMessages.max.replace('{max}', String(rule.max))
+    if (rule.len !== undefined) {
+      const length = Array.isArray(value) ? value.length : String(value).length
+      if (length !== rule.len) {
+        return {
+          valid: false,
+          errors: [rule.message || `长度必须为 ${rule.len} 个字符`]
+        }
       }
     }
 
-    if (!isValid) {
-      errors.push(errorMessage)
+    // 最小值/长度验证
+    if (rule.min !== undefined) {
+      if (rule.type === 'number' || rule.type === 'integer' || rule.type === 'float') {
+        // 数字类型验证数值大小
+        const numValue = Number(value)
+        if (numValue < rule.min) {
+          return {
+            valid: false,
+            errors: [rule.message || `数值不能小于 ${rule.min}`]
+          }
+        }
+      } else {
+        // 字符串和数组验证长度
+        const length = Array.isArray(value) ? value.length : String(value).length
+        if (length < rule.min) {
+          return {
+            valid: false,
+            errors: [rule.message || `最少需要 ${rule.min} 个字符`]
+          }
+        }
+      }
+    }
+
+    // 最大值/长度验证
+    if (rule.max !== undefined) {
+      if (rule.type === 'number' || rule.type === 'integer' || rule.type === 'float') {
+        // 数字类型验证数值大小
+        const numValue = Number(value)
+        if (numValue > rule.max) {
+          return {
+            valid: false,
+            errors: [rule.message || `数值不能大于 ${rule.max}`]
+          }
+        }
+      } else {
+        // 字符串和数组验证长度
+        const length = Array.isArray(value) ? value.length : String(value).length
+        if (length > rule.max) {
+          return {
+            valid: false,
+            errors: [rule.message || `最多允许 ${rule.max} 个字符`]
+          }
+        }
+      }
+    }
+
+    // 正则表达式验证
+    if (rule.pattern && !rule.pattern.test(String(value))) {
+      return {
+        valid: false,
+        errors: [rule.message || '格式不正确']
+      }
+    }
+
+    // 枚举值验证
+    if (rule.enum && !rule.enum.includes(value)) {
+      return {
+        valid: false,
+        errors: [rule.message || '请选择有效的选项']
+      }
+    }
+
+    // 自定义验证器
+    if (rule.validator) {
+      return new Promise((resolve) => {
+        rule.validator!(
+          rule,
+          value,
+          (error?: string | Error) => {
+            if (error) {
+              const message = error instanceof Error ? error.message : error
+              resolve({
+                valid: false,
+                errors: [message]
+              })
+            } else {
+              resolve({ valid: true, errors: [] })
+            }
+          },
+          source
+        )
+      })
+    }
+
+    // 异步验证器
+    if (rule.asyncValidator) {
+      try {
+        await rule.asyncValidator(rule, value, () => {}, source)
+        return { valid: true, errors: [] }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Validation failed'
+        return {
+          valid: false,
+          errors: [message]
+        }
+      }
+    }
+
+    return { valid: true, errors: [] }
+  } catch (error) {
+    console.error('Validation error:', error)
+    return {
+      valid: false,
+      errors: [error instanceof Error ? error.message : 'Validation failed']
+    }
+  }
+}
+
+// 验证多个规则
+export const validateRules = async (
+  value: any,
+  rules: FormItemRule[],
+  source: Record<string, any>
+): Promise<ValidationResult> => {
+  const errors: string[] = []
+
+  for (const rule of rules) {
+    const result = await validateRule(value, rule, source)
+    if (!result.valid) {
+      errors.push(...result.errors)
+      // 遇到第一个错误就停止验证（可配置）
+      break
     }
   }
 
@@ -128,33 +246,24 @@ export async function validateField(
 }
 
 // 验证整个表单
-export async function validateForm(
-  formData: Record<string, any>,
-  items: FormItem[]
-): Promise<{ valid: boolean; errors: Record<string, string[]> }> {
+export const validateForm = async (
+  model: Record<string, any>,
+  rules: Record<string, FormItemRule | FormItemRule[]>
+): Promise<{ valid: boolean; errors: Record<string, string[]> }> => {
   const errors: Record<string, string[]> = {}
   let isValid = true
 
-  for (const item of items) {
-    if (item.rules && item.rules.length > 0) {
-      const fieldResult = await validateField(formData[item.name], item.rules, formData)
-      if (!fieldResult.valid) {
-        errors[item.name] = fieldResult.errors
-        isValid = false
-      }
+  const validationPromises = Object.keys(rules).map(async (field) => {
+    const fieldRules = Array.isArray(rules[field]) ? rules[field] as FormItemRule[] : [rules[field] as FormItemRule]
+    const result = await validateRules(model[field], fieldRules, model)
+
+    if (!result.valid) {
+      errors[field] = result.errors
+      isValid = false
     }
-  }
-
-  return {
-    valid: isValid,
-    errors
-  }
-}
-
-// 根据触发时机过滤规则
-export function getRulesByTrigger(rules: FormRule[], trigger: 'blur' | 'change' | 'submit'): FormRule[] {
-  return rules.filter(rule => {
-    if (!rule.trigger) return trigger === 'submit' // 默认在提交时验证
-    return rule.trigger === trigger || rule.trigger === 'submit'
   })
+
+  await Promise.all(validationPromises)
+
+  return { valid: isValid, errors }
 }

@@ -1,580 +1,275 @@
 <template>
   <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
     <h3 class="text-lg font-semibold mb-4">Form 表单组件测试</h3>
-    <p class="text-gray-600 text-sm mb-6">测试表单组件的各种配置、验证规则和功能</p>
+    <p class="text-gray-600 text-sm mb-6">基于 Element UI 设计的表单组件，支持完整的验证功能</p>
 
     <!-- 基础表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">基础表单</h4>
+    <GlobalCodeDemo
+      title="基础表单"
+      description="最简单的表单使用方式，包含基本的输入框和文本域"
+      :code="basicFormCode"
+    >
       <div class="bg-gray-50 p-4 rounded-md">
         <GlobalForm
-          v-model="basicFormData"
-          :items="basicFormItems"
-          @submit="handleBasicSubmit"
-          @reset="handleBasicReset"
-          @validate="handleValidate"
-        />
+          ref="basicFormRef"
+          :model="basicForm"
+          :rules="basicRules"
+          label-width="80px"
+        >
+          <GlobalFormItem label="用户名" prop="username">
+            <GlobalInput v-model="basicForm.username" placeholder="请输入用户名" />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="邮箱" prop="email">
+            <GlobalInput v-model="basicForm.email" type="email" placeholder="请输入邮箱" />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="描述" prop="description">
+            <GlobalTextarea v-model="basicForm.description" placeholder="请输入描述" />
+          </GlobalFormItem>
+
+          <GlobalFormItem>
+            <GlobalButton type="primary" @click="submitBasicForm">提交</GlobalButton>
+            <GlobalButton @click="resetBasicForm" style="margin-left: 10px;">重置</GlobalButton>
+          </GlobalFormItem>
+        </GlobalForm>
+
         <div class="mt-4 p-3 bg-white rounded border">
           <h5 class="text-sm font-medium mb-2">表单数据：</h5>
-          <pre class="text-xs text-gray-600">{{ JSON.stringify(basicFormData, null, 2) }}</pre>
+          <pre class="text-xs text-gray-600">{{ JSON.stringify(basicForm, null, 2) }}</pre>
         </div>
       </div>
-    </div>
-
-    <!-- 水平布局表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">水平布局表单</h4>
-      <div class="bg-gray-50 p-4 rounded-md">
-        <GlobalForm
-          v-model="horizontalFormData"
-          :items="horizontalFormItems"
-          layout="horizontal"
-          label-width="120px"
-          @submit="handleHorizontalSubmit"
-        />
-      </div>
-    </div>
-
-    <!-- 内联表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">内联表单</h4>
-      <div class="bg-gray-50 p-4 rounded-md">
-        <GlobalForm
-          v-model="inlineFormData"
-          :items="inlineFormItems"
-          layout="inline"
-          submit-text="搜索"
-          :show-reset-button="false"
-          @submit="handleInlineSubmit"
-        />
-      </div>
-    </div>
+    </GlobalCodeDemo>
 
     <!-- 验证表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">表单验证</h4>
+    <GlobalCodeDemo
+      title="表单验证"
+      description="包含各种验证规则的表单示例，支持必填、格式验证、自定义验证等"
+      :code="validationFormCode"
+    >
       <div class="bg-gray-50 p-4 rounded-md">
         <GlobalForm
           ref="validationFormRef"
-          v-model="validationFormData"
-          :items="validationFormItems"
-          :validate-on-change="true"
-          :validate-on-blur="true"
-          @submit="handleValidationSubmit"
-        />
-        <div class="mt-4 flex gap-2">
-          <GlobalButton
-            type="secondary"
-            variant="outline"
-            @click="validateForm"
-          >
-            手动验证
-          </GlobalButton>
-          <GlobalButton
-            type="warning"
-            variant="outline"
-            @click="resetValidation"
-          >
-            重置验证
-          </GlobalButton>
-        </div>
-      </div>
-    </div>
+          :model="validationForm"
+          :rules="validationRules"
+          label-width="120px"
+          label-position="right"
+        >
+          <GlobalFormItem label="用户名" prop="username">
+            <GlobalInput v-model="validationForm.username" placeholder="请输入用户名" />
+          </GlobalFormItem>
 
-    <!-- 复杂表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">复杂表单示例</h4>
+          <GlobalFormItem label="密码" prop="password">
+            <GlobalInput
+              v-model="validationForm.password"
+              type="password"
+              placeholder="请输入密码"
+              show-password
+            />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="确认密码" prop="confirmPassword">
+            <GlobalInput
+              v-model="validationForm.confirmPassword"
+              type="password"
+              placeholder="请再次输入密码"
+              show-password
+            />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="年龄" prop="age">
+            <GlobalInput v-model="validationForm.age" type="number" placeholder="请输入年龄" />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="网站" prop="website">
+            <GlobalInput v-model="validationForm.website" placeholder="请输入网站地址" />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="性别" prop="gender">
+            <GlobalSelect
+              v-model="validationForm.gender"
+              placeholder="请选择性别"
+              :options="genderOptions"
+            />
+          </GlobalFormItem>
+
+          <GlobalFormItem>
+            <GlobalButton type="primary" @click="submitValidationForm">提交</GlobalButton>
+            <GlobalButton @click="resetValidationForm" style="margin-left: 10px;">重置</GlobalButton>
+            <GlobalButton type="warning" @click="validateSpecificField" style="margin-left: 10px;">验证用户名</GlobalButton>
+          </GlobalFormItem>
+        </GlobalForm>
+      </div>
+    </GlobalCodeDemo>
+
+    <!-- 内联表单 -->
+    <GlobalCodeDemo
+      title="内联表单"
+      description="表单项在一行内排列，适合简单的搜索表单"
+      :code="inlineFormCode"
+    >
       <div class="bg-gray-50 p-4 rounded-md">
         <GlobalForm
-          v-model="complexFormData"
-          :items="complexFormItems"
-          :submit-loading="isSubmitting"
-          bordered
-          @submit="handleComplexSubmit"
-        />
-      </div>
-    </div>
+          :model="inlineForm"
+          :inline="true"
+        >
+          <GlobalFormItem label="关键词">
+            <GlobalInput v-model="inlineForm.keyword" placeholder="搜索关键词" />
+          </GlobalFormItem>
 
-    <!-- 禁用表单 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">禁用状态</h4>
+          <GlobalFormItem label="类型">
+            <GlobalSelect
+              v-model="inlineForm.type"
+              placeholder="请选择类型"
+              :options="typeOptions"
+            />
+          </GlobalFormItem>
+
+          <GlobalFormItem>
+            <GlobalButton type="primary" @click="submitInlineForm">搜索</GlobalButton>
+          </GlobalFormItem>
+        </GlobalForm>
+      </div>
+    </GlobalCodeDemo>
+
+    <!-- 顶部标签表单 -->
+    <GlobalCodeDemo
+      title="顶部标签表单"
+      description="标签位置在输入框上方，适合较宽的表单布局"
+      :code="topLabelFormCode"
+    >
+      <div class="bg-gray-50 p-4 rounded-md">
+        <GlobalForm
+          ref="topLabelFormRef"
+          :model="topLabelForm"
+          :rules="topLabelRules"
+          label-position="top"
+        >
+          <div class="grid grid-cols-2 gap-4">
+            <GlobalFormItem label="姓名" prop="name">
+              <GlobalInput v-model="topLabelForm.name" placeholder="请输入姓名" />
+            </GlobalFormItem>
+
+            <GlobalFormItem label="电话" prop="phone">
+              <GlobalInput v-model="topLabelForm.phone" placeholder="请输入电话号码" />
+            </GlobalFormItem>
+          </div>
+
+          <GlobalFormItem label="地址" prop="address">
+            <GlobalInput v-model="topLabelForm.address" placeholder="请输入详细地址" />
+          </GlobalFormItem>
+
+          <GlobalFormItem label="备注" prop="remark">
+            <GlobalTextarea v-model="topLabelForm.remark" placeholder="请输入备注" :rows="3" />
+          </GlobalFormItem>
+
+          <GlobalFormItem>
+            <GlobalButton type="primary" @click="submitTopLabelForm">提交</GlobalButton>
+            <GlobalButton @click="resetTopLabelForm" style="margin-left: 10px;">重置</GlobalButton>
+          </GlobalFormItem>
+        </GlobalForm>
+      </div>
+    </GlobalCodeDemo>
+
+    <!-- 禁用状态 -->
+    <GlobalCodeDemo
+      title="禁用状态"
+      description="通过disabled属性禁用整个表单"
+      :code="disabledFormCode"
+    >
       <div class="bg-gray-50 p-4 rounded-md">
         <div class="mb-4">
-          <GlobalButton
-            type="secondary"
-            variant="outline"
-            @click="toggleDisabled"
-          >
+          <GlobalButton @click="toggleDisabled">
             {{ formDisabled ? '启用表单' : '禁用表单' }}
           </GlobalButton>
         </div>
+
         <GlobalForm
-          v-model="disabledFormData"
-          :items="disabledFormItems"
+          :model="disabledForm"
           :disabled="formDisabled"
-        />
-      </div>
-    </div>
+          label-width="80px"
+        >
+          <GlobalFormItem label="用户名">
+            <GlobalInput v-model="disabledForm.username" placeholder="用户名" />
+          </GlobalFormItem>
 
-    <!-- 表单尺寸 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">表单尺寸</h4>
+          <GlobalFormItem label="状态">
+            <GlobalSelect
+              v-model="disabledForm.status"
+              placeholder="请选择状态"
+              :options="statusOptions"
+            />
+          </GlobalFormItem>
+
+          <GlobalFormItem>
+            <GlobalButton type="primary">提交</GlobalButton>
+          </GlobalFormItem>
+        </GlobalForm>
+      </div>
+    </GlobalCodeDemo>
+
+    <!-- 尺寸示例 -->
+    <GlobalCodeDemo
+      title="不同尺寸"
+      description="表单支持small、default、large三种尺寸"
+      :code="sizeFormCode"
+    >
       <div class="space-y-4">
         <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">小尺寸</h5>
+          <h5 class="text-sm font-medium mb-2">小尺寸 (small)</h5>
           <div class="bg-gray-50 p-4 rounded-md">
-            <GlobalForm
-              v-model="sizeFormData"
-              :items="sizeFormItems"
-              size="small"
-              layout="inline"
-              :show-reset-button="false"
-            />
+            <GlobalForm :model="sizeForm" size="small" label-width="60px">
+              <GlobalFormItem label="姓名">
+                <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+              </GlobalFormItem>
+              <GlobalFormItem label="年龄">
+                <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+              </GlobalFormItem>
+            </GlobalForm>
           </div>
         </div>
+
         <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">中等尺寸（默认）</h5>
+          <h5 class="text-sm font-medium mb-2">默认尺寸 (default)</h5>
           <div class="bg-gray-50 p-4 rounded-md">
-            <GlobalForm
-              v-model="sizeFormData"
-              :items="sizeFormItems"
-              size="medium"
-              layout="inline"
-              :show-reset-button="false"
-            />
+            <GlobalForm :model="sizeForm" size="default" label-width="60px">
+              <GlobalFormItem label="姓名">
+                <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+              </GlobalFormItem>
+              <GlobalFormItem label="年龄">
+                <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+              </GlobalFormItem>
+            </GlobalForm>
           </div>
         </div>
+
         <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">大尺寸</h5>
+          <h5 class="text-sm font-medium mb-2">大尺寸 (large)</h5>
           <div class="bg-gray-50 p-4 rounded-md">
-            <GlobalForm
-              v-model="sizeFormData"
-              :items="sizeFormItems"
-              size="large"
-              layout="inline"
-              :show-reset-button="false"
-            />
+            <GlobalForm :model="sizeForm" size="large" label-width="60px">
+              <GlobalFormItem label="姓名">
+                <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+              </GlobalFormItem>
+              <GlobalFormItem label="年龄">
+                <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+              </GlobalFormItem>
+            </GlobalForm>
           </div>
         </div>
       </div>
-    </div>
+    </GlobalCodeDemo>
 
-    <!-- 独立组件测试 -->
-    <div class="mb-8">
-      <h4 class="font-medium text-gray-900 mb-4">独立组件测试</h4>
-      <div class="bg-gray-50 p-4 rounded-md space-y-4">
-        <!-- Input 组件测试 -->
-        <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">GlobalInput 组件</h5>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <GlobalInput
-              v-model="inputValue"
-              placeholder="普通输入框"
-              prefix-icon="user"
-            />
-            <GlobalInput
-              v-model="passwordValue"
-              type="password"
-              placeholder="密码输入框"
-              :show-password="true"
-            />
-            <GlobalInput
-              v-model="emailValue"
-              type="email"
-              placeholder="邮箱输入框"
-              suffix-icon="envelope"
-            />
-            <GlobalInput
-              v-model="disabledValue"
-              placeholder="禁用状态"
-              :disabled="true"
-            />
-          </div>
-        </div>
-
-        <!-- Textarea 组件测试 -->
-        <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">GlobalTextarea 组件</h5>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <GlobalTextarea
-              v-model="textareaValue"
-              placeholder="普通文本域"
-              :rows="3"
-            />
-            <GlobalTextarea
-              v-model="textareaWithCountValue"
-              placeholder="带字符计数的文本域"
-              :maxlength="200"
-              :show-count="true"
-              :rows="3"
-            />
-          </div>
-        </div>
-
-        <div class="mt-4 p-3 bg-white rounded border">
-          <h5 class="text-sm font-medium mb-2">独立组件数据：</h5>
-          <pre class="text-xs text-gray-600">输入框: {{ inputValue }}
-密码: {{ passwordValue }}
-邮箱: {{ emailValue }}
-文本域: {{ textareaValue }}
-带计数文本域: {{ textareaWithCountValue }}</pre>
-        </div>
+    <!-- API 测试 -->
+    <div class="mt-8 p-4 bg-blue-50 rounded-md">
+      <h4 class="font-medium text-blue-900 mb-4">API 测试</h4>
+      <div class="flex gap-2 flex-wrap mb-4">
+        <GlobalButton size="small" @click="validateAllFields">验证全部字段</GlobalButton>
+        <GlobalButton size="small" @click="clearValidation">清除验证</GlobalButton>
+        <GlobalButton size="small" @click="resetFields">重置字段</GlobalButton>
       </div>
-    </div>
-
-    <!-- API 测试区域 -->
-    <div class="bg-gray-50 p-4 rounded-md">
-      <h4 class="font-medium text-gray-900 mb-3">API 测试区域</h4>
-      <div class="space-y-4">
-        <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">表单方法测试</h5>
-          <div class="flex flex-wrap gap-2">
-            <GlobalButton
-              type="primary"
-              size="small"
-              @click="setFieldValue"
-            >
-              设置用户名为 "admin"
-            </GlobalButton>
-            <GlobalButton
-              type="secondary"
-              size="small"
-              @click="getFieldValue"
-            >
-              获取邮箱值
-            </GlobalButton>
-            <GlobalButton
-              type="warning"
-              size="small"
-              @click="validateField"
-            >
-              验证邮箱字段
-            </GlobalButton>
-          </div>
-        </div>
-        <div>
-          <h5 class="text-sm font-medium text-gray-700 mb-2">操作结果：</h5>
-          <div class="p-3 bg-white rounded border text-xs">
-            <pre>{{ apiTestResult || '暂无操作结果' }}</pre>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- API 文档 -->
-    <div class="mt-8 border-t pt-8">
-      <h3 class="text-lg font-semibold mb-4">API 文档</h3>
-
-      <!-- Props -->
-      <div class="mb-6">
-        <h4 class="font-medium text-gray-900 mb-3">Props</h4>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">属性</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">默认值</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">说明</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">modelValue</td>
-                <td class="px-4 py-2 text-sm text-gray-500">Record&lt;string, any&gt;</td>
-                <td class="px-4 py-2 text-sm text-gray-500">{}</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单数据对象</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">items</td>
-                <td class="px-4 py-2 text-sm text-gray-500">FormItem[]</td>
-                <td class="px-4 py-2 text-sm text-gray-500">[]</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单项配置数组</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">layout</td>
-                <td class="px-4 py-2 text-sm text-gray-500">'vertical' | 'horizontal' | 'inline'</td>
-                <td class="px-4 py-2 text-sm text-gray-500">'vertical'</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单布局方式</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">size</td>
-                <td class="px-4 py-2 text-sm text-gray-500">'small' | 'medium' | 'large'</td>
-                <td class="px-4 py-2 text-sm text-gray-500">'medium'</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单组件尺寸</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">labelWidth</td>
-                <td class="px-4 py-2 text-sm text-gray-500">string | number</td>
-                <td class="px-4 py-2 text-sm text-gray-500">-</td>
-                <td class="px-4 py-2 text-sm text-gray-500">标签宽度（水平布局时有效）</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">validateOnChange</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">false</td>
-                <td class="px-4 py-2 text-sm text-gray-500">值变化时是否验证</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">validateOnBlur</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">true</td>
-                <td class="px-4 py-2 text-sm text-gray-500">失去焦点时是否验证</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">showSubmitButton</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">true</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否显示提交按钮</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">showResetButton</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">true</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否显示重置按钮</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">submitLoading</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">false</td>
-                <td class="px-4 py-2 text-sm text-gray-500">提交按钮加载状态</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">disabled</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">false</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否禁用整个表单</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">bordered</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">false</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否显示表单边框</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Events -->
-      <div class="mb-6">
-        <h4 class="font-medium text-gray-900 mb-3">Events</h4>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">事件名</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">参数</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">说明</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">update:modelValue</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(value: Record&lt;string, any&gt;)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单数据变化时触发</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">submit</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(value: Record&lt;string, any&gt;)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单提交时触发</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">reset</td>
-                <td class="px-4 py-2 text-sm text-gray-500">-</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单重置时触发</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">validate</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(valid: boolean, errors: Record&lt;string, string[]&gt;)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">表单验证时触发</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">field-change</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(field: string, value: any)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">字段值变化时触发</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">field-blur</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(field: string, value: any)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">字段失去焦点时触发</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Methods -->
-      <div class="mb-6">
-        <h4 class="font-medium text-gray-900 mb-3">Methods</h4>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">方法名</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">参数</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">返回值</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">说明</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">validate</td>
-                <td class="px-4 py-2 text-sm text-gray-500">-</td>
-                <td class="px-4 py-2 text-sm text-gray-500">Promise&lt;{valid: boolean, errors: Record&lt;string, string[]&gt;}&gt;</td>
-                <td class="px-4 py-2 text-sm text-gray-500">验证整个表单</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">validateField</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(field: string)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">Promise&lt;{valid: boolean, errors: string[]}&gt;</td>
-                <td class="px-4 py-2 text-sm text-gray-500">验证单个字段</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">resetValidation</td>
-                <td class="px-4 py-2 text-sm text-gray-500">-</td>
-                <td class="px-4 py-2 text-sm text-gray-500">void</td>
-                <td class="px-4 py-2 text-sm text-gray-500">重置验证状态</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">reset</td>
-                <td class="px-4 py-2 text-sm text-gray-500">-</td>
-                <td class="px-4 py-2 text-sm text-gray-500">void</td>
-                <td class="px-4 py-2 text-sm text-gray-500">重置表单数据</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">getFieldValue</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(field: string)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">any</td>
-                <td class="px-4 py-2 text-sm text-gray-500">获取字段值</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">setFieldValue</td>
-                <td class="px-4 py-2 text-sm text-gray-500">(field: string, value: any)</td>
-                <td class="px-4 py-2 text-sm text-gray-500">void</td>
-                <td class="px-4 py-2 text-sm text-gray-500">设置字段值</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- FormItem -->
-      <div class="mb-6">
-        <h4 class="font-medium text-gray-900 mb-3">FormItem 配置</h4>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">属性</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">类型</th>
-                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">说明</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">name</td>
-                <td class="px-4 py-2 text-sm text-gray-500">string</td>
-                <td class="px-4 py-2 text-sm text-gray-500">字段名称，必填</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">label</td>
-                <td class="px-4 py-2 text-sm text-gray-500">string</td>
-                <td class="px-4 py-2 text-sm text-gray-500">字段标签</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">type</td>
-                <td class="px-4 py-2 text-sm text-gray-500">'input' | 'password' | 'select' | 'checkbox' | 'radio' | 'textarea'</td>
-                <td class="px-4 py-2 text-sm text-gray-500">组件类型</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">placeholder</td>
-                <td class="px-4 py-2 text-sm text-gray-500">string</td>
-                <td class="px-4 py-2 text-sm text-gray-500">占位符文本</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">required</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否必填</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">rules</td>
-                <td class="px-4 py-2 text-sm text-gray-500">FormRule[]</td>
-                <td class="px-4 py-2 text-sm text-gray-500">验证规则数组</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">options</td>
-                <td class="px-4 py-2 text-sm text-gray-500">FormOption[]</td>
-                <td class="px-4 py-2 text-sm text-gray-500">选项数据（select/checkbox/radio）</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">defaultValue</td>
-                <td class="px-4 py-2 text-sm text-gray-500">any</td>
-                <td class="px-4 py-2 text-sm text-gray-500">默认值</td>
-              </tr>
-              <tr>
-                <td class="px-4 py-2 text-sm font-medium text-gray-900">disabled</td>
-                <td class="px-4 py-2 text-sm text-gray-500">boolean</td>
-                <td class="px-4 py-2 text-sm text-gray-500">是否禁用</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- 使用示例 -->
-      <div>
-        <h4 class="font-medium text-gray-900 mb-3">使用示例</h4>
-        <div class="bg-gray-50 p-4 rounded-md">
-          <pre class="text-sm text-gray-800 overflow-x-auto"><code>&lt;template&gt;
-  &lt;GlobalForm
-    v-model="formData"
-    :items="formItems"
-    layout="vertical"
-    :validate-on-blur="true"
-    @submit="handleSubmit"
-    @validate="handleValidate"
-  /&gt;
-&lt;/template&gt;
-
-&lt;script setup&gt;
-import { ref } from 'vue'
-
-const formData = ref({})
-
-const formItems = [
-  {
-    name: 'username',
-    label: '用户名',
-    type: 'input',
-    placeholder: '请输入用户名',
-    rules: [
-      { type: 'required', message: '用户名不能为空' },
-      { min: 3, max: 20, message: '用户名长度为3-20个字符' }
-    ]
-  },
-  {
-    name: 'email',
-    label: '邮箱',
-    type: 'input',
-    inputType: 'email',
-    placeholder: '请输入邮箱',
-    rules: [
-      { type: 'required', message: '邮箱不能为空' },
-      { type: 'email', message: '请输入正确的邮箱格式' }
-    ]
-  }
-]
-
-const handleSubmit = (data) => {
-  console.log('表单提交:', data)
-}
-
-const handleValidate = (valid, errors) => {
-  console.log('验证结果:', valid, errors)
-}
-&lt;/script&gt;</code></pre>
-        </div>
+      <div v-if="apiTestResult" class="mt-4 p-3 bg-white rounded border text-sm">
+        <strong>测试结果：</strong>
+        <pre>{{ apiTestResult }}</pre>
       </div>
     </div>
   </div>
@@ -582,374 +277,450 @@ const handleValidate = (valid, errors) => {
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import type { FormInstance, FormItem } from '../../../components/Form/types'
+import type { FormInstance, FormRules } from '../../../components/Form/types'
 
 defineOptions({
   name: 'FormTest'
 })
 
-// 引用
+// 表单引用
+const basicFormRef = ref<FormInstance>()
 const validationFormRef = ref<FormInstance>()
-
-// 表单数据
-const basicFormData = ref({})
-const horizontalFormData = ref({})
-const inlineFormData = ref({})
-const validationFormData = ref({})
-const complexFormData = ref({})
-const disabledFormData = ref({})
-const sizeFormData = ref({})
-
-// 独立组件测试数据
-const inputValue = ref('')
-const passwordValue = ref('')
-const emailValue = ref('')
-const disabledValue = ref('禁用状态示例')
-const textareaValue = ref('')
-const textareaWithCountValue = ref('')
+const topLabelFormRef = ref<FormInstance>()
 
 // 状态
-const isSubmitting = ref(false)
 const formDisabled = ref(false)
 const apiTestResult = ref('')
 
-// 基础表单配置
-const basicFormItems: FormItem[] = [
-  {
-    name: 'username',
-    label: '用户名',
-    type: 'input',
-    placeholder: '请输入用户名',
-    defaultValue: ''
-  },
-  {
-    name: 'email',
-    label: '邮箱',
-    type: 'input',
-    inputType: 'email',
-    placeholder: '请输入邮箱地址'
-  },
-  {
-    name: 'description',
-    label: '描述',
-    type: 'textarea',
-    placeholder: '请输入描述信息'
-  }
-]
+// 基础表单
+const basicForm = reactive({
+  username: '',
+  email: '',
+  description: ''
+})
 
-// 水平布局表单配置
-const horizontalFormItems: FormItem[] = [
-  {
-    name: 'title',
-    label: '标题',
-    type: 'input',
-    placeholder: '请输入标题',
-    required: true
-  },
-  {
-    name: 'category',
-    label: '分类',
-    type: 'select',
-    placeholder: '请选择分类',
-    options: [
-      { label: '技术文章', value: 'tech' },
-      { label: '生活随笔', value: 'life' },
-      { label: '工作总结', value: 'work' }
-    ]
-  },
-  {
-    name: 'tags',
-    label: '标签',
-    type: 'select',
-    placeholder: '请选择标签',
-    multiple: true,
-    options: [
-      { label: 'Vue', value: 'vue' },
-      { label: 'React', value: 'react' },
-      { label: 'TypeScript', value: 'typescript' },
-      { label: 'JavaScript', value: 'javascript' }
-    ]
-  }
-]
-
-// 内联表单配置
-const inlineFormItems: FormItem[] = [
-  {
-    name: 'keyword',
-    label: '关键词',
-    type: 'input',
-    placeholder: '搜索关键词'
-  },
-  {
-    name: 'type',
-    label: '类型',
-    type: 'select',
-    placeholder: '全部',
-    options: [
-      { label: '全部', value: '' },
-      { label: '文章', value: 'article' },
-      { label: '视频', value: 'video' },
-      { label: '图片', value: 'image' }
-    ]
-  }
-]
-
-// 验证表单配置
-const validationFormItems: FormItem[] = [
-  {
-    name: 'username',
-    label: '用户名',
-    type: 'input',
-    placeholder: '请输入用户名',
-    rules: [
-      { type: 'required', message: '用户名不能为空' },
-      { min: 3, max: 20, message: '用户名长度为3-20个字符' }
-    ]
-  },
-  {
-    name: 'email',
-    label: '邮箱',
-    type: 'input',
-    inputType: 'email',
-    placeholder: '请输入邮箱地址',
-    rules: [
-      { type: 'required', message: '邮箱不能为空' },
-      { type: 'email', message: '请输入正确的邮箱格式' }
-    ]
-  },
-  {
-    name: 'password',
-    label: '密码',
-    type: 'password',
-    placeholder: '请输入密码',
-    showPassword: true,
-    rules: [
-      { type: 'required', message: '密码不能为空' },
-      { min: 6, message: '密码长度不能少于6位' },
-      {
-        type: 'pattern',
-        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{6,}$/,
-        message: '密码必须包含大小写字母和数字'
-      }
-    ]
-  },
-  {
-    name: 'confirmPassword',
-    label: '确认密码',
-    type: 'password',
-    placeholder: '请再次输入密码',
-    rules: [
-      { type: 'required', message: '确认密码不能为空' },
-      {
-        type: 'custom',
-        validator: (value: any, formData: Record<string, any>) => {
-          return value === formData.password || '两次输入的密码不一致'
-        }
-      }
-    ]
-  },
-  {
-    name: 'agree',
-    label: '同意条款',
-    type: 'checkbox',
-    rules: [
-      {
-        type: 'custom',
-        validator: (value: any) => {
-          return value === true || '请同意用户协议'
-        }
-      }
-    ],
-    options: [
-      { label: '我已阅读并同意用户协议', value: true }
-    ]
-  }
-]
-
-// 复杂表单配置
-const complexFormItems: FormItem[] = [
-  {
-    name: 'fullName',
-    label: '姓名',
-    type: 'input',
-    placeholder: '请输入真实姓名',
-    required: true,
-    rules: [
-      { type: 'required', message: '姓名不能为空' }
-    ]
-  },
-  {
-    name: 'gender',
-    label: '性别',
-    type: 'radio',
-    options: [
-      { label: '男', value: 'male' },
-      { label: '女', value: 'female' }
-    ],
-    defaultValue: 'male'
-  },
-  {
-    name: 'age',
-    label: '年龄',
-    type: 'input',
-    inputType: 'number',
-    placeholder: '请输入年龄',
-    rules: [
-      { type: 'required', message: '年龄不能为空' },
-      { type: 'number', message: '请输入有效数字' },
-      { min: 18, max: 120, message: '年龄必须在18-120之间' }
-    ]
-  },
-  {
-    name: 'hobbies',
-    label: '兴趣爱好',
-    type: 'checkbox',
-    multiple: true,
-    options: [
-      { label: '阅读', value: 'reading' },
-      { label: '运动', value: 'sports' },
-      { label: '音乐', value: 'music' },
-      { label: '旅行', value: 'travel' },
-      { label: '编程', value: 'coding' }
-    ]
-  },
-  {
-    name: 'bio',
-    label: '个人简介',
-    type: 'textarea',
-    placeholder: '请简单介绍一下自己...',
-    maxLength: 500
-  }
-]
-
-// 禁用表单配置
-const disabledFormItems: FormItem[] = [
-  {
-    name: 'readonly',
-    label: '只读字段',
-    type: 'input',
-    defaultValue: '这是一个只读字段',
-    disabled: true
-  },
-  {
-    name: 'normal',
-    label: '正常字段',
-    type: 'input',
-    placeholder: '这个字段受全局禁用状态控制'
-  }
-]
-
-// 尺寸表单配置
-const sizeFormItems: FormItem[] = [
-  {
-    name: 'name',
-    label: '姓名',
-    type: 'input',
-    placeholder: '请输入姓名'
-  },
-  {
-    name: 'status',
-    label: '状态',
-    type: 'select',
-    options: [
-      { label: '启用', value: 'active' },
-      { label: '禁用', value: 'inactive' }
-    ]
-  }
-]
-
-// 事件处理
-const handleBasicSubmit = (data: Record<string, any>) => {
-  console.log('基础表单提交:', data)
-  apiTestResult.value = `基础表单提交: ${JSON.stringify(data, null, 2)}`
+const basicRules: FormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ],
+  description: [
+    { required: true, message: '请输入描述', trigger: 'blur' }
+  ]
 }
 
-const handleBasicReset = () => {
-  console.log('基础表单重置')
+// 验证表单
+const validationForm = reactive({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  age: '',
+  website: '',
+  gender: ''
+})
+
+const validationRules: FormRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
+    {
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{6,}$/,
+      message: '密码必须包含大小写字母和数字',
+      trigger: 'blur'
+    }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback, source) => {
+        if (value !== source?.password) {
+          callback('两次输入的密码不一致')
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur'
+    }
+  ],
+  age: [
+    { required: true, message: '请输入年龄', trigger: 'blur' },
+    { type: 'number', message: '请输入有效数字', trigger: 'blur' },
+    { min: 18, max: 120, message: '年龄必须在18-120之间', trigger: 'blur' }
+  ],
+  website: [
+    { type: 'url', message: '请输入正确的网站地址', trigger: 'blur' }
+  ],
+  gender: [
+    { required: true, message: '请选择性别', trigger: 'change' }
+  ]
+}
+
+// 内联表单
+const inlineForm = reactive({
+  keyword: '',
+  type: ''
+})
+
+// 顶部标签表单
+const topLabelForm = reactive({
+  name: '',
+  phone: '',
+  address: '',
+  remark: ''
+})
+
+const topLabelRules: FormRules = {
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' }
+  ],
+  phone: [
+    { required: true, message: '请输入电话号码', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+  ]
+}
+
+// 禁用表单
+const disabledForm = reactive({
+  username: 'admin',
+  status: 'active'
+})
+
+// 尺寸表单
+const sizeForm = reactive({
+  name: '',
+  age: ''
+})
+
+// 选项数据
+const genderOptions = [
+  { label: '男', value: 'male' },
+  { label: '女', value: 'female' }
+]
+
+const typeOptions = [
+  { label: '全部', value: '' },
+  { label: '文章', value: 'article' },
+  { label: '视频', value: 'video' },
+  { label: '图片', value: 'image' }
+]
+
+const statusOptions = [
+  { label: '启用', value: 'active' },
+  { label: '禁用', value: 'inactive' }
+]
+
+// 代码示例字符串
+const basicFormCode = `<template>
+  <GlobalForm
+    ref="basicFormRef"
+    :model="basicForm"
+    :rules="basicRules"
+    label-width="80px"
+  >
+    <GlobalFormItem label="用户名" prop="username">
+      <GlobalInput v-model="basicForm.username" placeholder="请输入用户名" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="邮箱" prop="email">
+      <GlobalInput v-model="basicForm.email" type="email" placeholder="请输入邮箱" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="描述" prop="description">
+      <GlobalTextarea v-model="basicForm.description" placeholder="请输入描述" />
+    </GlobalFormItem>
+
+    <GlobalFormItem>
+      <GlobalButton type="primary" @click="submitBasicForm">提交</GlobalButton>
+      <GlobalButton @click="resetBasicForm">重置</GlobalButton>
+    </GlobalFormItem>
+  </GlobalForm>
+</template>`
+
+const validationFormCode = `<template>
+  <GlobalForm
+    ref="validationFormRef"
+    :model="validationForm"
+    :rules="validationRules"
+    label-width="120px"
+    label-position="right"
+  >
+    <GlobalFormItem label="用户名" prop="username">
+      <GlobalInput v-model="validationForm.username" placeholder="请输入用户名" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="密码" prop="password">
+      <GlobalInput
+        v-model="validationForm.password"
+        type="password"
+        placeholder="请输入密码"
+        show-password
+      />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="确认密码" prop="confirmPassword">
+      <GlobalInput
+        v-model="validationForm.confirmPassword"
+        type="password"
+        placeholder="请再次输入密码"
+        show-password
+      />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="年龄" prop="age">
+      <GlobalInput v-model="validationForm.age" type="number" placeholder="请输入年龄" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="性别" prop="gender">
+      <GlobalSelect
+        v-model="validationForm.gender"
+        placeholder="请选择性别"
+        :options="genderOptions"
+      />
+    </GlobalFormItem>
+
+    <GlobalFormItem>
+      <GlobalButton type="primary" @click="submitValidationForm">提交</GlobalButton>
+      <GlobalButton @click="resetValidationForm">重置</GlobalButton>
+    </GlobalFormItem>
+  </GlobalForm>
+</template>`
+
+const inlineFormCode = `<template>
+  <GlobalForm :model="inlineForm" :inline="true">
+    <GlobalFormItem label="关键词">
+      <GlobalInput v-model="inlineForm.keyword" placeholder="搜索关键词" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="类型">
+      <GlobalSelect
+        v-model="inlineForm.type"
+        placeholder="请选择类型"
+        :options="typeOptions"
+      />
+    </GlobalFormItem>
+
+    <GlobalFormItem>
+      <GlobalButton type="primary" @click="submitInlineForm">搜索</GlobalButton>
+    </GlobalFormItem>
+  </GlobalForm>
+</template>`
+
+const topLabelFormCode = `<template>
+  <GlobalForm
+    ref="topLabelFormRef"
+    :model="topLabelForm"
+    :rules="topLabelRules"
+    label-position="top"
+  >
+    <div class="grid grid-cols-2 gap-4">
+      <GlobalFormItem label="姓名" prop="name">
+        <GlobalInput v-model="topLabelForm.name" placeholder="请输入姓名" />
+      </GlobalFormItem>
+
+      <GlobalFormItem label="电话" prop="phone">
+        <GlobalInput v-model="topLabelForm.phone" placeholder="请输入电话号码" />
+      </GlobalFormItem>
+    </div>
+
+    <GlobalFormItem label="地址" prop="address">
+      <GlobalInput v-model="topLabelForm.address" placeholder="请输入详细地址" />
+    </GlobalFormItem>
+
+    <GlobalFormItem label="备注" prop="remark">
+      <GlobalTextarea v-model="topLabelForm.remark" placeholder="请输入备注" :rows="3" />
+    </GlobalFormItem>
+
+    <GlobalFormItem>
+      <GlobalButton type="primary" @click="submitTopLabelForm">提交</GlobalButton>
+      <GlobalButton @click="resetTopLabelForm">重置</GlobalButton>
+    </GlobalFormItem>
+  </GlobalForm>
+</template>`
+
+const disabledFormCode = `<template>
+  <div>
+    <GlobalButton @click="toggleDisabled">
+      {{ formDisabled ? '启用表单' : '禁用表单' }}
+    </GlobalButton>
+
+    <GlobalForm
+      :model="disabledForm"
+      :disabled="formDisabled"
+      label-width="80px"
+    >
+      <GlobalFormItem label="用户名">
+        <GlobalInput v-model="disabledForm.username" placeholder="用户名" />
+      </GlobalFormItem>
+
+      <GlobalFormItem label="状态">
+        <GlobalSelect
+          v-model="disabledForm.status"
+          placeholder="请选择状态"
+          :options="statusOptions"
+        />
+      </GlobalFormItem>
+
+      <GlobalFormItem>
+        <GlobalButton type="primary">提交</GlobalButton>
+      </GlobalFormItem>
+    </GlobalForm>
+  </div>
+</template>`
+
+const sizeFormCode = `<template>
+  <div>
+    <!-- 小尺寸 -->
+    <GlobalForm :model="sizeForm" size="small" label-width="60px">
+      <GlobalFormItem label="姓名">
+        <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+      </GlobalFormItem>
+      <GlobalFormItem label="年龄">
+        <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+      </GlobalFormItem>
+    </GlobalForm>
+
+    <!-- 默认尺寸 -->
+    <GlobalForm :model="sizeForm" size="default" label-width="60px">
+      <GlobalFormItem label="姓名">
+        <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+      </GlobalFormItem>
+      <GlobalFormItem label="年龄">
+        <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+      </GlobalFormItem>
+    </GlobalForm>
+
+    <!-- 大尺寸 -->
+    <GlobalForm :model="sizeForm" size="large" label-width="60px">
+      <GlobalFormItem label="姓名">
+        <GlobalInput v-model="sizeForm.name" placeholder="请输入姓名" />
+      </GlobalFormItem>
+      <GlobalFormItem label="年龄">
+        <GlobalInput v-model="sizeForm.age" placeholder="请输入年龄" />
+      </GlobalFormItem>
+    </GlobalForm>
+  </div>
+</template>`
+
+// 方法
+const submitBasicForm = async () => {
+  try {
+    const valid = await basicFormRef.value?.validate()
+    if (valid) {
+      apiTestResult.value = `基础表单提交成功: ${JSON.stringify(basicForm, null, 2)}`
+    } else {
+      apiTestResult.value = '基础表单验证失败'
+    }
+  } catch (error) {
+    apiTestResult.value = `基础表单验证失败: ${error}`
+  }
+}
+
+const resetBasicForm = () => {
+  basicFormRef.value?.resetFields()
   apiTestResult.value = '基础表单已重置'
 }
 
-const handleValidate = (valid: boolean, errors: Record<string, string[]>) => {
-  console.log('表单验证结果:', valid, errors)
-  apiTestResult.value = `验证结果: ${valid ? '通过' : '失败'}\n错误信息: ${JSON.stringify(errors, null, 2)}`
+const submitValidationForm = async () => {
+  try {
+    const valid = await validationFormRef.value?.validate()
+    if (valid) {
+      apiTestResult.value = `验证表单提交成功: ${JSON.stringify(validationForm, null, 2)}`
+    } else {
+      apiTestResult.value = '验证表单验证失败'
+    }
+  } catch (error) {
+    apiTestResult.value = `验证表单验证失败: ${error}`
+  }
 }
 
-const handleHorizontalSubmit = (data: Record<string, any>) => {
-  console.log('水平布局表单提交:', data)
-  apiTestResult.value = `水平布局表单提交: ${JSON.stringify(data, null, 2)}`
+const resetValidationForm = () => {
+  validationFormRef.value?.resetFields()
+  apiTestResult.value = '验证表单已重置'
 }
 
-const handleInlineSubmit = (data: Record<string, any>) => {
-  console.log('内联表单提交:', data)
-  apiTestResult.value = `搜索参数: ${JSON.stringify(data, null, 2)}`
+const validateSpecificField = async () => {
+  try {
+    const valid = await validationFormRef.value?.validateField('username')
+    apiTestResult.value = `用户名字段验证结果: ${valid ? '通过' : '失败'}`
+  } catch (error) {
+    apiTestResult.value = `用户名字段验证失败: ${error}`
+  }
 }
 
-const handleValidationSubmit = (data: Record<string, any>) => {
-  console.log('验证表单提交:', data)
-  apiTestResult.value = `验证表单提交成功: ${JSON.stringify(data, null, 2)}`
+const submitInlineForm = () => {
+  apiTestResult.value = `内联表单搜索: ${JSON.stringify(inlineForm, null, 2)}`
 }
 
-const handleComplexSubmit = async (data: Record<string, any>) => {
-  console.log('复杂表单提交:', data)
-  isSubmitting.value = true
-
-  // 模拟提交延迟
-  await new Promise(resolve => setTimeout(resolve, 2000))
-
-  isSubmitting.value = false
-  apiTestResult.value = `复杂表单提交成功: ${JSON.stringify(data, null, 2)}`
+const submitTopLabelForm = async () => {
+  try {
+    const valid = await topLabelFormRef.value?.validate()
+    if (valid) {
+      apiTestResult.value = `顶部标签表单提交成功: ${JSON.stringify(topLabelForm, null, 2)}`
+    }
+  } catch (error) {
+    apiTestResult.value = `顶部标签表单验证失败: ${error}`
+  }
 }
 
-// API 测试方法
-const validateForm = async () => {
-  if (!validationFormRef.value) return
-
-  const result = await validationFormRef.value.validate()
-  apiTestResult.value = `完整表单验证结果: ${JSON.stringify(result, null, 2)}`
-}
-
-const resetValidation = () => {
-  if (!validationFormRef.value) return
-
-  validationFormRef.value.resetValidation()
-  apiTestResult.value = '验证状态已重置'
-}
-
-const setFieldValue = () => {
-  if (!validationFormRef.value) return
-
-  validationFormRef.value.setFieldValue('username', 'admin')
-  apiTestResult.value = '已将用户名设置为 "admin"'
-}
-
-const getFieldValue = () => {
-  if (!validationFormRef.value) return
-
-  const email = validationFormRef.value.getFieldValue('email')
-  apiTestResult.value = `邮箱字段当前值: ${email || '(空)'}`
-}
-
-const validateField = async () => {
-  if (!validationFormRef.value) return
-
-  const result = await validationFormRef.value.validateField('email')
-  apiTestResult.value = `邮箱字段验证结果: ${JSON.stringify(result, null, 2)}`
+const resetTopLabelForm = () => {
+  topLabelFormRef.value?.resetFields()
+  apiTestResult.value = '顶部标签表单已重置'
 }
 
 const toggleDisabled = () => {
   formDisabled.value = !formDisabled.value
   apiTestResult.value = `表单${formDisabled.value ? '已禁用' : '已启用'}`
 }
+
+// API 测试方法
+const validateAllFields = async () => {
+  try {
+    const valid = await validationFormRef.value?.validate()
+    apiTestResult.value = `整个表单验证结果: ${valid ? '通过' : '失败'}`
+  } catch (error) {
+    apiTestResult.value = `表单验证出错: ${error}`
+  }
+}
+
+const clearValidation = () => {
+  validationFormRef.value?.clearValidation()
+  apiTestResult.value = '已清除验证状态'
+}
+
+const resetFields = () => {
+  validationFormRef.value?.resetFields()
+  apiTestResult.value = '已重置所有字段'
+}
 </script>
 
 <style scoped>
-/* 表单项间距 */
-:deep(.global-form) {
-  @apply space-y-4;
+/* 表单样式调整 */
+:deep(.global-form-item) {
+  margin-bottom: 1rem;
 }
 
-/* 内联表单样式调整 */
-:deep(.form--inline .global-form) {
-  @apply space-y-0 space-x-4;
+:deep(.global-form--inline .global-form-item) {
+  margin-bottom: 0;
+  margin-right: 1rem;
+}
+
+/* 网格布局样式 */
+.grid {
+  display: grid;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gap-4 {
+  gap: 1rem;
 }
 </style>

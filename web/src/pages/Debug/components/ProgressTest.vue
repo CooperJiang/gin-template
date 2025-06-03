@@ -166,7 +166,7 @@
           <GlobalProgress
             type="circle"
             :value="circleProgress"
-            :format="(val) => `${val}/100`"
+            :format="circleProgressFormat"
           />
         </div>
       </div>
@@ -439,6 +439,9 @@ const decreaseCircleProgress = () => {
     circleProgress.value -= 10
   }
 }
+
+// 格式化函数
+const circleProgressFormat = (val: number) => `${val}/100`
 
 // 插槽进度控制
 const increaseSlotProgress = () => {

@@ -12,12 +12,15 @@ import InputTag from './InputTag'
 import FileUpload from './FileUpload'
 import Pagination from './Pagination'
 import Table from './Table'
+import { TableColumn } from './Table/components'
 import Select from './Select'
 import Dialog from './Dialog'
 import Form from './Form'
+import FormItem from './Form/FormItem.vue'
 import Tabs from './Tabs'
 import Card from './Card'
 import Progress from './Progress'
+import CodeDemo from './CodeDemo'
 
 // 组件库插件安装函数
 import type { App, Plugin } from 'vue'
@@ -37,12 +40,15 @@ const GinComponentsPlugin: Plugin = {
     app.component('GlobalFileUpload', FileUpload)
     app.component('GlobalPagination', Pagination)
     app.component('GlobalTable', Table)
+    app.component('GlobalTableColumn', TableColumn)
     app.component('GlobalSelect', Select)
     app.component('GlobalDialog', Dialog)
     app.component('GlobalForm', Form)
+    app.component('GlobalFormItem', FormItem)
     app.component('GlobalTabs', Tabs)
     app.component('GlobalCard', Card)
     app.component('GlobalProgress', Progress)
+    app.component('GlobalCodeDemo', CodeDemo)
   },
 }
 
@@ -63,12 +69,15 @@ export {
   FileUpload,
   Pagination,
   Table,
+  TableColumn,
   Select,
   Dialog,
   Form,
+  FormItem,
   Tabs,
   Card,
-  Progress
+  Progress,
+  CodeDemo
 }
 
 export { default as MessageContainer } from './MessageContainer'

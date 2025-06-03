@@ -384,7 +384,7 @@ const getColorClass = (colorClass: string) => {
 
 // 根据颜色获取对应的样式类
 const getColorClasses = (color: string) => {
-  const colorMap = {
+  const colorMap: Record<string, string> = {
     'text-blue-500': 'bg-blue-100 text-blue-800 border-blue-200',
     'text-green-500': 'bg-green-100 text-green-800 border-green-200',
     'text-violet-500': 'bg-violet-100 text-violet-800 border-violet-200',
