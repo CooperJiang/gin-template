@@ -25,7 +25,7 @@ type Config struct {
 	Log      LogConfig      `yaml:"log" env:"LOG"`
 	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
 	CORS     CORSConfig     `yaml:"cors" env:"CORS"`
-	Docs     DocsConfig     `yaml:"docs" env:"DOCS"`
+	Frontend FrontendConfig `yaml:"frontend" env:"FRONTEND"`
 }
 
 // AppConfig 应用基础配置
@@ -95,11 +95,25 @@ type CORSConfig struct {
 	MaxAge           int      `yaml:"max_age" env:"MAX_AGE"`
 }
 
-// DocsConfig 文档配置
-type DocsConfig struct {
+// FrontendConfig 前端模块配置
+type FrontendConfig struct {
+	Admin    FrontendModuleConfig   `yaml:"admin" env:"ADMIN"`
+	Web      FrontendModuleConfig   `yaml:"web" env:"WEB"`
+	Fallback FrontendFallbackConfig `yaml:"fallback" env:"FALLBACK"`
+}
+
+// FrontendModuleConfig 前端模块具体配置
+type FrontendModuleConfig struct {
+	Enabled     bool   `yaml:"enabled" env:"ENABLED"`
+	RoutePrefix string `yaml:"route_prefix" env:"ROUTE_PREFIX"`
+	Title       string `yaml:"title" env:"TITLE"`
+	Description string `yaml:"description" env:"DESCRIPTION"`
+}
+
+// FrontendFallbackConfig 前端备用页面配置
+type FrontendFallbackConfig struct {
 	Enabled bool   `yaml:"enabled" env:"ENABLED"`
-	Path    string `yaml:"path" env:"PATH"`
-	Title   string `yaml:"title" env:"TITLE"`
+	Message string `yaml:"message" env:"MESSAGE"`
 }
 
 var (
@@ -159,8 +173,8 @@ func loadConfigFromEnv(cfg *Config) {
 	// 处理CORS配置的环境变量
 	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)
 
-	// 处理Docs配置的环境变量
-	loadEnvToStruct(envPrefix+"DOCS_", &cfg.Docs)
+	// 处理Frontend配置的环境变量
+	loadEnvToStruct(envPrefix+"FRONTEND_", &cfg.Frontend)
 }
 
 // loadEnvToStruct 加载环境变量到结构体

@@ -5,7 +5,8 @@ import SecureStorage, { STORAGE_KEYS } from './storage'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:9000/api/v1', // 直接设置API地址，确保可以连接
+  // 使用环境变量配置API地址，开发环境指向localhost，生产环境使用相对路径
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

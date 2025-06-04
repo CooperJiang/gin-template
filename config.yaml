@@ -17,6 +17,22 @@ app:
     - "application/msword"
     - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
+# 前端模块配置
+frontend:
+  admin:
+    enabled: false                # 是否启用管理端，设为false则完全禁用管理端功能
+    route_prefix: "/admin"       # 管理端路由前缀
+    title: "管理后台"             # 管理端标题
+    description: "系统管理后台"   # 管理端描述
+  web:
+    enabled: false                # 是否启用用户端，设为false则完全禁用用户端功能
+    route_prefix: "/"            # 用户端路由前缀(根路径)
+    title: "用户端"               # 用户端标题
+    description: "用户前端应用"   # 用户端描述
+  fallback:
+    enabled: true                # 当所有前端模块都禁用时，是否启用备用页面
+    message: "当前服务未启用"     # 备用页面显示消息
+
 # 数据库配置
 database:
   driver: "mysql"                # 数据库类型: mysql/sqlite，如设置为"sqlite"或mysql参数不全，将自动使用SQLite
@@ -50,12 +66,12 @@ redis:
   password: ""                   # Redis密码，无密码则留空
   db: 0                          # Redis数据库索引，默认为0
   pool_size: 10                  # 连接池大小
-  min_idle_conns: 5             # 最小空闲连接数
-  max_conn_age: 3600            # 连接最大生命周期(秒)
-  idle_timeout: 240             # 空闲连接超时时间(秒)
-  read_timeout: 3               # 读取超时时间(秒)
-  write_timeout: 3              # 写入超时时间(秒)
-  dial_timeout: 5               # 连接超时时间(秒)
+  min_idle_conns: 5              # 最小空闲连接数
+  max_conn_age: 3600             # 连接最大生命周期(秒)
+  idle_timeout: 240              # 空闲连接超时时间(秒)
+  read_timeout: 3                # 读取超时时间(秒)
+  write_timeout: 3               # 写入超时时间(秒)
+  dial_timeout: 5                # 连接超时时间(秒)
 
 # 日志配置
 log:
@@ -92,7 +108,7 @@ cors:
   enabled: true                  # 是否启用CORS支持
   allowed_origins:               # 允许的来源域名列表
     - "http://localhost:3000"
-    - "http://localhost:5000"
+    - "http://localhost:4000"
     - "https://yourdomain.com"
   allowed_methods:               # 允许的HTTP方法
     - "GET"
@@ -110,26 +126,3 @@ cors:
     - "Content-Length"
     - "Content-Type"
 
-# 项目文档配置
-docs:
-  enabled: true                  # 是否启用文档服务
-  path: "/docs"                  # 文档访问路径
-  title: "项目文档"               # 文档标题
-  description: "API文档"          # 文档描述
-  version: "1.0.0"              # API版本
-  contact_name: "API Support"    # 联系人名称
-  contact_email: "support@example.com" # 联系人邮箱
-  license_name: "MIT"            # 许可证名称
-  license_url: "https://opensource.org/licenses/MIT" # 许可证URL
-  terms_of_service: "https://example.com/terms" # 服务条款URL
-  host: "api.example.com"        # API主机地址
-  schemes:                       # 支持的协议
-    - "http"
-    - "https"
-  base_path: "/api/v1"          # API基础路径
-  consumes:                      # 支持的请求内容类型
-    - "application/json"
-    - "application/x-www-form-urlencoded"
-  produces:                      # 支持的响应内容类型
-    - "application/json"
-    - "application/xml" 

@@ -13,8 +13,8 @@ BUILD_TIME=$(date "+%Y-%m-%d %H:%M:%S")
 GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 # 默认值
-OUTPUT_DIR="./build"
-BINARY_NAME="app"
+OUTPUT_DIR="./release"
+BINARY_NAME="template"
 MAIN_PATH="./cmd/main.go"
 
 # 打印帮助信息
@@ -25,8 +25,8 @@ show_help() {
     echo
     echo "选项:"
     echo "  -h, --help          显示帮助信息"
-    echo "  -o, --output        指定输出目录 (默认: ./build)"
-    echo "  -n, --name          指定二进制文件名 (默认: app)"
+    echo "  -o, --output        指定输出目录 (默认: ./release)"
+    echo "  -n, --name          指定二进制文件名 (默认: template)"
     echo "  --local             为当前平台打包"
     echo "  --all               为所有主要平台打包"
     echo "  --windows           为Windows平台打包 (amd64)"
@@ -38,7 +38,7 @@ show_help() {
     echo "  $0 --local          # 为当前平台编译"
     echo "  $0 --linux          # 为Linux平台编译"
     echo "  $0 --all            # 为所有主要平台编译"
-    echo "  $0 -o dist --windows # 将Windows二进制文件输出到dist目录"
+    echo "  $0 -o release --windows # 将Windows二进制文件输出到release目录"
 }
 
 # 打印构建信息

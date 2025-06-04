@@ -95,6 +95,9 @@ func (ls *LocalStorage) MergeChunks(chunkPaths []string, targetPath string) erro
 	}
 	defer target.Close()
 
+	// 收集需要清理的目录
+	dirsToClean := make(map[string]bool)
+
 	// 依次读取并合并分片
 	for _, chunkPath := range chunkPaths {
 		chunk, err := os.Open(chunkPath)
@@ -111,6 +114,18 @@ func (ls *LocalStorage) MergeChunks(chunkPaths []string, targetPath string) erro
 
 		// 删除已合并的分片
 		os.Remove(chunkPath)
+
+		// 记录需要清理的目录
+		chunkDir := filepath.Dir(chunkPath)
+		dirsToClean[chunkDir] = true
+	}
+
+	// 清理空的临时目录
+	for dir := range dirsToClean {
+		// 检查目录是否为空，如果是则删除
+		if entries, err := os.ReadDir(dir); err == nil && len(entries) == 0 {
+			os.Remove(dir)
+		}
 	}
 
 	return nil

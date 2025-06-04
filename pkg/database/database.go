@@ -14,6 +14,9 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
+
+	// 明确使用modernc.org/sqlite作为SQLite驱动
+	_ "modernc.org/sqlite"
 )
 
 var db *gorm.DB
@@ -48,7 +51,8 @@ func InitDB() {
 	if cfg.Host == "" || cfg.Username == "" || cfg.Name == "" {
 		// 未配置MySQL，使用SQLite
 		log.Info("未检测到MySQL配置，将使用SQLite数据库")
-		db, err = gorm.Open(sqlite.Open("app.db"), gormConfig)
+		// 使用modernc.org/sqlite驱动的连接字符串
+		db, err = gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc"), gormConfig)
 		if err != nil {
 			log.Fatal("连接SQLite数据库失败: %v", err)
 		}
@@ -70,7 +74,7 @@ func InitDB() {
 			log.Error("连接MySQL数据库失败: %v", err)
 			log.Info("自动降级到SQLite数据库")
 			// 降级到SQLite
-			db, err = gorm.Open(sqlite.Open("app.db"), gormConfig)
+			db, err = gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc"), gormConfig)
 			if err != nil {
 				log.Fatal("连接SQLite数据库失败: %v", err)
 			}

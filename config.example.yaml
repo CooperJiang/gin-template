@@ -2,7 +2,7 @@
 app:
   name: "template"               # 应用名称，用于日志、标识等
   port: 9000                     # 应用监听端口
-  mode: "debug"                  # 运行模式: debug/release，生产环境应设为"release"，调试环境设为"debug"
+  mode: "release"                # 运行模式: debug/release，生产环境应设为"release"，调试环境设为"debug"
   defaultRootPass: "123456"   # 初次启动时自动创建的管理员账号密码，建议在首次登录后立即修改
   timezone: "Asia/Shanghai"      # 应用时区设置
   api_prefix: "/api/v1"          # API路由前缀
@@ -17,6 +17,22 @@ app:
     - "application/msword"
     - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
+# 前端模块配置
+frontend:
+  admin:
+    enabled: true                # 是否启用管理端，设为false则完全禁用管理端功能
+    route_prefix: "/admin"       # 管理端路由前缀
+    title: "管理后台"             # 管理端标题
+    description: "系统管理后台"   # 管理端描述
+  web:
+    enabled: true                # 是否启用用户端，设为false则完全禁用用户端功能
+    route_prefix: "/"            # 用户端路由前缀(根路径)
+    title: "用户端"               # 用户端标题
+    description: "用户前端应用"   # 用户端描述
+  fallback:
+    enabled: true                # 当所有前端模块都禁用时，是否启用备用页面
+    message: "服务正在维护中"     # 备用页面显示消息
+
 # 数据库配置
 database:
   driver: "mysql"                # 数据库类型: mysql/sqlite，如设置为"sqlite"或mysql参数不全，将自动使用SQLite
@@ -30,7 +46,7 @@ database:
   max_open_conns: 100            # 最大打开连接数
   conn_max_lifetime: 3600        # 连接最大生命周期(秒)
   slow_query_threshold: 200      # 慢查询阈值(毫秒)
-  enable_logging: true           # 是否启用SQL日志
+  enable_logging: false          # 是否启用SQL日志，生产环境建议关闭
   table_prefix: ""               # 表名前缀
 
 # JWT认证配置
@@ -50,12 +66,12 @@ redis:
   password: ""                   # Redis密码，无密码则留空
   db: 0                          # Redis数据库索引，默认为0
   pool_size: 10                  # 连接池大小
-  min_idle_conns: 5             # 最小空闲连接数
-  max_conn_age: 3600            # 连接最大生命周期(秒)
-  idle_timeout: 240             # 空闲连接超时时间(秒)
-  read_timeout: 3               # 读取超时时间(秒)
-  write_timeout: 3              # 写入超时时间(秒)
-  dial_timeout: 5               # 连接超时时间(秒)
+  min_idle_conns: 5              # 最小空闲连接数
+  max_conn_age: 3600             # 连接最大生命周期(秒)
+  idle_timeout: 240              # 空闲连接超时时间(秒)
+  read_timeout: 3                # 读取超时时间(秒)
+  write_timeout: 3               # 写入超时时间(秒)
+  dial_timeout: 5                # 连接超时时间(秒)
 
 # 日志配置
 log:
@@ -67,10 +83,10 @@ log:
   max_age: 7                     # 日志文件最大保留天数
   compress: true                 # 是否压缩旧日志文件
   json_format: false             # 是否使用JSON格式输出
-  show_caller: true              # 是否显示调用者信息
-  show_line: true                # 是否显示行号
+  show_caller: false             # 是否显示调用者信息，生产环境建议关闭
+  show_line: false               # 是否显示行号，生产环境建议关闭
   show_stack: false              # 是否显示堆栈信息
-  enable_console: true           # 是否同时输出到控制台
+  enable_console: false          # 是否同时输出到控制台，生产环境建议关闭
 
 # 邮件服务配置
 mail:
@@ -82,7 +98,7 @@ mail:
   from_name: "应用名称"           # 发件人名称
   reply_to: "your@example.com"   # 回复地址
   ssl: true                      # 是否使用SSL加密，通常为true
-  enabled: true                  # 是否启用邮件服务，设为false则不发送邮件
+  enabled: false                 # 是否启用邮件服务，设为false则不发送邮件
   template_path: "templates/mail" # 邮件模板路径
   max_retries: 3                 # 发送失败最大重试次数
   retry_interval: 5              # 重试间隔(秒)
@@ -91,8 +107,8 @@ mail:
 cors:
   enabled: true                  # 是否启用CORS支持
   allowed_origins:               # 允许的来源域名列表
-    - "http://localhost:3000"
-    - "https://yourdomain.com"
+    - "https://yourdomain.com"   # 生产域名
+    - "https://www.yourdomain.com"
   allowed_methods:               # 允许的HTTP方法
     - "GET"
     - "POST"
@@ -107,28 +123,4 @@ cors:
   max_age: 86400                 # 预检请求结果缓存时间，单位秒
   expose_headers:                # 允许浏览器访问的响应头
     - "Content-Length"
-    - "Content-Type"
-
-# 项目文档配置
-docs:
-  enabled: true                  # 是否启用文档服务
-  path: "/docs"                  # 文档访问路径
-  title: "项目文档"               # 文档标题
-  description: "API文档"          # 文档描述
-  version: "1.0.0"              # API版本
-  contact_name: "API Support"    # 联系人名称
-  contact_email: "support@example.com" # 联系人邮箱
-  license_name: "MIT"            # 许可证名称
-  license_url: "https://opensource.org/licenses/MIT" # 许可证URL
-  terms_of_service: "https://example.com/terms" # 服务条款URL
-  host: "api.example.com"        # API主机地址
-  schemes:                       # 支持的协议
-    - "http"
-    - "https"
-  base_path: "/api/v1"          # API基础路径
-  consumes:                      # 支持的请求内容类型
-    - "application/json"
-    - "application/x-www-form-urlencoded"
-  produces:                      # 支持的响应内容类型
-    - "application/json"
-    - "application/xml" 
+    - "Content-Type" 
