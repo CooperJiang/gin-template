@@ -19,10 +19,16 @@
       <footer class="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
         <div class="flex items-center justify-between text-sm text-gray-500">
           <div>© 2025 管理系统. All rights reserved.</div>
-          <div class="flex space-x-4">
-            <span>版本 v1.0.0</span>
-            <span>•</span>
-            <span>{{ new Date().toLocaleDateString('zh-CN') }}</span>
+          <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0 text-right sm:text-left">
+            <div class="flex items-center space-x-2">
+              <span>版本 v{{ versionInfo?.version || '1.0.0' }}</span>
+              <span v-if="!loading" class="w-2 h-2 bg-green-500 rounded-full" title="版本信息已加载"></span>
+              <span v-else class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" title="加载中..."></span>
+            </div>
+            <span class="hidden sm:inline">•</span>
+            <div class="text-xs">
+              <div>构建时间: {{ versionInfo?.buildDate || new Date().toLocaleDateString('zh-CN') }}</div>
+            </div>
           </div>
         </div>
       </footer>
@@ -41,12 +47,16 @@
 import { ref, defineOptions } from 'vue'
 import AppNavbar from './components/AppNavbar.vue'
 import AppSidebar from './components/AppSidebar.vue'
+import { useVersion } from '@/composables/useVersion'
 
 const sidebarOpen = ref(false)
 
 const toggleSidebar = () => {
   sidebarOpen.value = !sidebarOpen.value
 }
+
+// 使用版本信息
+const { versionInfo, loading } = useVersion()
 
 defineOptions({
   name: 'AdminLayout',

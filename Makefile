@@ -179,8 +179,8 @@ frontend-format: admin-format web-format ## 格式化所有前端代码
 .PHONY: build
 build: frontend-build ## 🔨 构建生产部署版本 (Linux + 部署包)
 	@echo "$(GREEN)构建生产部署版本...$(RESET)"
-	@# 清理之前的Linux构建
-	@rm -rf release/linux_amd64 release/$(APP_NAME)_*_package.tar.gz
+	@# 清理所有旧的构建文件
+	@rm -rf release/ 
 	@# 创建release目录结构
 	@mkdir -p release/linux_amd64
 	@# 构建Linux版本（包含前端静态文件）
@@ -197,19 +197,20 @@ build: frontend-build ## 🔨 构建生产部署版本 (Linux + 部署包)
 	@echo "#!/bin/bash" > release/linux_amd64/run.sh
 	@echo "./$(APP_NAME)" >> release/linux_amd64/run.sh
 	@chmod +x release/linux_amd64/run.sh release/linux_amd64/$(APP_NAME)
-	@# 直接创建部署包
+	@# 创建部署包
 	@echo "$(BLUE)创建部署包...$(RESET)"
 	@cd release && tar -czf $(APP_NAME)_$(DEPLOY_ENV)_package.tar.gz -C linux_amd64 .
+	@# 清理中间目录，只保留部署包
+	@rm -rf release/linux_amd64
 	@echo "$(GREEN)生产部署版本构建完成!$(RESET)"
-	@echo "$(BLUE)构建位置: ./release/linux_amd64/$(APP_NAME)$(RESET)"
 	@echo "$(BLUE)部署包: ./release/$(APP_NAME)_$(DEPLOY_ENV)_package.tar.gz$(RESET)"
 	@echo "$(YELLOW)💡 可直接用于生产部署$(RESET)"
 
 .PHONY: build-release
 build-release: frontend-build ## 🚀 构建生产部署版本 (与 build 相同)
 	@echo "$(GREEN)构建生产部署版本...$(RESET)"
-	@# 清理之前的Linux构建
-	@rm -rf release/linux_amd64 release/$(APP_NAME)_*_package.tar.gz
+	@# 清理所有旧的构建文件
+	@rm -rf release/
 	@# 创建release目录结构
 	@mkdir -p release/linux_amd64
 	@# 构建Linux版本（包含前端静态文件）
@@ -226,11 +227,12 @@ build-release: frontend-build ## 🚀 构建生产部署版本 (与 build 相同
 	@echo "#!/bin/bash" > release/linux_amd64/run.sh
 	@echo "./$(APP_NAME)" >> release/linux_amd64/run.sh
 	@chmod +x release/linux_amd64/run.sh release/linux_amd64/$(APP_NAME)
-	@# 直接创建部署包
+	@# 创建部署包
 	@echo "$(BLUE)创建部署包...$(RESET)"
 	@cd release && tar -czf $(APP_NAME)_$(DEPLOY_ENV)_package.tar.gz -C linux_amd64 .
+	@# 清理中间目录，只保留部署包
+	@rm -rf release/linux_amd64
 	@echo "$(GREEN)生产部署版本构建完成!$(RESET)"
-	@echo "$(BLUE)构建位置: ./release/linux_amd64/$(APP_NAME)$(RESET)"
 	@echo "$(BLUE)部署包: ./release/$(APP_NAME)_$(DEPLOY_ENV)_package.tar.gz$(RESET)"
 	@echo "$(YELLOW)💡 可直接用于生产部署$(RESET)"
 
@@ -508,8 +510,8 @@ deploy-setup: ## 初始化服务器环境
 	@echo "$(GREEN)服务器环境设置完成$(RESET)"
 
 .PHONY: deploy
-deploy: deploy-check ## 🚀 部署应用（使用现有部署包）
-	@echo "$(BLUE)开始部署...$(RESET)"
+deploy: deploy-check ## 🚀 快速切换部署（2-3秒停机时间）
+	@echo "$(BLUE)开始应用部署...$(RESET)"
 	@chmod +x scripts/deploy_functions.sh
 	@# 检查必要参数
 	@if ! ./scripts/deploy_functions.sh check_params "$(DEPLOY_HOST)" "$(DEPLOY_USER)"; then \
@@ -552,39 +554,51 @@ deploy: deploy-check ## 🚀 部署应用（使用现有部署包）
 	@# 准备环境变量
 	@echo "$(BLUE)准备环境变量...$(RESET)"
 	@./scripts/deploy_functions.sh prepare_env "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)" "$(DEPLOY_DIR)" "$(DEPLOY_ENV)" "$(VERSION)" || true
-	@# 执行部署
-	@echo "$(BLUE)执行部署...$(RESET)"
+	@# 执行部署流程
+	@echo "$(BLUE)开始应用部署流程...$(RESET)"
 	@PACKAGE_PATH=$$(cat .tmp_package_path); \
 	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
 	RELEASE_DIR="$(DEPLOY_DIR)/releases/$$TIMESTAMP"; \
 	SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	SCP_CMD=$$(./scripts/deploy_functions.sh build_scp "$(DEPLOY_KEY)" "$(DEPLOY_PORT)"); \
-	echo "$(BLUE)创建发布目录...$(RESET)"; \
+	\
+	echo "$(BLUE)步骤1: 创建版本目录...$(RESET)"; \
 	$$SSH_CMD "mkdir -p $$RELEASE_DIR"; \
-	echo "$(BLUE)上传部署包...$(RESET)"; \
+	\
+	echo "$(BLUE)步骤2: 上传应用包...$(RESET)"; \
 	$$SCP_CMD "$$PACKAGE_PATH" "$(DEPLOY_USER)@$(DEPLOY_HOST):$(DEPLOY_DIR)/tmp/package.tar.gz"; \
-	echo "$(BLUE)解压部署包...$(RESET)"; \
-	$$SSH_CMD "cd $$RELEASE_DIR && tar -xzf $(DEPLOY_DIR)/tmp/package.tar.gz"; \
-	echo "$(BLUE)设置权限...$(RESET)"; \
+	\
+	echo "$(BLUE)步骤3: 解压应用包...$(RESET)"; \
+	$$SSH_CMD "cd $$RELEASE_DIR && tar -xzf $(DEPLOY_DIR)/tmp/package.tar.gz 2>/dev/null"; \
 	$$SSH_CMD "chmod +x $$RELEASE_DIR/$(APP_NAME) $$RELEASE_DIR/run.sh"; \
-	echo "$(BLUE)保存配置到共享目录...$(RESET)"; \
+	\
+	echo "$(BLUE)步骤4: 配置应用...$(RESET)"; \
 	$$SSH_CMD "mkdir -p $(DEPLOY_DIR)/shared/config && cp $$RELEASE_DIR/config.yaml $(DEPLOY_DIR)/shared/config/"; \
 	$$SSH_CMD "ln -sf $(DEPLOY_DIR)/shared/config/config.yaml $$RELEASE_DIR/config.yaml"; \
-	echo "$(BLUE)停止当前应用...$(RESET)"; \
-	$$SSH_CMD "$(DEPLOY_DIR)/service.sh stop" || true; \
-	echo "$(BLUE)更新当前版本链接...$(RESET)"; \
-	$$SSH_CMD "ln -sfn $$RELEASE_DIR $(DEPLOY_DIR)/current"; \
-	echo "$(BLUE)启动应用...$(RESET)"; \
-	$$SSH_CMD "$(DEPLOY_DIR)/service.sh start"; \
-	echo "$(BLUE)清理旧版本...$(RESET)"; \
+	\
+	echo "$(BLUE)步骤5: 切换应用版本...$(RESET)"; \
+	echo "$(YELLOW)⚡ 正在切换应用版本（预计停机2-3秒）...$(RESET)"; \
+	$$SSH_CMD "$(DEPLOY_DIR)/service.sh stop || true; ln -sfn $$RELEASE_DIR $(DEPLOY_DIR)/current; $(DEPLOY_DIR)/service.sh start"; \
+	sleep 2; \
+	\
+	echo "$(BLUE)步骤6: 验证应用状态...$(RESET)"; \
+	if $$SSH_CMD "$(DEPLOY_DIR)/service.sh status" >/dev/null 2>&1; then \
+		echo "$(GREEN)✅ 应用部署成功！$(RESET)"; \
+	else \
+		echo "$(RED)❌ 应用启动异常，请检查日志$(RESET)"; \
+	fi; \
+	\
+	echo "$(BLUE)步骤7: 清理旧版本...$(RESET)"; \
 	$$SSH_CMD "cd $(DEPLOY_DIR)/releases && ls -t | tail -n +$$(($(KEEP_RELEASES)+1)) | xargs rm -rf 2>/dev/null || true"; \
 	$$SSH_CMD "rm -f $(DEPLOY_DIR)/tmp/package.tar.gz"; \
-	echo "$(BLUE)部署完成，检查应用状态...$(RESET)"; \
-	$$SSH_CMD "$(DEPLOY_DIR)/service.sh status" || echo "$(YELLOW)获取应用状态失败，请手动检查$(RESET)"; \
-	echo "$(GREEN)部署完成!$(RESET)"; \
-	echo "$(BLUE)应用已部署到: $(DEPLOY_HOST):$(DEPLOY_DIR)$(RESET)"; \
-	echo "$(BLUE)环境: $(DEPLOY_ENV)$(RESET)"; \
-	echo "$(BLUE)当前版本: $$TIMESTAMP$(RESET)"; \
+	\
+	echo "$(GREEN)应用部署完成！$(RESET)"; \
+	$$SSH_CMD "$(DEPLOY_DIR)/service.sh status" || echo "$(YELLOW)状态检查失败，请手动检查$(RESET)"; \
+	echo "$(BLUE)部署信息:$(RESET)"; \
+	echo "  服务器: $(DEPLOY_HOST)"; \
+	echo "  目录: $(DEPLOY_DIR)"; \
+	echo "  环境: $(DEPLOY_ENV)"; \
+	echo "  版本: $$TIMESTAMP"; \
 	rm -f .tmp_package_path
 
 .PHONY: deploy-rollback
@@ -721,5 +735,5 @@ help: ## 显示帮助信息
 	@echo "  $(YELLOW)make deploy-rollback$(RESET)    # 回滚到上一版本"
 
 .PHONY: build-deploy
-build-deploy: build-release deploy ## 🔨 一键构建并部署 (完整流程)
-	@echo "$(GREEN)构建并部署完成!$(RESET)"
+build-deploy: build-release deploy ## 🔨 一键构建并快速部署 (完整流程)
+	@echo "$(GREEN)🎉 构建并快速部署完成!$(RESET)"

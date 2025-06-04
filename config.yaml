@@ -20,17 +20,17 @@ app:
 # 前端模块配置
 frontend:
   admin:
-    enabled: false                # 是否启用管理端，设为false则完全禁用管理端功能
+    enabled: true                # 是否启用管理端，设为false则完全禁用管理端功能
     route_prefix: "/admin"       # 管理端路由前缀
     title: "管理后台"             # 管理端标题
     description: "系统管理后台"   # 管理端描述
   web:
-    enabled: false                # 是否启用用户端，设为false则完全禁用用户端功能
+    enabled: true                # 是否启用用户端，设为false则完全禁用用户端功能
     route_prefix: "/"            # 用户端路由前缀(根路径)
     title: "用户端"               # 用户端标题
     description: "用户前端应用"   # 用户端描述
   fallback:
-    enabled: true                # 当所有前端模块都禁用时，是否启用备用页面
+    enabled: false               # 当所有前端模块都禁用时，是否启用备用页面
     message: "当前服务未启用"     # 备用页面显示消息
 
 # 数据库配置

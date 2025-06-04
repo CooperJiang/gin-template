@@ -73,7 +73,48 @@ func registerAdminRoutes(r *gin.Engine) {
 func registerWebRoutes(r *gin.Engine) {
 	webFS := static.GetWebDistFS()
 
-	// 用户端路由 - 根路径，但排除 API 和 admin 路径
+	// 用户端静态文件路由 - 处理根目录下的静态文件
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		file, err := webFS.Open("favicon.ico")
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		defer file.Close()
+
+		content, err := io.ReadAll(file)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to read favicon")
+			return
+		}
+
+		c.Data(http.StatusOK, "image/x-icon", content)
+	})
+
+	// 用户端assets路由
+	r.GET("/assets/*filepath", func(c *gin.Context) {
+		filePath := strings.TrimPrefix(c.Param("filepath"), "/")
+		assetPath := filepath.Join("assets", filePath)
+
+		file, err := webFS.Open(assetPath)
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		defer file.Close()
+
+		content, err := io.ReadAll(file)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to read asset")
+			return
+		}
+
+		// 设置正确的Content-Type
+		contentType := getContentType(filePath)
+		c.Data(http.StatusOK, contentType, content)
+	})
+
+	// 用户端SPA路由 - 使用NoRoute作为最后的fallback
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 
@@ -82,55 +123,6 @@ func registerWebRoutes(r *gin.Engine) {
 			strings.HasPrefix(path, "/debug/") ||
 			strings.HasPrefix(path, "/admin") {
 			c.Next()
-			return
-		}
-
-		// 处理用户端静态资源
-		if strings.HasPrefix(path, "/assets/") {
-			filePath := strings.TrimPrefix(path, "/assets/")
-			assetPath := filepath.Join("assets", filePath)
-
-			file, err := webFS.Open(assetPath)
-			if err != nil {
-				// 如果资源不存在，返回用户端首页（SPA路由支持）
-				serveIndexHTML(c, webFS, "web")
-				return
-			}
-			defer file.Close()
-
-			content, err := io.ReadAll(file)
-			if err != nil {
-				c.String(http.StatusInternalServerError, "Failed to read asset")
-				return
-			}
-
-			// 设置正确的Content-Type
-			contentType := getContentType(filePath)
-			c.Data(http.StatusOK, contentType, content)
-			return
-		}
-
-		// 处理其他静态文件（如favicon.ico, vite.svg等）
-		if strings.Contains(path, ".") && !strings.Contains(path, "/") {
-			filename := strings.TrimPrefix(path, "/")
-
-			file, err := webFS.Open(filename)
-			if err != nil {
-				// 如果文件不存在，返回用户端首页（SPA路由支持）
-				serveIndexHTML(c, webFS, "web")
-				return
-			}
-			defer file.Close()
-
-			content, err := io.ReadAll(file)
-			if err != nil {
-				c.String(http.StatusInternalServerError, "Failed to read file")
-				return
-			}
-
-			// 设置正确的Content-Type
-			contentType := getContentType(filename)
-			c.Data(http.StatusOK, contentType, content)
 			return
 		}
 

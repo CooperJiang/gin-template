@@ -65,6 +65,9 @@ rm -rf "$DIST_DIR"
 # npm run type-check
 
 # 构建管理端项目
+echo -e "${BLUE}更新版本信息...${RESET}"
+npm run version-update
+
 echo -e "${BLUE}构建管理端项目...${RESET}"
 npm run build-only
 
