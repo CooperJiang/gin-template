@@ -34,41 +34,17 @@ export interface User {
   id?: string
   username: string
   email: string
-  status: number // 后端返回的是数字：1=正常，2=禁用，3=删除
-  role?: number // 用户角色：1=管理员，2=普通用户
+  status: number
+  role?: number
   avatar?: string
-  bio?: string // 用户简介
+  bio?: string
   created_at?: string
   updated_at?: string
 }
 
-export interface CreateUserRequest {
-  username: string
-  email: string
-  password: string
-  role?: 'admin' | 'user'
-  status?: 'active' | 'inactive'
-}
-
-export interface UpdateUserRequest {
-  username?: string
-  email?: string
-  password?: string
-  role?: 'admin' | 'user'
-  status?: 'active' | 'inactive'
-  avatar?: string
-}
-
-export interface QueryUserRequest extends PaginationParams {
-  username?: string
-  email?: string
-  status?: number
-  role?: number
-}
-
 // 登录相关类型
 export interface LoginRequest {
-  account: string // 支持用户名或邮箱
+  account: string
   password: string
 }
 
@@ -117,7 +93,7 @@ export interface UpdateProfileRequest {
   username?: string
   email?: string
   avatar?: string
-  code?: string // 修改邮箱时需要的验证码
+  code?: string
 }
 
 // 通用状态枚举
@@ -130,15 +106,6 @@ export enum UserRole {
   SUPER_ADMIN = 1,
   ADMIN = 2,
   USER = 3,
-}
-
-// 表格列定义
-export interface TableColumn {
-  key: string
-  title: string
-  width?: string
-  sortable?: boolean
-  render?: (value: unknown, record: Record<string, unknown>) => string
 }
 
 // 表单字段定义

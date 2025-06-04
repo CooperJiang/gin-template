@@ -10,10 +10,13 @@ BINARY_PATH := ./bin/$(BINARY_NAME)
 MAIN_PATH := ./cmd/main.go
 
 # 前端配置
+ADMIN_DIR := ./admin
 WEB_DIR := ./web
 STATIC_DIR := ./internal/static
-DIST_DIR := $(WEB_DIR)/dist
-TARGET_DIST_DIR := $(STATIC_DIR)/dist
+ADMIN_DIST_DIR := $(ADMIN_DIR)/dist
+WEB_DIST_DIR := $(WEB_DIR)/dist
+TARGET_ADMIN_DIR := $(STATIC_DIR)/admin
+TARGET_WEB_DIR := $(STATIC_DIR)/web
 
 # Docker配置
 DOCKER_IMAGE := $(APP_NAME):$(VERSION)
@@ -27,22 +30,87 @@ BLUE := \033[34m
 RESET := \033[0m
 
 # ========================================
-# 前端构建命令
+# 管理端前端命令
+# ========================================
+
+.PHONY: admin-install
+admin-install: ## 安装管理端前端依赖
+	@echo "$(GREEN)安装管理端前端依赖...$(RESET)"
+	@if [ ! -d "$(ADMIN_DIR)" ]; then \
+		echo "$(RED)错误: admin目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(ADMIN_DIR) && npm install
+	@echo "$(GREEN)管理端前端依赖安装完成$(RESET)"
+
+.PHONY: admin-dev
+admin-dev: ## 启动管理端前端开发服务器
+	@echo "$(GREEN)启动管理端前端开发服务器...$(RESET)"
+	@if [ ! -d "$(ADMIN_DIR)" ]; then \
+		echo "$(RED)错误: admin目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(ADMIN_DIR) && npm run dev
+
+.PHONY: admin-build
+admin-build: ## 构建管理端前端项目并部署到static/admin目录
+	@echo "$(GREEN)构建管理端前端项目...$(RESET)"
+	@./scripts/build_admin.sh
+
+.PHONY: admin-lint
+admin-lint: ## 检查管理端前端代码
+	@echo "$(GREEN)检查管理端前端代码...$(RESET)"
+	@if [ ! -d "$(ADMIN_DIR)" ]; then \
+		echo "$(RED)错误: admin目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(ADMIN_DIR) && npm run lint
+
+.PHONY: admin-format
+admin-format: ## 格式化管理端前端代码
+	@echo "$(GREEN)格式化管理端前端代码...$(RESET)"
+	@if [ ! -d "$(ADMIN_DIR)" ]; then \
+		echo "$(RED)错误: admin目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(ADMIN_DIR) && npm run format
+
+.PHONY: admin-type-check
+admin-type-check: ## 管理端前端类型检查
+	@echo "$(GREEN)运行管理端前端类型检查...$(RESET)"
+	@if [ ! -d "$(ADMIN_DIR)" ]; then \
+		echo "$(RED)错误: admin目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@cd $(ADMIN_DIR) && npm run type-check
+
+.PHONY: admin-clean
+admin-clean: ## 清理管理端前端构建文件
+	@echo "$(YELLOW)清理管理端前端构建文件...$(RESET)"
+	@rm -rf $(ADMIN_DIST_DIR)
+	@rm -rf $(TARGET_ADMIN_DIR)
+	@if [ -d "$(ADMIN_DIR)" ]; then \
+		cd $(ADMIN_DIR) && npm run clean; \
+	fi
+	@echo "$(GREEN)管理端前端文件清理完成$(RESET)"
+
+# ========================================
+# 用户端前端命令
 # ========================================
 
 .PHONY: web-install
-web-install: ## 安装前端依赖
-	@echo "$(GREEN)安装前端依赖...$(RESET)"
+web-install: ## 安装用户端前端依赖
+	@echo "$(GREEN)安装用户端前端依赖...$(RESET)"
 	@if [ ! -d "$(WEB_DIR)" ]; then \
 		echo "$(RED)错误: web目录不存在$(RESET)"; \
 		exit 1; \
 	fi
 	@cd $(WEB_DIR) && npm install
-	@echo "$(GREEN)前端依赖安装完成$(RESET)"
+	@echo "$(GREEN)用户端前端依赖安装完成$(RESET)"
 
 .PHONY: web-dev
-web-dev: ## 启动前端开发服务器
-	@echo "$(GREEN)启动前端开发服务器...$(RESET)"
+web-dev: ## 启动用户端前端开发服务器
+	@echo "$(GREEN)启动用户端前端开发服务器...$(RESET)"
 	@if [ ! -d "$(WEB_DIR)" ]; then \
 		echo "$(RED)错误: web目录不存在$(RESET)"; \
 		exit 1; \
@@ -50,13 +118,13 @@ web-dev: ## 启动前端开发服务器
 	@cd $(WEB_DIR) && npm run dev
 
 .PHONY: web-build
-web-build: ## 构建前端项目并部署到static目录
-	@echo "$(GREEN)构建前端项目...$(RESET)"
-	@./scripts/build_frontend.sh
+web-build: ## 构建用户端前端项目并部署到static/web目录
+	@echo "$(GREEN)构建用户端前端项目...$(RESET)"
+	@./scripts/build_web.sh
 
 .PHONY: web-lint
-web-lint: ## 检查前端代码
-	@echo "$(GREEN)检查前端代码...$(RESET)"
+web-lint: ## 检查用户端前端代码
+	@echo "$(GREEN)检查用户端前端代码...$(RESET)"
 	@if [ ! -d "$(WEB_DIR)" ]; then \
 		echo "$(RED)错误: web目录不存在$(RESET)"; \
 		exit 1; \
@@ -64,67 +132,75 @@ web-lint: ## 检查前端代码
 	@cd $(WEB_DIR) && npm run lint
 
 .PHONY: web-format
-web-format: ## 格式化前端代码
-	@echo "$(GREEN)格式化前端代码...$(RESET)"
+web-format: ## 格式化用户端前端代码
+	@echo "$(GREEN)格式化用户端前端代码...$(RESET)"
 	@if [ ! -d "$(WEB_DIR)" ]; then \
 		echo "$(RED)错误: web目录不存在$(RESET)"; \
 		exit 1; \
 	fi
 	@cd $(WEB_DIR) && npm run format
 
-.PHONY: web-type-check
-web-type-check: ## 前端类型检查
-	@echo "$(GREEN)运行前端类型检查...$(RESET)"
-	@if [ ! -d "$(WEB_DIR)" ]; then \
-		echo "$(RED)错误: web目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(WEB_DIR) && npm run type-check
-
 .PHONY: web-clean
-web-clean: ## 清理前端构建文件
-	@echo "$(YELLOW)清理前端构建文件...$(RESET)"
-	@rm -rf $(DIST_DIR)
-	@rm -rf $(TARGET_DIST_DIR)
+web-clean: ## 清理用户端前端构建文件
+	@echo "$(YELLOW)清理用户端前端构建文件...$(RESET)"
+	@rm -rf $(WEB_DIST_DIR)
+	@rm -rf $(TARGET_WEB_DIR)
 	@if [ -d "$(WEB_DIR)" ]; then \
-		cd $(WEB_DIR) && npm run clean; \
+		cd $(WEB_DIR) && npm run clean 2>/dev/null || true; \
 	fi
-	@echo "$(GREEN)前端文件清理完成$(RESET)"
+	@echo "$(GREEN)用户端前端文件清理完成$(RESET)"
 
-.PHONY: web-check
-web-check: web-type-check web-lint ## 完整前端代码检查
+# ========================================
+# 前端组合命令
+# ========================================
+
+.PHONY: frontend-install
+frontend-install: admin-install web-install ## 安装所有前端依赖
+
+.PHONY: frontend-build
+frontend-build: admin-build web-build ## 构建所有前端项目
+
+.PHONY: frontend-clean
+frontend-clean: admin-clean web-clean ## 清理所有前端构建文件
+
+.PHONY: frontend-lint
+frontend-lint: admin-lint web-lint ## 检查所有前端代码
+
+.PHONY: frontend-format
+frontend-format: admin-format web-format ## 格式化所有前端代码
 
 # ========================================
 # 全栈构建命令
 # ========================================
 
 .PHONY: fullstack-build
-fullstack-build: web-build build ## 构建完整的全栈应用 (前端+后端)
+fullstack-build: frontend-build build ## 构建完整的全栈应用 (管理端+用户端+后端)
 	@echo "$(GREEN)全栈应用构建完成!$(RESET)"
 	@echo "$(BLUE)二进制文件: $(BINARY_PATH)$(RESET)"
+	@echo "$(BLUE)管理端: /admin 路径访问$(RESET)"
+	@echo "$(BLUE)用户端: / 根路径访问$(RESET)"
 	@echo "$(BLUE)静态文件已嵌入到二进制文件中$(RESET)"
 
 .PHONY: fullstack-dev
 fullstack-dev: ## 启动全栈开发环境 (并行启动前后端)
 	@echo "$(GREEN)启动全栈开发环境...$(RESET)"
-	@echo "$(YELLOW)后端将在 :8080 端口启动$(RESET)"
-	@echo "$(YELLOW)前端将在 :3000 端口启动$(RESET)"
+	@echo "$(YELLOW)后端将在 :9000 端口启动$(RESET)"
+	@echo "$(YELLOW)管理端将在 :3000 端口启动$(RESET)"
+	@echo "$(YELLOW)用户端将在 :4000 端口启动$(RESET)"
 	@echo "$(BLUE)按 Ctrl+C 停止所有服务$(RESET)"
 	@trap 'kill 0' INT; \
+	make admin-dev & \
 	make web-dev & \
 	make dev & \
 	wait
 
 .PHONY: fullstack-clean
-fullstack-clean: clean web-clean ## 清理所有构建文件 (前端+后端)
+fullstack-clean: clean frontend-clean ## 清理所有构建文件 (前端+后端)
 	@echo "$(GREEN)全栈清理完成$(RESET)"
 
-.PHONY: help
-help: ## 显示帮助信息
-	@echo "$(BLUE)$(APP_NAME) 开发工具$(RESET)"
-	@echo ""
-	@echo "$(GREEN)可用命令:$(RESET)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# ========================================
+# 后端构建命令
+# ========================================
 
 .PHONY: dev
 dev: ## 启动开发服务器（热重载）
@@ -158,6 +234,10 @@ clean: ## 清理构建文件
 	@rm -rf dist/
 	@go clean
 
+# ========================================
+# 测试命令
+# ========================================
+
 .PHONY: test
 test: ## 运行所有测试
 	@echo "$(GREEN)运行测试...$(RESET)"
@@ -180,6 +260,10 @@ test-coverage: ## 运行测试并生成覆盖率报告
 	@go tool cover -html=coverage.out -o coverage.html
 	@echo "$(GREEN)覆盖率报告已生成: coverage.html$(RESET)"
 
+# ========================================
+# 代码质量命令
+# ========================================
+
 .PHONY: fmt
 fmt: ## 格式化代码
 	@echo "$(GREEN)格式化代码...$(RESET)"
@@ -187,329 +271,47 @@ fmt: ## 格式化代码
 	@goimports -w .
 
 .PHONY: lint
-lint: ## 代码检查
-	@echo "$(GREEN)运行代码检查...$(RESET)"
-	@if command -v golangci-lint > /dev/null; then \
-		golangci-lint run; \
-	else \
-		echo "$(RED)golangci-lint 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest$(RESET)"; \
-	fi
+lint: ## 检查代码
+	@echo "$(GREEN)检查代码...$(RESET)"
+	@golangci-lint run
 
-.PHONY: security
-security: ## 安全检查
-	@echo "$(GREEN)运行安全检查...$(RESET)"
-	@if command -v gosec > /dev/null; then \
-		gosec ./...; \
-	else \
-		echo "$(RED)gosec 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install github.com/securego/gosec/v2/cmd/gosec@latest$(RESET)"; \
-	fi
+# ========================================
+# 兼容性命令 (保持向后兼容)
+# ========================================
 
-.PHONY: deps
-deps: ## 检查依赖
-	@echo "$(GREEN)检查依赖...$(RESET)"
-	@go mod tidy
-	@go mod verify
-	@if command -v govulncheck > /dev/null; then \
-		govulncheck ./...; \
-	else \
-		echo "$(YELLOW)govulncheck 未安装，跳过漏洞检查$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install golang.org/x/vuln/cmd/govulncheck@latest$(RESET)"; \
-	fi
+# 保留旧的命令名以确保向后兼容
+.PHONY: web-check
+web-check: admin-type-check admin-lint ## 完整前端代码检查 (兼容性保留)
 
-.PHONY: migrate
-migrate: ## 执行数据库迁移
-	@echo "$(GREEN)执行数据库迁移...$(RESET)"
-	@go run $(MAIN_PATH) migrate
+# ========================================
+# 帮助命令
+# ========================================
 
-.PHONY: migrate-down
-migrate-down: ## 回滚数据库迁移
-	@echo "$(YELLOW)回滚数据库迁移...$(RESET)"
-	@go run $(MAIN_PATH) migrate-down
-
-.PHONY: migration
-migration: ## 创建新的迁移文件 (使用: make migration name=add_user_avatar)
-	@if [ -z "$(name)" ]; then \
-		echo "$(RED)请提供迁移名称: make migration name=your_migration_name$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(GREEN)创建迁移文件: $(name)$(RESET)"
-	@mkdir -p internal/migrations
-	@timestamp=$$(date +%Y%m%d%H%M%S); \
-	filename="internal/migrations/$${timestamp}_$(name).sql"; \
-	echo "-- +migrate Up" > $$filename; \
-	echo "-- 在这里添加你的SQL语句" >> $$filename; \
-	echo "" >> $$filename; \
-	echo "-- +migrate Down" >> $$filename; \
-	echo "-- 在这里添加回滚SQL语句" >> $$filename; \
-	echo "$(GREEN)迁移文件已创建: $$filename$(RESET)"
-
-.PHONY: db-reset
-db-reset: ## 重置数据库
-	@echo "$(RED)重置数据库...$(RESET)"
-	@read -p "确定要重置数据库吗？这将删除所有数据 [y/N]: " confirm; \
-	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-		rm -f app.db; \
-		echo "$(GREEN)数据库已重置$(RESET)"; \
-	else \
-		echo "$(YELLOW)操作已取消$(RESET)"; \
-	fi
-
-.PHONY: new-module
-new-module: ## 创建新模块 (使用: make new-module name=product)
-	@if [ -z "$(name)" ]; then \
-		echo "$(RED)请提供模块名称: make new-module name=your_module_name$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(GREEN)创建新模块: $(name)$(RESET)"
-	@./scripts/create_module.sh $(name)
-
-.PHONY: docs
-docs: ## 生成API文档
-	@echo "$(GREEN)生成API文档...$(RESET)"
-	@if command -v swag > /dev/null; then \
-		swag init -g cmd/main.go -o docs/swagger; \
-		echo "$(GREEN)API文档已生成: docs/swagger/$(RESET)"; \
-	else \
-		echo "$(RED)swag 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install github.com/swaggo/swag/cmd/swag@latest$(RESET)"; \
-	fi
-
-.PHONY: docker-build
-docker-build: ## 构建Docker镜像
-	@echo "$(GREEN)构建Docker镜像...$(RESET)"
-	@docker build -t $(DOCKER_IMAGE) .
-	@echo "$(GREEN)Docker镜像构建完成: $(DOCKER_IMAGE)$(RESET)"
-
-.PHONY: docker-run
-docker-run: ## 运行Docker容器
-	@echo "$(GREEN)运行Docker容器...$(RESET)"
-	@docker run -p 9000:9000 --name $(APP_NAME) $(DOCKER_IMAGE)
-
-.PHONY: docker-push
-docker-push: docker-build ## 推送Docker镜像到仓库
-	@echo "$(GREEN)推送Docker镜像...$(RESET)"
-	@docker tag $(DOCKER_IMAGE) $(DOCKER_REGISTRY)/$(DOCKER_IMAGE)
-	@docker push $(DOCKER_REGISTRY)/$(DOCKER_IMAGE)
-
-.PHONY: docker-clean
-docker-clean: ## 清理Docker资源
-	@echo "$(YELLOW)清理Docker资源...$(RESET)"
-	@docker stop $(APP_NAME) 2>/dev/null || true
-	@docker rm $(APP_NAME) 2>/dev/null || true
-	@docker rmi $(DOCKER_IMAGE) 2>/dev/null || true
-
-.PHONY: install-tools
-install-tools: ## 安装开发工具
-	@echo "$(GREEN)安装开发工具...$(RESET)"
-	@go install github.com/air-verse/air@latest
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-	@go install github.com/securego/gosec/v2/cmd/gosec@latest
-	@go install golang.org/x/vuln/cmd/govulncheck@latest
-	@go install github.com/swaggo/swag/cmd/swag@latest
-	@go install golang.org/x/tools/cmd/goimports@latest
-	@echo "$(GREEN)开发工具安装完成$(RESET)"
-
-.PHONY: setup
-setup: install-tools ## 初始化开发环境
-	@echo "$(GREEN)初始化开发环境...$(RESET)"
-	@go mod tidy
-	@cp config.example.yaml config.yaml
-	@echo "$(GREEN)开发环境初始化完成$(RESET)"
-	@echo "$(YELLOW)请编辑 config.yaml 文件配置你的环境$(RESET)"
-
-.PHONY: run
-run: build ## 构建并运行应用程序
-	@echo "$(GREEN)运行应用程序...$(RESET)"
-	@$(BINARY_PATH)
-
-.PHONY: deploy-dev
-deploy-dev: ## 部署到开发环境
-	@echo "$(GREEN)部署到开发环境...$(RESET)"
-	@./scripts/deploy.sh dev
-
-.PHONY: deploy-prod
-deploy-prod: ## 部署到生产环境
-	@echo "$(GREEN)部署到生产环境...$(RESET)"
-	@./scripts/deploy.sh prod
-
-.PHONY: logs
-logs: ## 查看应用日志
-	@echo "$(GREEN)查看应用日志...$(RESET)"
-	@tail -f logs/app.log
-
-.PHONY: status
-status: ## 显示项目状态
-	@echo "$(BLUE)项目状态$(RESET)"
-	@echo "应用名称: $(APP_NAME)"
-	@echo "版本: $(VERSION)"
-	@echo "Go版本: $(GO_VERSION)"
-	@echo "构建时间: $(BUILD_TIME)"
+.PHONY: help
+help: ## 显示帮助信息
+	@echo "$(BLUE)$(APP_NAME) 三端开发工具$(RESET)"
 	@echo ""
-	@echo "$(GREEN)Git状态:$(RESET)"
-	@git status --short
-
-# ========================================
-# 新增的工具命令
-# ========================================
-
-.PHONY: perf-check
-perf-check: ## 运行性能检查
-	@echo "$(GREEN)运行性能检查...$(RESET)"
-	@./scripts/performance_check.sh
-
-.PHONY: perf-check-url
-perf-check-url: ## 运行性能检查 (自定义URL: make perf-check-url url=http://localhost:9000)
-	@if [ -z "$(url)" ]; then \
-		echo "$(RED)请提供URL: make perf-check-url url=http://localhost:9000$(RESET)"; \
-		exit 1; \
-	fi
-	@echo "$(GREEN)运行性能检查 (URL: $(url))...$(RESET)"
-	@./scripts/performance_check.sh -u $(url)
-
-.PHONY: db-backup
-db-backup: ## 备份数据库
-	@echo "$(GREEN)备份数据库...$(RESET)"
-	@./scripts/db_manager.sh backup
-
-.PHONY: db-restore
-db-restore: ## 恢复数据库
-	@echo "$(GREEN)恢复数据库...$(RESET)"
-	@./scripts/db_manager.sh restore
-
-.PHONY: db-list
-db-list: ## 列出数据库备份
-	@echo "$(GREEN)列出数据库备份...$(RESET)"
-	@./scripts/db_manager.sh list
-
-.PHONY: db-cleanup
-db-cleanup: ## 清理旧备份 (使用: make db-cleanup days=7)
-	@echo "$(GREEN)清理旧备份...$(RESET)"
-	@if [ -n "$(days)" ]; then \
-		./scripts/db_manager.sh cleanup $(days); \
-	else \
-		./scripts/db_manager.sh cleanup; \
-	fi
-
-.PHONY: db-info
-db-info: ## 显示数据库信息
-	@echo "$(GREEN)显示数据库信息...$(RESET)"
-	@./scripts/db_manager.sh info
-
-.PHONY: db-optimize
-db-optimize: ## 优化数据库
-	@echo "$(GREEN)优化数据库...$(RESET)"
-	@./scripts/db_manager.sh optimize
-
-.PHONY: db-export
-db-export: ## 导出数据库数据
-	@echo "$(GREEN)导出数据库数据...$(RESET)"
-	@./scripts/db_manager.sh export
-
-.PHONY: db-sql
-db-sql: ## 执行SQL查询 (使用: make db-sql file=query.sql 或直接 make db-sql 进入交互模式)
-	@echo "$(GREEN)执行SQL查询...$(RESET)"
-	@if [ -n "$(file)" ]; then \
-		./scripts/db_manager.sh sql $(file); \
-	else \
-		./scripts/db_manager.sh sql; \
-	fi
-
-.PHONY: benchmark
-benchmark: ## 运行性能基准测试
-	@echo "$(GREEN)运行性能基准测试...$(RESET)"
-	@go test -bench=. -benchmem ./...
-
-.PHONY: profile
-profile: ## 生成性能分析报告
-	@echo "$(GREEN)生成性能分析报告...$(RESET)"
-	@go test -cpuprofile=cpu.prof -memprofile=mem.prof -bench=. ./...
-	@echo "$(YELLOW)CPU分析: go tool pprof cpu.prof$(RESET)"
-	@echo "$(YELLOW)内存分析: go tool pprof mem.prof$(RESET)"
-
-.PHONY: check-deps
-check-deps: ## 检查依赖更新
-	@echo "$(GREEN)检查依赖更新...$(RESET)"
-	@go list -u -m all
-
-.PHONY: update-deps
-update-deps: ## 更新依赖
-	@echo "$(GREEN)更新依赖...$(RESET)"
-	@go get -u ./...
-	@go mod tidy
-
-.PHONY: generate
-generate: ## 运行代码生成
-	@echo "$(GREEN)运行代码生成...$(RESET)"
-	@go generate ./...
-
-.PHONY: mock
-mock: ## 生成Mock文件
-	@echo "$(GREEN)生成Mock文件...$(RESET)"
-	@if command -v mockgen > /dev/null; then \
-		find . -name "*.go" -exec grep -l "//go:generate mockgen" {} \; | xargs -I {} go generate {}; \
-		echo "$(GREEN)Mock文件生成完成$(RESET)"; \
-	else \
-		echo "$(RED)mockgen 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install github.com/golang/mock/mockgen@latest$(RESET)"; \
-	fi
-
-.PHONY: swagger
-swagger: ## 生成Swagger文档
-	@echo "$(GREEN)生成Swagger文档...$(RESET)"
-	@if command -v swag > /dev/null; then \
-		swag init -g cmd/main.go -o docs/swagger --parseDependency --parseInternal; \
-		echo "$(GREEN)Swagger文档已生成: docs/swagger/$(RESET)"; \
-		echo "$(YELLOW)访问地址: http://localhost:8080/swagger/index.html$(RESET)"; \
-	else \
-		echo "$(RED)swag 未安装$(RESET)"; \
-		echo "$(YELLOW)安装命令: go install github.com/swaggo/swag/cmd/swag@latest$(RESET)"; \
-	fi
-
-.PHONY: api-test
-api-test: ## 运行API测试
-	@echo "$(GREEN)运行API测试...$(RESET)"
-	@if [ -f "tests/api_test.sh" ]; then \
-		./tests/api_test.sh; \
-	else \
-		echo "$(YELLOW)API测试脚本不存在: tests/api_test.sh$(RESET)"; \
-	fi
-
-.PHONY: check-config
-check-config: ## 检查配置文件
-	@echo "$(GREEN)检查配置文件...$(RESET)"
-	@if [ -f "config.yaml" ]; then \
-		echo "$(GREEN)✓ 配置文件存在$(RESET)"; \
-		if command -v yq > /dev/null; then \
-			yq eval '.' config.yaml > /dev/null && echo "$(GREEN)✓ 配置文件格式正确$(RESET)" || echo "$(RED)✗ 配置文件格式错误$(RESET)"; \
-		else \
-			echo "$(YELLOW)⚠ yq 未安装，无法验证YAML格式$(RESET)"; \
-		fi; \
-	else \
-		echo "$(RED)✗ 配置文件不存在$(RESET)"; \
-		echo "$(YELLOW)请运行: cp config.example.yaml config.yaml$(RESET)"; \
-	fi
-
-.PHONY: clean-all
-clean-all: clean docker-clean ## 清理所有构建文件和Docker资源
-	@echo "$(YELLOW)清理所有文件...$(RESET)"
-	@rm -rf coverage.out coverage.html
-	@rm -rf *.prof
-	@rm -rf docs/swagger
-	@rm -rf exports/
-	@echo "$(GREEN)清理完成$(RESET)"
-
-.PHONY: quick-start
-quick-start: setup migrate dev ## 快速启动项目 (初始化+迁移+开发服务器)
-	@echo "$(GREEN)项目快速启动完成!$(RESET)"
-
-.PHONY: full-check
-full-check: fmt lint security test test-coverage ## 完整代码检查 (格式化+检查+安全+测试+覆盖率)
-	@echo "$(GREEN)完整代码检查完成!$(RESET)"
-
-.PHONY: all
-all: clean fmt lint test build ## 执行完整的构建流程
-
-# 默认目标
-.DEFAULT_GOAL := help 
+	@echo "$(GREEN)📊 项目架构:$(RESET)"
+	@echo "  🎯 后端 (Go)     - 端口 9000"
+	@echo "  🎨 管理端 (Vue3) - 端口 3000 (开发) / /admin (生产)"  
+	@echo "  👥 用户端 (Vue3) - 端口 4000 (开发) / / (生产)"
+	@echo ""
+	@echo "$(GREEN)🔧 可用命令:$(RESET)"
+	@echo ""
+	@echo "$(YELLOW)📱 管理端命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^admin-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)🌐 用户端命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^web-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)🔗 前端组合命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^frontend-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)🚀 全栈命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^fullstack-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)⚙️ 后端命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^(dev|build|build-linux|clean):.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "$(YELLOW)🧪 测试命令:$(RESET)"
+	@awk 'BEGIN {FS = ":.*?## "} /^test[a-zA-Z_-]*:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) 

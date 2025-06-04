@@ -6,9 +6,6 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 
-// 导入全局组件插件
-import GinComponentsPlugin from './components'
-
 // 导入安全存储工具
 import SecureStorage from './utils/storage'
 
@@ -26,6 +23,5 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-app.use(GinComponentsPlugin)
 
 app.mount('#app')

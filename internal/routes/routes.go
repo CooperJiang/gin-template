@@ -15,7 +15,7 @@ func RegisterRoutes(r *gin.Engine) {
 	RegisterClientRoutes(r)
 
 	// 注册文件访问路由（独立路由，不在 /api/v1 下）
-	RegisterFileRoutes(r)
+	// RegisterFileRoutes(r)
 
 	prefix := r.Group("/api")
 	version := prefix.Group("/v1")
@@ -34,6 +34,6 @@ func RegisterRoutes(r *gin.Engine) {
 		// RegisterProductRoutes(productRoutes)
 	}
 
-	// 静态文件服务
-	r.Static("/static", "./internal/static")
+	// 静态文件服务 - 暂时注释掉，使用embed版本
+	// r.Static("/static", "./internal/static")
 }

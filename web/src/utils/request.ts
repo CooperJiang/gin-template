@@ -5,7 +5,7 @@ import SecureStorage, { STORAGE_KEYS } from './storage'
 
 // 创建axios实例
 const request: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:9000/api/v1',
+  baseURL: 'http://localhost:9000/api/v1', // 直接设置API地址，确保可以连接
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -32,9 +32,22 @@ request.interceptors.request.use(
       }
     }
 
+    // 开发环境下打印请求信息
+    if (import.meta.env.DEV) {
+      console.log('🚀 API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL,
+        data: config.data,
+        params: config.params,
+        headers: config.headers
+      })
+    }
+
     return config
   },
   (error) => {
+    console.error('❌ Request Error:', error)
     return Promise.reject(error)
   },
 )
@@ -44,11 +57,30 @@ request.interceptors.response.use(
   (response: AxiosResponse<BaseResponse>) => {
     const { data } = response
 
+    // 开发环境下打印响应信息
+    if (import.meta.env.DEV) {
+      console.log('✅ API Response:', {
+        url: response.config.url,
+        status: response.status,
+        data: data
+      })
+    }
+
     // 检查业务状态码
     if (data.code !== 200) {
       const error = new Error(data.message || '请求失败')
       // 显示错误消息
       showError(data.message || '请求失败')
+
+      // 开发环境下打印错误详情
+      if (import.meta.env.DEV) {
+        console.error('❌ Business Error:', {
+          code: data.code,
+          message: data.message,
+          data: data.data
+        })
+      }
+
       return Promise.reject(error)
     }
 
@@ -61,6 +93,15 @@ request.interceptors.response.use(
   (error) => {
     // 处理HTTP错误
     let message = '网络错误'
+
+    if (import.meta.env.DEV) {
+      console.error('❌ HTTP Error:', {
+        message: error.message,
+        response: error.response,
+        request: error.request,
+        config: error.config
+      })
+    }
 
     if (error.response) {
       const { status, data } = error.response
@@ -89,7 +130,7 @@ request.interceptors.response.use(
           message = data?.message || `请求失败 (${status})`
       }
     } else if (error.request) {
-      message = '网络连接失败'
+      message = '网络连接失败，请检查网络连接'
     }
 
     // 显示错误消息

@@ -7,6 +7,7 @@ specifiers:
   '@tsconfig/node22': ^22.0.1
   '@types/crypto-js': ^4.2.2
   '@types/node': ^22.14.0
+  '@types/prismjs': ^1.26.5
   '@vitejs/plugin-vue': ^5.2.3
   '@vue/eslint-config-prettier': ^10.2.0
   '@vue/eslint-config-typescript': ^14.5.0
@@ -47,6 +48,7 @@ devDependencies:
   '@tsconfig/node22': 22.0.2
   '@types/crypto-js': 4.2.2
   '@types/node': 22.15.29
+  '@types/prismjs': 1.26.5
   '@vitejs/plugin-vue': 5.2.4_vite@6.3.5+vue@3.5.16
   '@vue/eslint-config-prettier': 10.2.0_4w3occ6werslr2k3gafujuco74
   '@vue/eslint-config-typescript': 14.5.0_xxywpes3jaezcgfkzu4ulycney
@@ -1009,6 +1011,10 @@ packages:
     resolution: {integrity: sha512-LNdjOkUDlU1RZb8e1kOIUpN1qQUlzGkEtbVNo53vbrwDg5om6oduhm4SiUaPW5ASTXhAiP0jInWG8Qx9fVlOeQ==}
     dependencies:
       undici-types: 6.21.0
+    dev: true
+
+  /@types/prismjs/1.26.5:
+    resolution: {integrity: sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ==}
     dev: true
 
   /@types/web-bluetooth/0.0.21:

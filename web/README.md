@@ -1,164 +1,171 @@
-# 🎨 Gin Template 前端项目
+# 用户端前端
 
-基于 Vue 3 + TypeScript + TailwindCSS 构建的现代化前端应用，与 Gin 后端完美集成。
+基于 Vue 3 + TypeScript + TailwindCSS 的现代化用户端前端应用。
 
-## 🚀 快速开始
+## 🚀 特性
 
-### 环境要求
-- Node.js >= 18.0.0
-- npm >= 9.0.0
+- **现代技术栈**: Vue 3 + TypeScript + TailwindCSS + Vite
+- **用户认证系统**: 完整的登录、注册、密码重置流程
+- **安全存储**: 加密的本地存储，支持过期管理
+- **响应式设计**: 适配各种设备尺寸
+- **代码规范**: ESLint + Prettier 确保代码质量
+- **开发体验**: 热重载、TypeScript 类型检查
 
-### 安装和启动
+## 📦 技术栈
 
-```bash
-# 安装依赖
-npm install
-
-# 启动开发服务器
-npm run dev
-
-# 或使用便捷脚本
-./start.sh
-```
-
-访问地址: http://localhost:3000
-
-## 🛠️ 技术栈
-
-| 技术 | 版本 | 说明 |
+| 技术 | 版本 | 用途 |
 |------|------|------|
-| **Vue 3** | ^3.5.13 | 渐进式JavaScript框架 |
-| **TypeScript** | ^5.6.3 | 类型安全的JavaScript |
-| **Vite** | ^6.0.1 | 下一代前端构建工具 |
-| **Pinia** | ^2.2.6 | Vue官方状态管理库 |
-| **Vue Router** | ^4.5.0 | Vue官方路由管理器 |
-| **TailwindCSS** | ^4.0.0 | 实用优先的CSS框架 |
-| **Axios** | ^1.7.9 | HTTP客户端 |
-| **VueUse** | ^11.3.0 | Vue组合式API工具集 |
-| **Heroicons** | ^2.2.0 | 精美的SVG图标库 |
+| Vue | ^3.5.13 | 前端框架 |
+| TypeScript | ~5.8.0 | 类型安全 |
+| TailwindCSS | ^3.4.17 | CSS 框架 |
+| Vue Router | ^4.5.0 | 路由管理 |
+| Pinia | ^3.0.1 | 状态管理 |
+| Axios | ^1.9.0 | HTTP 请求 |
+| Vite | ^6.2.4 | 构建工具 |
 
-## 📁 项目结构
+## 🏗️ 项目结构
 
 ```
-web/
-├── public/                    # 静态资源
+frontend/
 ├── src/
-│   ├── api/                   # API接口层
-│   │   ├── auth.ts           # 认证相关API
-│   │   └── user.ts           # 用户相关API
-│   ├── assets/               # 资源文件
-│   │   ├── main.css          # 主样式文件
-│   │   └── base.css          # 基础样式
-│   ├── components/           # 组件
-│   │   └── common/           # 通用组件
-│   │       ├── AppNotification.vue  # 通知组件
-│   │       └── AppLoading.vue       # 加载组件
-│   ├── router/               # 路由配置
-│   │   └── index.ts          # 路由定义
-│   ├── stores/               # Pinia状态管理
-│   │   ├── auth.ts           # 认证状态
-│   │   ├── notification.ts   # 通知状态
-│   │   └── user.ts           # 用户状态
-│   ├── types/                # TypeScript类型定义
-│   │   └── index.ts          # 全局类型
-│   ├── utils/                # 工具函数
-│   │   └── request.ts        # HTTP请求封装
-│   ├── views/                # 页面组件
-│   │   ├── LoginView.vue     # 登录页面
-│   │   ├── RegisterView.vue  # 注册页面
-│   │   ├── DashboardView.vue # 仪表板
-│   │   └── ...               # 其他页面
-│   ├── App.vue               # 根组件
-│   └── main.ts               # 应用入口
-├── index.html                # HTML模板
-├── package.json              # 项目配置
-├── vite.config.ts            # Vite配置
-├── tailwind.config.js        # TailwindCSS配置
-├── postcss.config.js         # PostCSS配置
-└── tsconfig.json             # TypeScript配置
+│   ├── api/                 # API 接口
+│   │   └── auth/           # 认证相关 API
+│   ├── components/         # 通用组件
+│   ├── composables/        # 组合式函数
+│   ├── hooks/              # 自定义 hooks
+│   │   ├── common/         # 通用 hooks
+│   │   └── user/           # 用户相关 hooks
+│   ├── pages/              # 页面组件
+│   │   ├── About/          # 关于页面
+│   │   ├── ForgotPassword/ # 忘记密码
+│   │   ├── Home/           # 首页
+│   │   ├── Login/          # 登录页面
+│   │   ├── NotFound/       # 404 页面
+│   │   ├── Profile/        # 个人资料
+│   │   ├── Register/       # 注册页面
+│   │   └── Settings/       # 设置页面
+│   ├── router/             # 路由配置
+│   ├── styles/             # 样式文件
+│   ├── types/              # TypeScript 类型定义
+│   ├── utils/              # 工具函数
+│   ├── App.vue             # 主应用组件
+│   └── main.ts             # 应用入口
+├── public/                 # 静态资源
+├── package.json            # 项目配置
+├── vite.config.ts          # Vite 配置
+├── tailwind.config.js      # TailwindCSS 配置
+├── tsconfig.json           # TypeScript 配置
+└── README.md               # 项目文档
 ```
 
-## 🎯 核心功能
+## 🚦 快速开始
 
-### 🔐 认证系统
-- JWT Token 认证
-- 自动token刷新
-- 路由权限控制
-- 登录状态持久化
-
-### 📊 状态管理
-- Pinia 状态管理
-- 模块化store设计
-- 类型安全的状态操作
-- 持久化支持
-
-### 🌐 HTTP请求
-- Axios 请求封装
-- 自动错误处理
-- 请求/响应拦截器
-- 统一API接口
-
-### 🎨 UI组件
-- TailwindCSS 样式系统
-- 响应式设计
-- 通用组件库
-- 主题定制
-
-### 🔔 通知系统
-- 全局通知组件
-- 多种通知类型
-- 自动消失
-- 可自定义样式
-
-## 🚀 开发命令
+### 安装依赖
 
 ```bash
-# 开发
-npm run dev              # 启动开发服务器
-npm run dev:host         # 启动开发服务器（允许外部访问）
-
-# 构建
-npm run build            # 构建生产版本
-npm run preview          # 预览生产构建
-
-# 代码质量
-npm run lint             # ESLint检查
-npm run lint:fix         # 自动修复ESLint错误
-npm run format           # Prettier格式化
-npm run type-check       # TypeScript类型检查
-
-# 测试
-npm run test             # 运行测试
-npm run test:coverage    # 运行测试并生成覆盖率报告
+npm install
 ```
+
+### 开发环境
+
+```bash
+npm run dev
+```
+
+应用将在 http://localhost:4000 启动
+
+### 构建生产版本
+
+```bash
+npm run build
+```
+
+### 代码检查
+
+```bash
+# 运行 ESLint 检查
+npm run lint
+
+# 自动修复代码风格问题
+npm run lint:fix
+
+# 代码格式化
+npm run format
+```
+
+## 🔐 认证流程
+
+### 登录
+
+1. 访问 `/login` 页面
+2. 输入用户名/邮箱和密码
+3. 系统验证后跳转到首页
+4. token 自动保存到安全存储
+
+### 注册
+
+1. 访问 `/register` 页面
+2. 填写用户信息
+3. 发送邮箱验证码
+4. 验证通过后完成注册
+
+### 密码重置
+
+1. 在登录页点击"忘记密码"
+2. 输入邮箱地址
+3. 接收验证码
+4. 设置新密码
+
+## 🛡️ 安全特性
+
+- **Token 认证**: 使用 JWT token 进行身份验证
+- **安全存储**: 本地数据加密存储，支持过期时间
+- **路由守卫**: 自动重定向未认证用户
+- **请求拦截**: 自动添加认证头和错误处理
+
+## 📄 页面说明
+
+| 路由 | 页面 | 权限 | 说明 |
+|------|------|------|------|
+| `/` | 首页 | 公开 | 欢迎页面，展示产品特性 |
+| `/login` | 登录 | 游客 | 用户登录，已登录用户会被重定向 |
+| `/register` | 注册 | 游客 | 用户注册 |
+| `/forgot-password` | 忘记密码 | 游客 | 密码重置 |
+| `/profile` | 个人资料 | 需认证 | 查看和编辑个人信息 |
+| `/settings` | 设置 | 需认证 | 账户设置和偏好 |
+| `/about` | 关于 | 公开 | 项目介绍 |
 
 ## 🔧 配置说明
 
-### 环境变量
+### API 配置
 
-创建 `.env` 文件配置环境变量：
+修改 `src/utils/request.ts` 中的 `baseURL` 配置后台 API 地址：
 
-```bash
-# API基础URL
-VITE_API_BASE_URL=http://localhost:8080/api/v1
-
-# 应用标题
-VITE_APP_TITLE=Gin Template
-
-# 是否启用调试模式
-VITE_DEBUG=true
+```typescript
+const request: AxiosInstance = axios.create({
+  baseURL: 'http://localhost:9000/api/v1', // 修改为实际 API 地址
+  timeout: 10000,
+})
 ```
 
-### TailwindCSS配置
+### 端口配置
 
-项目使用 TailwindCSS v4，配置文件 `tailwind.config.js`：
+修改 `vite.config.ts` 更改开发服务器端口：
+
+```typescript
+export default defineConfig({
+  server: {
+    port: 4000, // 修改端口号
+  },
+})
+```
+
+## 🎨 主题定制
+
+项目使用 TailwindCSS，可以在 `tailwind.config.js` 中自定义主题：
 
 ```javascript
-export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-  ],
+module.exports = {
   theme: {
     extend: {
       colors: {
@@ -168,214 +175,39 @@ export default {
       },
     },
   },
-  plugins: [],
 }
 ```
 
-### TypeScript配置
+## 📱 响应式支持
 
-严格的TypeScript配置，确保类型安全：
+- **移动端优先**: 使用 TailwindCSS 的响应式前缀
+- **断点设置**: `sm: 640px`, `md: 768px`, `lg: 1024px`, `xl: 1280px`
+- **自适应布局**: 所有页面都支持移动端显示
 
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    // ...其他配置
-  }
-}
-```
+## 🐛 问题解决
 
-## 📝 开发规范
+### 常见问题
 
-### 代码风格
-- 使用 ESLint + Prettier 统一代码风格
-- 遵循 Vue 3 Composition API 最佳实践
-- TypeScript 严格模式
-- 组件命名使用 PascalCase
+1. **模块找不到错误**
+   - 检查 `tsconfig.json` 路径映射配置
+   - 确保所有依赖已正确安装
 
-### 文件命名
-- 组件文件：`PascalCase.vue`
-- 工具文件：`camelCase.ts`
-- 页面文件：`PascalCaseView.vue`
-- 类型文件：`camelCase.ts`
+2. **API 请求失败**
+   - 检查后台服务是否启动
+   - 确认 API 地址配置正确
+   - 查看浏览器控制台的网络请求
 
-### 提交规范
-```bash
-feat: 新功能
-fix: 修复bug
-docs: 文档更新
-style: 代码格式调整
-refactor: 代码重构
-test: 测试相关
-chore: 构建工具或辅助工具的变动
-```
-
-## 🔗 API集成
-
-### 请求封装
-
-```typescript
-// utils/request.ts
-import axios from 'axios'
-
-const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
-})
-
-// 请求拦截器
-request.interceptors.request.use(config => {
-  const token = localStorage.getItem('token')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
-
-// 响应拦截器
-request.interceptors.response.use(
-  response => response.data.data,
-  error => {
-    // 统一错误处理
-    return Promise.reject(error)
-  }
-)
-```
-
-### API接口定义
-
-```typescript
-// api/auth.ts
-export const authApi = {
-  login(data: LoginRequest): Promise<LoginResponse> {
-    return ApiClient.post('/auth/login', data)
-  },
-  
-  getCurrentUser(): Promise<User> {
-    return ApiClient.get('/auth/profile')
-  },
-  
-  // ...其他接口
-}
-```
-
-## 🎨 组件开发
-
-### 组件模板
-
-```vue
-<template>
-  <div class="component-wrapper">
-    <!-- 组件内容 -->
-  </div>
-</template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue'
-
-// Props定义
-interface Props {
-  title: string
-  visible?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  visible: false
-})
-
-// Emits定义
-interface Emits {
-  close: []
-  confirm: [value: string]
-}
-
-const emit = defineEmits<Emits>()
-
-// 响应式数据
-const loading = ref(false)
-
-// 计算属性
-const isVisible = computed(() => props.visible && !loading.value)
-
-// 方法
-const handleClose = () => {
-  emit('close')
-}
-</script>
-
-<style scoped>
-.component-wrapper {
-  @apply p-4 bg-white rounded-lg shadow;
-}
-</style>
-```
-
-## 🚀 部署
-
-### 构建生产版本
-
-```bash
-npm run build
-```
-
-构建产物在 `dist/` 目录下。
-
-### 部署到静态服务器
-
-```bash
-# 使用 nginx
-cp -r dist/* /var/www/html/
-
-# 使用 Apache
-cp -r dist/* /var/www/html/
-
-# 使用 CDN
-# 上传 dist/ 目录到 CDN
-```
-
-### Docker部署
-
-```dockerfile
-FROM nginx:alpine
-COPY dist/ /usr/share/nginx/html/
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
-```
-
-## 🐛 常见问题
-
-### 1. 开发服务器启动失败
-```bash
-# 清除缓存
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### 2. TypeScript类型错误
-```bash
-# 重新生成类型
-npm run type-check
-```
-
-### 3. 样式不生效
-```bash
-# 检查TailwindCSS配置
-npm run build
-```
-
-## 📚 学习资源
-
-- [Vue 3 官方文档](https://vuejs.org/)
-- [TypeScript 官方文档](https://www.typescriptlang.org/)
-- [TailwindCSS 官方文档](https://tailwindcss.com/)
-- [Pinia 官方文档](https://pinia.vuejs.org/)
-- [Vite 官方文档](https://vitejs.dev/)
+3. **登录后页面空白**
+   - 检查路由配置
+   - 确认用户数据格式正确
 
 ## 🤝 贡献
 
-欢迎提交 Issue 和 Pull Request！
+1. Fork 项目
+2. 创建特性分支
+3. 提交更改
+4. 推送到分支
+5. 创建 Pull Request
 
 ## �� 许可证
 

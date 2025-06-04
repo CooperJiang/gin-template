@@ -5,20 +5,40 @@ import (
 	"io/fs"
 )
 
-/*
-dist/css/* dist/js/* dist/components/* dist/utils/* dist/plugins/* dist/public/*
-*/
+// AdminDistDir 管理端静态文件
+// 如果admin目录不存在，embed会创建空的文件系统
+//
+//go:embed admin
+var AdminDistDir embed.FS
 
-//go:embed  dist/*.html
+// WebDistDir 用户端静态文件
+// 如果web目录不存在，embed会创建空的文件系统
+//
+//go:embed web
+var WebDistDir embed.FS
 
-//go:embed  dist/assets/* dist/favicon.ico dist/index.html
-var DistDir embed.FS
-
-// GetDistFS 返回嵌入的静态文件系统
-func GetDistFS() fs.FS {
-	distFS, err := fs.Sub(DistDir, "dist")
+// GetAdminDistFS 返回嵌入的管理端静态文件系统
+func GetAdminDistFS() fs.FS {
+	adminFS, err := fs.Sub(AdminDistDir, "admin")
 	if err != nil {
-		panic(err)
+		// 如果admin目录不存在，返回空的文件系统
+		return embed.FS{}
 	}
-	return distFS
+	return adminFS
+}
+
+// GetWebDistFS 返回嵌入的用户端静态文件系统
+func GetWebDistFS() fs.FS {
+	webFS, err := fs.Sub(WebDistDir, "web")
+	if err != nil {
+		// 如果web目录不存在，返回空的文件系统
+		return embed.FS{}
+	}
+	return webFS
+}
+
+// GetDistFS 返回嵌入的静态文件系统 (兼容性保留，默认返回管理端)
+// @Deprecated 建议使用 GetAdminDistFS() 或 GetWebDistFS()
+func GetDistFS() fs.FS {
+	return GetAdminDistFS()
 }

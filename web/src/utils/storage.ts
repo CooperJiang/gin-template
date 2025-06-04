@@ -56,7 +56,7 @@ interface StorageOptions {
 }
 
 class SecureStorage {
-  private static PREFIX = 'gin_template_'
+  private static PREFIX = 'gin_template_frontend_'
 
   /**
    * 设置存储项

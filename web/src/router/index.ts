@@ -6,7 +6,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/dashboard',
+      name: 'home',
+      component: () => import('@/pages/Home/index.vue'),
+      meta: {
+        title: '首页',
+      },
     },
     // 游客页面 - 未登录用户可访问，已登录用户会被重定向
     {
@@ -38,124 +42,32 @@ const router = createRouter({
     },
     // 需要认证的页面
     {
-      path: '/dashboard',
-      name: 'dashboard',
-      component: () => import('@/pages/Dashboard/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '概览',
-      },
-    },
-    {
-      path: '/debug',
-      name: 'debug',
-      component: () => import('@/pages/Debug/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: 'Debug调试',
-      },
-    },
-    {
-      path: '/element-table-test',
-      name: 'element-table-test',
-      component: () => import('@/pages/Debug/components/ElementTableTest.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: 'Element表格测试',
-      },
-    },
-    {
-      path: '/simple-table-test',
-      name: 'simple-table-test',
-      component: () => import('@/pages/Debug/components/SimpleTableTest.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '简单表格测试',
-      },
-    },
-    {
-      path: '/demo/page1',
-      name: 'demo-page1',
-      component: () => import('@/pages/Demo/Page1/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1',
-      },
-    },
-    {
-      path: '/demo/page1/page1-1',
-      redirect: '/demo/page1/page1-1/page1-1-1',
-    },
-    {
-      path: '/demo/page1/page1-2',
-      redirect: '/demo/page1/page1-2/page1-2-1',
-    },
-    {
-      path: '/demo/page1/page1-3',
-      name: 'demo-page1-3',
-      component: () => import('@/pages/Demo/Page1/Page1-3/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1-3',
-      },
-    },
-    {
-      path: '/demo/page1/page1-2/page1-2-1',
-      name: 'demo-page1-2-1',
-      component: () => import('@/pages/Demo/Page1/Page1-2/Page1-2-1/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1-2-1',
-      },
-    },
-    {
-      path: '/demo/page1/page1-2/page1-2-2',
-      name: 'demo-page1-2-2',
-      component: () => import('@/pages/Demo/Page1/Page1-2/Page1-2-2/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1-2-2',
-      },
-    },
-    {
-      path: '/demo/page1/page1-1/page1-1-1',
-      name: 'demo-page1-1-1',
-      component: () => import('@/pages/Demo/Page1/Page1-1/Page1-1-1/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1-1-1',
-      },
-    },
-    {
-      path: '/demo/page1/page1-1/page1-1-2',
-      name: 'demo-page1-1-2',
-      component: () => import('@/pages/Demo/Page1/Page1-1/Page1-1-2/index.vue'),
-      meta: {
-        requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '页面1-1-2',
-      },
-    },
-    {
       path: '/profile',
       name: 'profile',
       component: () => import('@/pages/Profile/index.vue'),
       meta: {
         requiresAuth: true,
-        layout: 'admin',
-        breadcrumb: '个人资料',
+        title: '个人资料',
+      },
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/pages/Settings/index.vue'),
+      meta: {
+        requiresAuth: true,
+        title: '设置',
       },
     },
     // 公共页面 - 任何人都可以访问
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('@/pages/About/index.vue'),
+      meta: {
+        title: '关于我们',
+      },
+    },
     {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
@@ -206,7 +118,7 @@ router.beforeEach(async (to, from, next) => {
   // 检查是否是游客页面（登录、注册等）
   if (to.meta.requiresGuest && isAuthenticated.value) {
     // 如果已登录用户访问登录页，重定向到来源页面或首页
-    const redirectPath = (from.query?.redirect as string) || '/dashboard'
+    const redirectPath = (from.query?.redirect as string) || '/'
     next({
       path: redirectPath,
       replace: true,
@@ -226,8 +138,8 @@ router.beforeEach(async (to, from, next) => {
 // 路由后置守卫 - 用于设置页面标题等
 router.afterEach((to) => {
   // 设置页面标题
-  const defaultTitle = '管理后台'
-  const pageTitle = to.meta.breadcrumb as string
+  const defaultTitle = '用户端'
+  const pageTitle = to.meta.title as string
 
   if (pageTitle) {
     document.title = `${pageTitle} - ${defaultTitle}`

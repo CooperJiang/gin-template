@@ -31,12 +31,12 @@ temp/
 .tmp/
 
 # 本地配置覆盖
-config.local.yaml
-config.dev.yaml
-config.prod.yaml
-config.test.yaml
-config.*.yaml
-!config.example.yaml
+# config.local.yaml
+# config.dev.yaml
+# config.prod.yaml
+# config.test.yaml
+# config.*.yaml
+# !config.example.yaml
 
 # 部署配置
 deploy.conf
@@ -72,7 +72,8 @@ __debug_bin
 
 # 构建目录
 /build/
-/dist/
+/web/dist/
+/admin/dist/
 /bin/
 
 # SQLite数据库文件
@@ -86,9 +87,6 @@ __debug_bin
 # 特定于Go的忽略
 go.work
 
-# 编译时生成的前端文件
-/internal/static/dist/
-/internal/static/assets/
 
 # Air工具的临时文件
 /tmp-air-*/
@@ -111,11 +109,11 @@ web/.rollup.cache/
 web/.turbo/
 
 # 前端环境文件
-web/.env
-web/.env.local
-web/.env.development.local
-web/.env.test.local
-web/.env.production.local
+# web/.env
+# web/.env.local
+# web/.env.development.local
+# web/.env.test.local
+# web/.env.production.local
 
 # 前端测试和覆盖率
 web/coverage/
@@ -237,3 +235,128 @@ NOTES.md
 *.trace 
 
 uploads
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go build
+/bin/
+/dist/
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Go build files
+*.out
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# App specific files
+/app
+/tmp
+/logs
+*.log
+
+# Configuration files (keep example files)
+/config.yaml
+/config.yml
+/config.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Test coverage files
+coverage.out
+coverage.html
+*.prof
+
+# Build artifacts
+/internal/static/admin/
+/internal/static/web/
+/internal/static/dist/
+
+# Frontend node_modules and build files
+# Admin frontend
+/admin/node_modules/
+/admin/dist/
+/admin/.npm
+/admin/.pnpm-store
+/admin/pnpm-lock.yaml
+/admin/package-lock.json
+/admin/yarn.lock
+/admin/.eslintcache
+/admin/.vite/
+
+# Web frontend  
+/web/node_modules/
+/web/dist/
+/web/.npm
+/web/.pnpm-store
+/web/pnpm-lock.yaml
+/web/package-lock.json
+/web/yarn.lock
+/web/.eslintcache
+/web/.vite/
+
+# Frontend environment files
+/admin/.env
+/admin/.env.local
+/admin/.env.development.local
+/admin/.env.test.local
+/admin/.env.production.local
+
+/web/.env
+/web/.env.local
+/web/.env.development.local
+/web/.env.test.local
+/web/.env.production.local
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Docker files
+docker-compose.override.yml
+
+# Air (Go live reload)
+.air.toml
+tmp/
+
+# Static backup files
+/internal/static/admin_backup_*
+/internal/static/web_backup_*
+/internal/static/dist_backup_*
+
+# Export files
+/exports/
+
+# Swagger documentation
+/docs/swagger/

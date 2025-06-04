@@ -1,7 +1,7 @@
 {
-  "name": "gin-template-web",
+  "name": "gin-template-frontend",
   "version": "1.0.0",
-  "description": "Vue3 + TypeScript + TailwindCSS 前端模板",
+  "description": "Vue3 + TypeScript + TailwindCSS 用户端模板",
   "private": true,
   "type": "module",
   "scripts": {
@@ -58,7 +58,8 @@
     "vue-router",
     "vite",
     "gin",
-    "admin"
+    "frontend",
+    "user"
   ],
   "author": "Gin Template",
   "license": "MIT"

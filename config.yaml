@@ -92,6 +92,7 @@ cors:
   enabled: true                  # 是否启用CORS支持
   allowed_origins:               # 允许的来源域名列表
     - "http://localhost:3000"
+    - "http://localhost:5000"
     - "https://yourdomain.com"
   allowed_methods:               # 允许的HTTP方法
     - "GET"

@@ -2,49 +2,74 @@
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">重置密码</h2>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          重置密码
+        </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          请输入您的邮箱地址，我们将发送验证码到您的邮箱
+          输入您的邮箱地址和验证码，设置新密码
         </p>
       </div>
 
-      <form class="mt-8 space-y-6" @submit.prevent="handleResetPassword">
+      <!-- 错误提示 -->
+      <div v-if="error" class="bg-red-50 border border-red-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <ExclamationCircleIcon class="h-5 w-5 text-red-400" />
+          </div>
+          <div class="ml-3">
+            <p class="text-red-800">{{ error }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 成功提示 -->
+      <div v-if="successMessage" class="bg-green-50 border border-green-200 rounded-md p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <CheckCircleIcon class="h-5 w-5 text-green-400" />
+          </div>
+          <div class="ml-3">
+            <p class="text-green-800">{{ successMessage }}</p>
+          </div>
+        </div>
+      </div>
+
+      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
         <div class="space-y-4">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700">邮箱地址</label>
             <input
               id="email"
               v-model="form.email"
-              name="email"
               type="email"
               required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="请输入注册时的邮箱地址"
+              :disabled="loading"
+              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="请输入您的邮箱"
             />
           </div>
 
-          <!-- 验证码输入 -->
           <div>
-            <label for="verificationCode" class="block text-sm font-medium text-gray-700"
-              >验证码</label
-            >
-            <div class="flex space-x-2">
+            <label for="code" class="block text-sm font-medium text-gray-700">验证码</label>
+            <div class="mt-1 flex space-x-2">
               <input
-                id="verificationCode"
-                v-model="form.verificationCode"
-                name="verificationCode"
+                id="code"
+                v-model="form.code"
                 type="text"
                 required
-                class="flex-1 mt-1 appearance-none relative block px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                :disabled="loading"
+                class="flex-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="请输入验证码"
               />
               <button
                 type="button"
+                :disabled="sendCodeLoading || countdown > 0 || !isEmailValid"
                 @click="handleSendCode"
-                :disabled="!canSendCode || loading"
-                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {{ codeButtonText }}
+                <span v-if="sendCodeLoading">发送中...</span>
+                <span v-else-if="countdown > 0">{{ countdown }}s</span>
+                <span v-else>发送验证码</span>
               </button>
             </div>
           </div>
@@ -54,25 +79,23 @@
             <input
               id="newPassword"
               v-model="form.newPassword"
-              name="newPassword"
               type="password"
               required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              placeholder="请输入新密码（6-20位）"
+              :disabled="loading"
+              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder="请输入新密码"
             />
           </div>
 
           <div>
-            <label for="confirm_password" class="block text-sm font-medium text-gray-700"
-              >确认新密码</label
-            >
+            <label for="confirmPassword" class="block text-sm font-medium text-gray-700">确认新密码</label>
             <input
-              id="confirm_password"
-              v-model="form.confirm_password"
-              name="confirm_password"
+              id="confirmPassword"
+              v-model="form.confirmPassword"
               type="password"
               required
-              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              :disabled="loading"
+              class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder="请再次输入新密码"
             />
           </div>
@@ -82,81 +105,71 @@
           <button
             type="submit"
             :disabled="loading || !isFormValid"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <span v-if="loading" class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <div
-                class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-              ></div>
+              <!-- Loading spinner -->
+              <svg class="animate-spin h-5 w-5 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
             </span>
             {{ loading ? '重置中...' : '重置密码' }}
           </button>
         </div>
+
+        <div class="text-center">
+          <router-link to="/login" class="font-medium text-blue-600 hover:text-blue-500">
+            返回登录
+          </router-link>
+        </div>
       </form>
-
-      <div class="mt-6 text-center">
-        <router-link to="/login" class="font-medium text-blue-600 hover:text-blue-500">
-          返回登录
-        </router-link>
-      </div>
-
-      <!-- 错误提示 -->
-      <div v-if="error" class="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-        {{ error }}
-      </div>
-
-      <!-- 成功提示 -->
-      <div
-        v-if="success"
-        class="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded"
-      >
-        {{ success }}
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineOptions } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuth } from '../../hooks/user/useAuth'
+import { ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { useAuth } from '@/hooks/user/useAuth'
+import { useMessage } from '@/composables/useMessage'
+import type { ResetPasswordRequest } from '@/types'
 
 const router = useRouter()
 const { resetPassword, sendResetPasswordCode, loading } = useAuth()
+const { success, error: showError } = useMessage()
 
-const form = ref<{
-  email: string
-  verificationCode: string
-  newPassword: string
-  confirm_password: string
-}>({
+// 表单数据
+const form = ref({
   email: '',
-  verificationCode: '',
+  code: '',
   newPassword: '',
-  confirm_password: '',
+  confirmPassword: ''
 })
 
+// 状态
 const error = ref('')
-const success = ref('')
+const successMessage = ref('')
+const sendCodeLoading = ref(false)
 const countdown = ref(0)
+let countdownTimer: NodeJS.Timeout | null = null
 
-// 计算属性
+// 表单验证
+const isEmailValid = computed(() => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(form.value.email)
+})
+
 const isFormValid = computed(() => {
   return (
     form.value.email.trim() !== '' &&
-    form.value.verificationCode.trim() !== '' &&
+    form.value.code.trim() !== '' &&
     form.value.newPassword.trim() !== '' &&
-    form.value.confirm_password.trim() !== '' &&
-    form.value.newPassword === form.value.confirm_password
+    form.value.confirmPassword.trim() !== '' &&
+    form.value.newPassword === form.value.confirmPassword &&
+    isEmailValid.value
   )
-})
-
-const canSendCode = computed(() => {
-  return form.value.email.trim() !== '' && countdown.value === 0
-})
-
-const codeButtonText = computed(() => {
-  return countdown.value > 0 ? `${countdown.value}s后重发` : '发送验证码'
 })
 
 // 发送验证码
@@ -164,56 +177,113 @@ const handleSendCode = async () => {
   try {
     error.value = ''
 
-    if (!form.value.email) {
-      error.value = '请先输入邮箱地址'
+    if (!form.value.email.trim()) {
+      error.value = '请输入邮箱地址'
       return
     }
 
-    await sendResetPasswordCode(form.value.email)
-    success.value = '验证码已发送到您的邮箱'
+    if (!isEmailValid.value) {
+      error.value = '请输入有效的邮箱地址'
+      return
+    }
+
+    sendCodeLoading.value = true
+    await sendResetPasswordCode(form.value.email.trim())
+
+    success('验证码已发送到您的邮箱')
 
     // 开始倒计时
-    countdown.value = 60
-    const timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
+    startCountdown()
+
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : '发送验证码失败'
+    const errorMessage = err instanceof Error ? err.message : '发送验证码失败'
+    error.value = errorMessage
+    showError(errorMessage)
+  } finally {
+    sendCodeLoading.value = false
   }
 }
 
-// 处理重置密码
-const handleResetPassword = async () => {
-  if (form.value.newPassword !== form.value.confirm_password) {
-    error.value = '两次输入的密码不一致'
-    return
-  }
+// 开始倒计时
+const startCountdown = () => {
+  countdown.value = 60
+  countdownTimer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(countdownTimer!)
+      countdownTimer = null
+    }
+  }, 1000)
+}
 
+// 处理重置密码提交
+const handleSubmit = async () => {
   try {
     error.value = ''
-    success.value = ''
+    successMessage.value = ''
 
-    await resetPassword({
-      email: form.value.email,
-      code: form.value.verificationCode,
-      newPassword: form.value.newPassword,
-    })
+    // 表单验证
+    if (!form.value.email.trim()) {
+      error.value = '请输入邮箱地址'
+      return
+    }
 
-    success.value = '密码重置成功！即将跳转到登录页面'
+    if (!isEmailValid.value) {
+      error.value = '请输入有效的邮箱地址'
+      return
+    }
 
-    // 延迟一下再跳转，让用户看到成功提示
+    if (!form.value.code.trim()) {
+      error.value = '请输入验证码'
+      return
+    }
+
+    if (!form.value.newPassword.trim()) {
+      error.value = '请输入新密码'
+      return
+    }
+
+    if (form.value.newPassword.length < 6) {
+      error.value = '密码长度不能少于6位'
+      return
+    }
+
+    if (form.value.newPassword !== form.value.confirmPassword) {
+      error.value = '两次输入的密码不一致'
+      return
+    }
+
+    // 构造重置密码请求数据
+    const resetData: ResetPasswordRequest = {
+      email: form.value.email.trim(),
+      code: form.value.code.trim(),
+      newPassword: form.value.newPassword.trim()
+    }
+
+    // 调用重置密码API
+    await resetPassword(resetData)
+
+    // 重置成功
+    successMessage.value = '密码重置成功！请使用新密码登录'
+    success('密码重置成功！')
+
+    // 延迟跳转到登录页
     setTimeout(() => {
       router.push('/login')
     }, 2000)
+
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : '重置密码失败，请检查输入信息'
+    // 处理重置密码错误
+    const errorMessage = err instanceof Error ? err.message : '重置密码失败，请重试'
+    error.value = errorMessage
+    showError(errorMessage)
   }
 }
 
-defineOptions({
-  name: 'ForgotPasswordPage',
+// 清理函数
+onBeforeUnmount(() => {
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
 })
 </script>
