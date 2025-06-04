@@ -188,6 +188,31 @@ make build            # 仅构建后端
 make fullstack-build  # 构建所有组件
 ```
 
+### 🚀 一键部署到服务器
+```bash
+# 首次部署 (3步搞定)
+make deploy-config    # 1. 配置服务器信息
+make deploy-setup     # 2. 初始化服务器环境
+make build-deploy     # 3. 构建并部署
+
+# 日常更新 (一个命令)
+make build-deploy     # 构建并部署
+
+# 更多部署命令
+make deploy-status    # 查看应用状态
+make deploy-logs      # 查看应用日志  
+make deploy-rollback  # 回滚到上一版本
+```
+
+**特性:**
+- ✅ **2-3秒快速切换** - 几乎零停机部署
+- ✅ **版本管理** - 保留最近5个版本，支持一键回滚
+- ✅ **智能检测** - 自动处理端口占用和进程管理
+- ✅ **多环境支持** - prod/test/dev环境配置
+- ✅ **版本自动递增** - Admin后台版本号自动更新
+
+📖 详细部署文档: [DEPLOY.md](DEPLOY.md) | ⚡ 快速参考: [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+
 ### 生产部署
 ```bash
 # 1. 构建完整应用

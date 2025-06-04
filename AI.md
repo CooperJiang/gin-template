@@ -1,313 +1,222 @@
 # AI 开发规范文档
 
-这是一个基于 Go + Gin + Vue3 + TypeScript 的全栈模板项目，旨在为 AI 开发者提供标准化的开发规范和最佳实践。
+> 专为AI助手（Cursor、Claude等）提供的开发规范，确保严格遵循项目架构和代码规范。
 
-## 项目概述
+## 📋 项目概述
 
-### 架构设计
-- **后端**: Go + Gin 框架，采用分层架构设计
-- **前端**: Vue3 + TypeScript + Vite + TailwindCSS
-- **部署**: 前端构建后嵌入到 Go 二进制文件中，实现单文件部署
-- **数据库**: SQLite (开发) / PostgreSQL (生产)
-- **缓存**: Redis
-- **认证**: JWT
-
-### 构建流程
-1. 前端项目在 `web/` 目录下独立开发
-2. 构建时将前端 `dist/` 文件夹复制到 `internal/static/dist/`
-3. 通过 Go embed 将静态文件嵌入到二进制文件中
-4. 最终生成单个二进制文件，包含完整的前后端功能
+**技术栈**: Go + Gin + Vue3 + TypeScript + SQLite/PostgreSQL + Redis  
+**架构**: 前后端分离开发，构建时合并为单个二进制文件  
+**部署**: 前端打包后嵌入Go程序，最终生成单文件部署
 
 ---
 
-## 后端开发规范
+## ⚠️ 核心约束 (必须严格遵守)
 
-### 📁 项目结构
+### 🚫 绝对禁止的操作
+1. **禁止随意创建新文件或目录** - 必须按照既定目录结构
+2. **禁止使用自增ID** - 所有数据模型必须使用UUID主键
+3. **禁止跳过分层架构** - 必须按Controller→Service→Repository→Model分层
+4. **禁止在Controller中写业务逻辑** - Controller只处理HTTP请求
+5. **禁止跳过参数验证** - 所有输入参数必须验证
+6. **禁止硬编码配置信息** - 必须使用配置文件或常量
 
+### ✅ 必须遵守的规则
+1. **UUID主键** - 所有Model必须嵌入BaseModel使用UUID
+2. **统一命名** - 全项目采用驼峰命名法(camelCase)
+3. **分层调用** - 严格按分层架构调用，不可跨层
+4. **统一响应** - 使用errors.ResponseSuccess/ResponseError
+5. **参数校验** - 使用common.ValidateRequest统一校验
+6. **错误处理** - 使用统一错误处理机制
+
+---
+
+## 🔧 后端开发规范
+
+### 📁 目录结构规则
+
+#### 1. 目录组织规范
 ```
-├── cmd/                    # 应用程序入口
-│   └── main.go            # 主程序启动文件
-├── internal/              # 内部模块 (不对外暴露)
-│   ├── controllers/       # 控制器层 - 处理 HTTP 请求
-│   ├── services/          # 业务逻辑层 - 核心业务处理
-│   ├── repositories/      # 数据访问层 - 数据库操作
-│   ├── models/           # 数据模型 - 数据库表结构
-│   ├── dto/              # 数据传输对象 - 请求/响应结构
-│   ├── routes/           # 路由定义 - API 路由配置
-│   ├── middleware/       # 中间件 - 认证、日志、CORS 等
-│   ├── migrations/       # 数据库迁移文件
-│   └── static/           # 嵌入的静态文件 (前端构建产物)
-├── pkg/                   # 可复用的公共包
-│   ├── common/           # 通用工具和助手函数
-│   ├── config/           # 配置管理
-│   ├── database/         # 数据库连接和管理
-│   ├── logger/           # 日志系统
-│   ├── cache/            # Redis 缓存
-│   ├── email/            # 邮件服务
-│   ├── errors/           # 错误处理和统一返回
-│   ├── utils/            # 工具函数
-│   └── constants/        # 全局常量定义
-└── tests/                # 测试文件
-    ├── unit/             # 单元测试
-    └── integration/      # 集成测试
+cmd/main.go                    # ✅ 程序入口，唯一启动文件
+internal/
+├── controllers/模块名/        # ✅ HTTP请求处理层
+├── services/模块名/          # ✅ 业务逻辑层  
+├── repositories/模块名/      # ✅ 数据访问层
+├── models/                   # ✅ 数据模型定义
+├── dto/request/             # ✅ 请求参数对象
+├── dto/response/            # ✅ 响应数据对象
+├── routes/                  # ✅ 路由定义
+├── middleware/              # ✅ 中间件
+└── migrations/              # ✅ 数据库迁移文件
+pkg/
+├── common/                  # ✅ 通用工具函数
+├── config/                  # ✅ 配置管理
+├── database/                # ✅ 数据库连接
+├── logger/                  # ✅ 日志系统
+├── cache/                   # ✅ Redis缓存
+├── email/                   # ✅ 邮件服务
+├── errors/                  # ✅ 错误处理
+├── utils/                   # ✅ 工具函数
+└── constants/               # ✅ 常量定义
 ```
 
-### 🎯 命名规范
+#### 2. 文件创建规则
+- **新增Model**: 只能在`internal/models/`创建，必须嵌入BaseModel
+- **新增API**: 按模块在`controllers/服务名/`、`services/服务名/`、`repositories/服务名/`创建
+- **新增常量**: 只能在`pkg/constants/`对应模块文件中添加
+- **新增工具**: 只能在`pkg/utils/`或`pkg/common/`中添加
+- **新增中间件**: 只能在`internal/middleware/`中添加
+- **新增路由**: 只能在`internal/routes/`对应模块文件中添加
 
-**统一采用驼峰命名法 (camelCase)**
+### 🏛️ 分层架构规则
 
-- **文件名**: `userController.go`, `emailService.go`
-- **包名**: `usercontroller`, `emailservice` (小写)
-- **函数名**: `GetUserInfo()`, `SendEmail()`
-- **变量名**: `userId`, `emailAddress`
-- **常量名**: `DefaultPageSize`, `MaxRetryCount`
-- **结构体**: `UserInfo`, `LoginRequest`
-
-### 🏗️ MVC 架构分层
-
-#### Controller 层 (控制器)
-**位置**: `internal/controllers/`
-**职责**: 处理 HTTP 请求，参数校验，调用 Service 层
+#### 3. Controller层规则
+- **职责**: 仅处理HTTP请求、参数校验、响应格式化
+- **禁止**: 不得包含任何业务逻辑
+- **调用**: 只能调用Service层
+- **响应**: 必须使用`errors.ResponseSuccess(c, data, "消息")`或`errors.ResponseError(c, err)`
 
 ```go
-// internal/controllers/user/userController.go
-func (ctrl *UserController) GetUserInfo(c *gin.Context) {
-    // 1. 参数校验
-    var req request.GetUserInfoRequest
-    if err := common.ValidateRequest[request.GetUserInfoRequest](c); err != nil {
+func (ctrl *UserController) CreateUser(c *gin.Context) {
+    // ✅ 正确：参数校验
+    req, err := common.ValidateRequest[request.CreateUserRequest](c)
+    if err != nil {
+        errors.HandleError(c, err)
         return
     }
     
-    // 2. 调用 Service 层
-    user, err := ctrl.userService.GetUserInfo(req.UserID)
+    // ✅ 正确：调用Service层
+    user, err := ctrl.userService.CreateUser(req.Username, req.Email, req.Password)
     if err != nil {
         errors.ResponseError(c, err)
         return
     }
     
-    // 3. 返回结果
-    errors.ResponseSuccess(c, user, "获取用户信息成功")
+    // ✅ 正确：统一响应格式
+    errors.ResponseSuccess(c, user, "创建成功")
 }
 ```
 
-#### Service 层 (业务逻辑)
-**位置**: `internal/services/`
-**职责**: 核心业务逻辑处理，调用 Repository 层
+#### 4. Service层规则
+- **职责**: 业务逻辑处理、事务管理、数据组装
+- **调用**: 只能调用Repository层和其他Service
+- **事务**: 在此层管理数据库事务
+- **验证**: 包含业务规则验证
 
 ```go
-// internal/services/user/userService.go
-func (s *UserService) GetUserInfo(userID string) (*models.User, error) {
-    // 业务逻辑处理
-    user, err := s.userRepo.GetByID(userID)
-    if err != nil {
-        return nil, err
+func (s *userService) CreateUser(username, email, password string) (*models.User, error) {
+    // ✅ 正确：业务逻辑验证
+    if exists, _ := s.userRepo.ExistsByEmail(email); exists {
+        return nil, errors.New(errors.CodeUserExists, "邮箱已存在")
     }
     
-    // 业务规则验证
-    if user.Status != constants.UserStatusActive {
-        return nil, errors.New("用户已被禁用")
+    // ✅ 正确：数据处理
+    hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+    
+    // ✅ 正确：调用Repository层
+    user := &models.User{
+        Username: username,
+        Email:    email,
+        Password: string(hashedPassword),
     }
     
-    return user, nil
+    return s.userRepo.Create(context.Background(), user)
 }
 ```
 
-#### Repository 层 (数据访问)
-**位置**: `internal/repositories/`
-**职责**: 数据库操作，CRUD 操作
+#### 5. Repository层规则
+- **职责**: 仅数据库CRUD操作
+- **继承**: 必须嵌入BaseRepository获得通用CRUD
+- **查询**: 只包含数据访问逻辑，不含业务逻辑
+- **错误**: 统一错误处理和转换
 
 ```go
-// internal/repositories/user/userRepository.go
-func (r *UserRepository) GetByID(userID string) (*models.User, error) {
-    var user models.User
-    err := r.db.Where("id = ?", userID).First(&user).Error
-    return &user, err
+type UserRepository interface {
+    repositories.BaseRepository[models.User]  // ✅ 必须继承
+    GetByEmail(ctx context.Context, email string) (*models.User, error)
+    ExistsByEmail(ctx context.Context, email string) (bool, error)
 }
 ```
 
-### 📝 DTO 和参数校验
+### 🆔 数据模型规则
 
-#### DTO 定义
-**位置**: `internal/dto/request/` 和 `internal/dto/response/`
-
-```go
-// internal/dto/request/userRequest.go
-type LoginRequest struct {
-    Account  string `json:"account" binding:"required" validate:"min=3,max=50"`
-    Password string `json:"password" binding:"required" validate:"min=6,max=50"`
-}
-
-type RegisterRequest struct {
-    Username string `json:"username" binding:"required" validate:"min=3,max=30"`
-    Email    string `json:"email" binding:"required,email"`
-    Password string `json:"password" binding:"required" validate:"min=6,max=50"`
-    Code     string `json:"code" binding:"required" validate:"len=6"`
-}
-```
-
-#### 参数校验使用
-```go
-// 在 Controller 中使用
-var req request.LoginRequest
-if err := common.ValidateRequest[request.LoginRequest](c); err != nil {
-    return // 自动返回错误信息
-}
-```
-
-### 🗄️ 数据库层
-
-#### 数据库连接
-**位置**: `pkg/database/`
-**配置**: `config.yaml` 中的 database 配置节
+#### 6. Model定义规则
+- **主键**: 必须使用UUID，禁止自增ID
+- **嵌入**: 必须嵌入BaseModel
+- **表名**: 必须定义TableName()方法
+- **钩子**: 实现BeforeCreate等必要钩子
 
 ```go
-// 数据库初始化
-db := database.InitDB()
-
-// 自动迁移 (在 main.go 中)
-database.AutoMigrate(db)
-```
-
-#### Model 定义
-**位置**: `internal/models/`
-
-```go
-// internal/models/user.go
 type User struct {
-    BaseModel
-    Username string    `gorm:"uniqueIndex;not null" json:"username"`
-    Email    string    `gorm:"uniqueIndex;not null" json:"email"`
-    Password string    `gorm:"not null" json:"-"`
-    Status   int       `gorm:"default:1" json:"status"`
-    Role     int       `gorm:"default:2" json:"role"`
+    BaseModel                                    // ✅ 必须嵌入
+    Username string `gorm:"size:50;not null;uniqueIndex" json:"username"`
+    Password string `gorm:"size:100;not null" json:"-"`
+    Email    string `gorm:"size:100;uniqueIndex" json:"email"`
+    Status   int    `gorm:"default:1" json:"status"`
+}
+
+func (User) TableName() string {           // ✅ 必须定义
+    return "user"
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) error {  // ✅ 必须实现
+    return u.BaseModel.BeforeCreate(tx)
 }
 ```
 
-#### 自动迁移
-**在 `internal/models/` 中的任何 model 文件放置后**:
-1. 在 `pkg/database/migrate.go` 中添加到迁移列表
-2. 程序启动时自动完成建表迁移
+### 📝 数据传输规则
 
-### 📨 统一返回方法
-
-**使用 `errors.ResponseSuccess` 和 `errors.ResponseError`**
-
-```go
-// 成功返回
-errors.ResponseSuccess(c, data, "操作成功")
-
-// 错误返回
-errors.ResponseError(c, err)
-
-// 自定义错误
-errors.ResponseErrorWithCode(c, 400, "参数错误")
-```
-
-### 📚 常量和公共方法
-
-#### 常量定义
-**位置**: `pkg/constants/`
+#### 7. DTO定义规则
+- **位置**: Request放`internal/dto/request/`，Response放`internal/dto/response/`
+- **校验**: Request必须包含binding和validate标签
+- **消息**: Request必须实现GetValidationMessages()方法
+- **转换**: Response必须实现FromModel()方法
 
 ```go
-// pkg/constants/user.go
-const (
-    UserStatusActive   = 1
-    UserStatusInactive = 2
-    UserRoleAdmin      = 1
-    UserRoleUser       = 2
-)
-```
+// ✅ Request DTO
+type CreateUserRequest struct {
+    dto.BaseRequest
+    Username string `json:"username" binding:"required,min=2,max=20"`
+    Email    string `json:"email" binding:"required,email"`
+    Password string `json:"password" binding:"required,min=6,max=20"`
+}
 
-#### 公共方法
-**位置**: `pkg/common/`
+func (r *CreateUserRequest) GetValidationMessages() map[string]string {
+    return map[string]string{
+        "Username.required": "用户名不能为空",
+        "Email.email":       "请输入有效的邮箱地址",
+    }
+}
 
-- `ValidateRequest[T]()` - 参数校验
-- `GetUserFromContext()` - 从上下文获取用户
-- `GenerateID()` - 生成唯一ID
-- `HashPassword()` - 密码加密
+// ✅ Response DTO  
+type UserInfo struct {
+    dto.BaseResponse
+    Username string `json:"username"`
+    Email    string `json:"email"`
+}
 
-### 📋 日志系统
-
-**位置**: `pkg/logger/`
-**使用方式**:
-
-```go
-import "your-project/pkg/logger"
-
-// 记录日志
-logger.Info("用户登录", "user_id", userID)
-logger.Error("数据库连接失败", "error", err)
-logger.Debug("调试信息", "data", data)
-```
-
-### 🚀 Redis 缓存
-
-**位置**: `pkg/cache/`
-**使用方式**:
-
-```go
-import "your-project/pkg/cache"
-
-// 基本操作
-cache.Set("key", value, time.Hour)
-value, err := cache.Get("key")
-cache.Delete("key")
-
-// 在 Service 中使用
-cacheKey := fmt.Sprintf("user:%s", userID)
-if user, exists := cache.GetUser(cacheKey); exists {
-    return user, nil
+func (u *UserInfo) FromModel(user models.User) *UserInfo {
+    return &UserInfo{
+        BaseResponse: dto.BaseResponse{
+            ID:        user.ID.String(),    // ✅ UUID转字符串
+            CreatedAt: time.Time(user.CreatedAt),
+            UpdatedAt: time.Time(user.UpdatedAt),
+        },
+        Username: user.Username,
+        Email:    user.Email,
+    }
 }
 ```
 
-### 🗃️ 数据库管理
+### 🛣️ 路由规则
 
-#### 连接配置
-**文件**: `config.yaml`
-```yaml
-database:
-  driver: "sqlite"
-  dsn: "app.db"
-  max_open_conns: 100
-  max_idle_conns: 10
-```
-
-#### 自动迁移流程
-1. 在 `internal/models/` 创建模型文件
-2. 在 `pkg/database/migrate.go` 注册模型
-3. 程序启动时自动建表
-
-### 📧 Email 服务
-
-**位置**: `pkg/email/`
-**配置**: `config.yaml` 中的 email 配置节
+#### 8. 路由定义规则
+- **组织**: 一个模块一个路由文件
+- **分组**: 使用gin.Group分组管理
+- **中间件**: 在路由级别应用中间件
+- **注册**: 在main.go中统一注册
 
 ```go
-// 发送邮件
-emailService := email.NewEmailService()
-err := emailService.SendVerificationCode(email, code)
-err := emailService.SendResetPassword(email, resetLink)
-```
-
-### 🛠️ Common 库功能
-
-**位置**: `pkg/common/`
-**包含功能**:
-
-- `validator.go` - 参数校验助手
-- `jwt.go` - JWT 令牌处理
-- `context.go` - 上下文处理
-- `password.go` - 密码加密/验证
-- `response.go` - 响应处理助手
-
-### 🛣️ 路由模块规范
-
-#### 路由文件组织
-**位置**: `internal/routes/`
-**规范**: 一个模块一个文件
-
-```go
-// internal/routes/userRoutes.go
+// ✅ 路由文件: internal/routes/userRoutes.go
 func RegisterUserRoutes(r *gin.Engine, userController *controllers.UserController) {
     api := r.Group("/api/v1")
     {
@@ -316,192 +225,87 @@ func RegisterUserRoutes(r *gin.Engine, userController *controllers.UserControlle
             user.POST("/login", userController.Login)
             user.POST("/register", userController.Register)
             
-            // 需要认证的路由
-            authUser := user.Use(middleware.AuthMiddleware())
+            authUser := user.Use(middleware.AuthMiddleware())  // ✅ 中间件应用
             {
                 authUser.GET("/info", userController.GetUserInfo)
-                authUser.PUT("/profile", userController.UpdateProfile)
             }
         }
     }
 }
 ```
 
-#### 路由注册
-**在 `main.go` 中**:
-```go
-// 注册路由
-routes.RegisterUserRoutes(r, userController)
-routes.RegisterAdminRoutes(r, adminController)
-```
+### 🔧 开发工具规则
 
-### 🔒 中间件和 JWT
-
-#### 可用中间件
-**位置**: `internal/middleware/`
-
-- `authMiddleware.go` - JWT 认证中间件
-- `corsMiddleware.go` - CORS 跨域中间件
-- `loggerMiddleware.go` - 请求日志中间件
-- `rateLimitMiddleware.go` - 限流中间件
-
-#### JWT 使用
-```go
-// 生成 JWT
-token, err := common.GenerateJWT(userID, role)
-
-// 验证 JWT (在中间件中自动处理)
-// 获取当前用户
-user, err := common.GetUserFromContext(c)
-```
-
-### 🎬 项目启动
-
-**启动文件**: `cmd/main.go`
-**功能**:
-- 配置加载
-- 数据库连接
-- 路由注册
-- 中间件配置
-- 服务启动
-
-### 🔧 Makefile 脚本功能
-
-```bash
-# 开发相关
-make dev                 # 启动开发服务器 (热重载)
-make build               # 构建后端程序
-make clean               # 清理构建文件
-
-# 前端相关
-make web-dev             # 启动前端开发服务器
-make web-build           # 构建前端并嵌入到后端
-make web-lint            # 前端代码检查
-
-# 全栈相关
-make fullstack-build     # 构建完整全栈应用
-make fullstack-dev       # 并行启动前后端开发环境
-make fullstack-clean     # 清理所有构建文件
-
-# 测试相关
-make test                # 运行所有测试
-make test-coverage       # 生成测试覆盖率报告
-
-# 代码质量
-make fmt                 # 格式化代码
-make lint                # 代码检查
-make security            # 安全检查
-
-# 部署相关
-make docker-build        # 构建 Docker 镜像
-make deploy              # 部署到服务器
-```
-
-### ⚠️ 开发约束
-
-**禁止随意创建新文件或目录**，必须遵循以下规范：
-
-1. **新增 Model**: 放在 `internal/models/`，并在 `migrate.go` 中注册
-2. **新增 API**: 按模块在对应的 controller/service/repository 中添加
-3. **新增常量**: 放在 `pkg/constants/` 对应模块文件中
-4. **新增工具函数**: 放在 `pkg/utils/` 或 `pkg/common/` 中
-5. **新增中间件**: 放在 `internal/middleware/` 中
-6. **新增路由**: 在 `internal/routes/` 对应模块文件中添加
+#### 9. 工具使用规则
+- **模块生成**: 使用`make new-module name=模块名`创建新模块
+- **数据库**: 使用`make migrate`执行迁移
+- **开发**: 使用`make dev`启动开发服务器
+- **测试**: 使用`make test`运行测试
+- **检查**: 使用`make full-check`完整检查
 
 ---
 
-## 前端开发规范
+## 🎨 前端开发规范
 
-### 📁 项目结构
+### 📁 目录结构规则
 
+#### 10. 前端目录组织
 ```
-web/
-├── src/
-│   ├── api/              # API 接口封装层
-│   │   ├── auth/         # 认证相关接口
-│   │   ├── user/         # 用户相关接口
-│   │   └── index.ts      # 统一导出
-│   ├── components/       # 全局组件
-│   │   ├── Button/       # 按钮组件
-│   │   │   ├── index.vue # 组件实现
-│   │   │   ├── index.ts  # 组件导出
-│   │   │   └── types.ts  # 类型定义
-│   │   └── index.ts      # 全局注册
-│   ├── composables/      # 组合式函数
-│   │   ├── useMessage.ts # 消息提示
-│   │   └── useLoading.ts # 加载状态
-│   ├── constants/        # 常量定义
-│   │   ├── index.ts      # 通用常量
-│   │   └── api.ts        # API 相关常量
-│   ├── hooks/            # Vue Hooks
-│   │   ├── common/       # 通用 hooks
-│   │   ├── user/         # 用户相关 hooks
-│   │   └── index.ts      # 统一导出
-│   ├── layouts/          # 布局组件
-│   │   ├── AdminLayout.vue
-│   │   └── components/   # 布局子组件
-│   ├── pages/            # 页面组件
-│   │   ├── Login/        # 登录页面
-│   │   │   ├── index.vue # 页面主文件
-│   │   │   └── components/ # 页面私有组件
-│   │   └── Dashboard/    # 仪表板
-│   ├── router/           # 路由配置
-│   │   ├── index.ts      # 路由主文件
-│   │   └── modules/      # 路由模块
-│   ├── stores/           # 状态管理
-│   │   ├── user/         # 用户状态
-│   │   │   ├── index.ts  # 状态定义
-│   │   │   └── types.ts  # 类型定义
-│   │   └── index.ts      # 统一导出
-│   ├── styles/           # 样式文件
-│   ├── types/            # TypeScript 类型定义
-│   ├── utils/            # 工具函数
-│   └── main.ts           # 应用入口
-├── package.json          # 依赖配置
-├── tsconfig.json         # TypeScript 配置
-├── tailwind.config.js    # TailwindCSS 配置
-└── vite.config.ts        # Vite 配置
+web/src/
+├── api/模块名/              # ✅ API接口封装
+├── components/组件名/       # ✅ 全局组件(已注册,无需引入)
+├── composables/            # ✅ 组合式函数
+├── constants/              # ✅ 常量定义
+├── hooks/分类/             # ✅ Vue Hooks
+├── layouts/                # ✅ 布局组件
+├── pages/页面名/           # ✅ 页面组件
+├── router/                 # ✅ 路由配置
+├── stores/模块名/          # ✅ 状态管理
+├── styles/                 # ✅ 样式文件
+├── types/                  # ✅ 类型定义
+└── utils/                  # ✅ 工具函数
 ```
 
-### 🎯 命名规范
+#### 11. 文件创建规则
+- **新增页面**: 必须在`pages/`对应模块下创建，主文件名为`index.vue`
+- **新增组件**: 全局组件放`components/`，页面组件放页面的`components/`
+- **新增API**: 按模块在`api/`下创建对应文件夹
+- **新增状态**: 在`stores/`下按模块创建
+- **新增常量**: 放在`constants/`对应文件中
+- **新增类型**: 放在`types/`中，按模块组织
 
-**统一采用驼峰命名法 (camelCase)**
+### 🧩 组件开发规则
 
-- **文件名**: `UserProfile.vue`, `userService.ts`
-- **组件名**: `UserProfile`, `DataTable`
-- **函数名**: `getUserInfo()`, `handleSubmit()`
-- **变量名**: `userInfo`, `isLoading`
-- **常量名**: `API_BASE_URL`, `DEFAULT_PAGE_SIZE`
+#### 12. 全局组件规则
+- **结构**: 每个组件必须包含`index.vue`、`index.ts`、`types.ts`最少三个文件 复杂的可以拆分为多个
+- **命名**: 组件名必须有`Global`前缀，如`GlobalButton`
+- **注册**: 已全局注册，页面中直接使用无需引入
+- **优先**: 开发功能前先检查是否有现成全局组件
 
-### 📄 Pages 页面规范
-
-#### 页面组织原则
-1. **一个页面一个文件夹**，主文件命名为 `index.vue`
-2. **多级嵌套路由** 对应多层级目录结构
-3. **复杂页面** 在同目录创建 `components/` 文件夹存放私有组件
-
-```
-pages/
-├── Login/
-│   └── index.vue
-├── Dashboard/
-│   ├── index.vue
-│   └── components/
-│       ├── StatsCard.vue
-│       └── ChartWidget.vue
-├── System/
-│   ├── User/
-│   │   ├── index.vue          # /system/user
-│   │   ├── List/
-│   │   │   └── index.vue      # /system/user/list
-│   │   └── Detail/
-│   │       └── index.vue      # /system/user/detail
-│   └── Role/
-│       └── index.vue          # /system/role
-```
-
-#### 页面文件模板
 ```vue
+<!-- ✅ 全局组件定义 -->
+<script setup lang="ts">
+import type { ButtonProps } from './types'
+
+defineOptions({
+  name: 'GlobalButton',  // ✅ 必须有Global前缀
+})
+
+withDefaults(defineProps<ButtonProps>(), {
+  type: 'primary',
+  size: 'medium',
+})
+</script>
+```
+
+#### 13. 页面组件规则
+- **组织**: 一个页面一个文件夹，主文件命名为`index.vue`
+- **嵌套**: 多级路由对应多层级目录结构
+- **私有组件**: 复杂页面在同目录创建`components/`文件夹
+- **命名**: 组件必须定义`name`属性
+
+```vue
+<!-- ✅ 页面组件模板 -->
 <template>
   <div class="page-container">
     <!-- 页面内容 -->
@@ -509,132 +313,58 @@ pages/
 </template>
 
 <script setup lang="ts">
-import { defineOptions } from 'vue'
-
-// 必须定义组件名称
 defineOptions({
-  name: 'LoginPage', // 或其他有意义的名称
+  name: 'LoginPage',  // ✅ 必须定义组件名
 })
-
-// 页面逻辑
 </script>
-
-<style scoped>
-/* 仅在需要自定义样式时添加 */
-</style>
 ```
 
-### 🏗️ Layout 布局组件
+### 🛣️ 路由规则
 
-#### 布局系统说明
-**位置**: `src/layouts/`
+#### 14. 路由配置规则
+- **Meta信息**: 每个路由必须包含完整meta信息
+- **权限**: 使用`requiresAuth`和`roles`控制访问权限
+- **布局**: 通过`layout`指定使用的布局组件
+- **拆分**: 大型项目按模块拆分路由文件
 
-- `AdminLayout.vue` - 管理后台布局 (侧边栏 + 顶栏)
-- `AuthLayout.vue` - 认证页面布局 (登录/注册)
-- `components/` - 布局相关的子组件
-
-#### 布局组件职责
-1. **页面框架结构** - 定义整体页面布局
-2. **导航管理** - 侧边栏、面包屑、用户菜单
-3. **权限控制** - 根据用户角色显示不同内容
-4. **响应式设计** - 移动端适配
-
-### 🛣️ Router 路由配置
-
-#### 路由文件结构
-```typescript
-// router/index.ts - 主路由配置
-const routes = [
-  {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/pages/Login/index.vue'),
-    meta: {
-      title: '登录',           // 页面标题
-      requiresAuth: false,     // 是否需要认证
-      layout: 'auth',          // 使用的布局
-      icon: 'login',           // 菜单图标
-      hidden: true,            // 是否在菜单中隐藏
-      breadcrumb: '登录',      // 面包屑显示名称
-      roles: ['admin', 'user'], // 允许访问的角色
-    }
+```javascript
+// ✅ 路由配置模板
+{
+  path: '/users',
+  name: 'users',
+  component: () => import('@/pages/System/User/index.vue'),
+  meta: {
+    title: '用户管理',        // ✅ 必须：页面标题
+    requiresAuth: true,      // ✅ 必须：是否需要认证
+    layout: 'admin',         // ✅ 必须：使用的布局
+    icon: 'users',           // ✅ 必须：菜单图标
+    hidden: false,           // ✅ 必须：是否隐藏
+    roles: ['admin'],        // ✅ 必须：允许的角色
   }
-]
-```
-
-#### Meta 参数说明
-- `title` - 页面标题，用于浏览器标签页
-- `requiresAuth` - 是否需要登录认证
-- `layout` - 使用的布局组件 (admin/auth)
-- `icon` - 菜单中显示的图标
-- `hidden` - 是否在侧边栏菜单中隐藏
-- `breadcrumb` - 面包屑导航显示的名称
-- `roles` - 允许访问的用户角色数组
-
-#### 大型项目路由拆分
-```typescript
-// router/modules/user.ts
-export const userRoutes = [
-  // 用户相关路由
-]
-
-// router/modules/system.ts  
-export const systemRoutes = [
-  // 系统管理路由
-]
-
-// router/index.ts
-import { userRoutes } from './modules/user'
-import { systemRoutes } from './modules/system'
-```
-
-### 🗃️ Stores 状态管理规范
-
-#### 状态管理结构
-**规范**: 一个模块一个文件夹
-
-```
-stores/
-├── user/
-│   ├── index.ts          # 用户状态管理
-│   ├── types.ts          # 类型定义
-│   └── actions.ts        # 异步操作 (可选)
-├── app/
-│   ├── index.ts          # 应用全局状态
-│   └── types.ts
-└── index.ts              # 统一导出
-```
-
-#### Store 模板
-```typescript
-// stores/user/types.ts
-export interface UserState {
-  userInfo: User | null
-  token: string | null
-  permissions: string[]
 }
+```
 
-// stores/user/index.ts
-import { defineStore } from 'pinia'
-import type { UserState } from './types'
+### 🗃️ 状态管理规则
 
+#### 15. Store定义规则
+- **组织**: 一个模块一个文件夹，包含`index.ts`和`types.ts`
+- **类型**: 必须定义完整的State接口
+- **命名**: store名称使用`useXxxStore`格式
+- **结构**: 包含state、getters、actions三部分
+
+```typescript
+// ✅ Store定义模板
 export const useUserStore = defineStore('user', {
   state: (): UserState => ({
     userInfo: null,
     token: null,
-    permissions: []
   }),
   
   getters: {
     isLoggedIn: (state) => !!state.token,
-    userName: (state) => state.userInfo?.name || ''
   },
   
   actions: {
-    setToken(token: string) {
-      this.token = token
-    },
-    
     async login(credentials: LoginRequest) {
       // 异步操作
     }
@@ -642,212 +372,16 @@ export const useUserStore = defineStore('user', {
 })
 ```
 
-### 🧩 Components 全局组件规范
+### 🌐 API接口规则
 
-#### 组件文件结构
-** 开发所有功能前需要组件先看看全局组件是否已经封装 优先使用我们封装的组件 无需引入 直接使用 已经在全局注册过了**
-**每个组件必须包含最少三个文件 如果组件复杂 vue文件可以拆分多个模块 **:
-
-```
-components/
-├── Button/
-│   ├── index.vue         # 组件实现
-│   ├── index.ts          # 组件导出
-│   └── types.ts          # 类型定义
-└── DataTable/
-    ├── index.vue
-    ├── index.ts
-    └── types.ts
-```
-
-#### 组件模板
-```typescript
-// components/Button/types.ts
-export interface ButtonProps {
-  type?: 'primary' | 'secondary' | 'danger'
-  size?: 'small' | 'medium' | 'large'
-  loading?: boolean
-  disabled?: boolean
-}
-
-// components/Button/index.vue
-<template>
-  <button 
-    :class="buttonClass" 
-    :disabled="disabled || loading"
-    @click="handleClick"
-  >
-    <slot />
-  </button>
-</template>
-
-<script setup lang="ts">
-import type { ButtonProps } from './types'
-
-defineOptions({
-  name: 'GlobalButton', // 注意：全局组件需要 Global 前缀
-})
-
-withDefaults(defineProps<ButtonProps>(), {
-  type: 'primary',
-  size: 'medium',
-  loading: false,
-  disabled: false,
-})
-</script>
-
-// components/Button/index.ts
-export { default } from './index.vue'
-export type * from './types'
-```
-
-#### 全局注册
-```typescript
-// components/index.ts
-import Button from './Button'
-import DataTable from './DataTable'
-
-export default {
-  GlobalButton: Button,        // 必须添加 Global 前缀
-  GlobalDataTable: DataTable,
-}
-
-// main.ts 中注册
-import globalComponents from '@/components'
-
-Object.entries(globalComponents).forEach(([name, component]) => {
-  app.component(name, component)
-})
-```
-
-#### 使用方式
-```vue
-<template>
-  <!-- 直接使用，无需导入 -->
-  <GlobalButton type="primary" @click="handleClick">
-    确认
-  </GlobalButton>
-  
-  <GlobalDataTable :columns="columns" :data="tableData" />
-</template>
-```
-
-### 📊 Constants 常量定义
-
-**位置**: `src/constants/`
-**原则**: 所有可定义为常量的值都应该定义，避免在页面中硬编码
+#### 16. API封装规则
+- **组织**: 按模块分文件夹，统一导出
+- **命名**: API方法使用动词+名词格式
+- **类型**: 所有请求和响应必须有类型定义
+- **错误**: 统一错误处理机制
 
 ```typescript
-// constants/index.ts
-export const PAGE_SIZE = 20
-export const MAX_UPLOAD_SIZE = 5 * 1024 * 1024 // 5MB
-
-// constants/api.ts
-export const API_ENDPOINTS = {
-  LOGIN: '/user/login',
-  REGISTER: '/user/register',
-  USER_INFO: '/user/info',
-} as const
-
-// constants/user.ts
-export const USER_STATUS = {
-  ACTIVE: 1,
-  INACTIVE: 2,
-  BANNED: 3,
-} as const
-
-export const USER_ROLES = {
-  ADMIN: 1,
-  USER: 2,
-} as const
-```
-
-### 🛠️ Utils 工具函数
-
-**位置**: `src/utils/`
-
-```typescript
-// utils/format.ts
-export const formatDate = (date: Date | string) => {
-  // 日期格式化
-}
-
-export const formatFileSize = (bytes: number) => {
-  // 文件大小格式化
-}
-
-// utils/validation.ts
-export const isEmail = (email: string) => {
-  // 邮箱验证
-}
-
-export const isPhone = (phone: string) => {
-  // 手机号验证
-}
-```
-
-### 🎣 Hooks 和 Composables
-
-#### Hooks 规范
-**位置**: `src/hooks/`
-**组织**: 按模块分文件夹
-
-```typescript
-// hooks/user/useAuth.ts
-export function useAuth() {
-  const userStore = useUserStore()
-  
-  const login = async (credentials: LoginRequest) => {
-    // 登录逻辑
-  }
-  
-  const logout = () => {
-    // 登出逻辑
-  }
-  
-  return {
-    login,
-    logout,
-    isAuthenticated: computed(() => userStore.isLoggedIn)
-  }
-}
-
-// hooks/common/useSecureStorage.ts
-export function useSecureStorage<T>(key: string, defaultValue: T) {
-  // 安全存储逻辑
-  return [ref(value), setValue, removeValue]
-}
-```
-
-#### Composables 规范  
-**位置**: `src/composables/`
-
-```typescript
-// composables/useMessage.ts
-export function useMessage() {
-  const success = (message: string, duration = 3000) => {
-    // 成功提示
-  }
-  
-  const error = (message: string, duration = 5000) => {
-    // 错误提示
-  }
-  
-  return { success, error, warning, info }
-}
-```
-
-### 🌐 API 接口封装
-
-#### API 文件组织
-**位置**: `src/api/`
-**规范**: 按模块分文件夹，统一导出
-
-```typescript
-// api/user/index.ts
-import { request } from '@/utils/request'
-import type { LoginRequest, User } from '@/types'
-
+// ✅ API封装模板
 export const userApi = {
   login: (data: LoginRequest) => 
     request.post<LoginResponse>('/user/login', data),
@@ -858,119 +392,93 @@ export const userApi = {
   updateProfile: (data: UpdateProfileRequest) =>
     request.put<User>('/user/profile', data),
 }
-
-// api/index.ts
-export * from './user'
-export * from './admin'
 ```
 
-### 🎨 样式规范
+### 🎨 样式规则
 
-#### TailwindCSS 优先
+#### 17. 样式开发规则
+- **优先级**: 优先使用TailwindCSS类名
+- **自定义**: 仅在TailwindCSS无法满足时使用自定义样式
+- **作用域**: 自定义样式必须使用`scoped`
+- **组织**: 复杂样式抽取到独立文件
+
 ```vue
+<!-- ✅ 样式使用模板 -->
 <template>
   <!-- 优先使用 TailwindCSS -->
   <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
     <h1 class="text-xl font-bold text-gray-900">标题</h1>
-    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-      按钮
-    </button>
-  </div>
-</template>
-
-<script setup lang="ts">
-// 如果不需要自定义样式，不要添加 style 标签
-</script>
-```
-
-#### 自定义样式规范
-```vue
-<template>
-  <div class="custom-component">
-    <!-- 复杂布局才使用自定义样式 -->
   </div>
 </template>
 
 <style scoped>
-/* 仅在 TailwindCSS 无法满足需求时使用 */
+/* 仅在必要时使用自定义样式 */
 .custom-component {
   /* 自定义样式 */
 }
 </style>
 ```
 
-### ⚠️ 前端开发约束
+---
 
-**严格遵循以下规范，禁止随意创建文件**:
+## 📋 开发流程规则
 
-1. **新增页面**: 必须在 `pages/` 对应模块下创建
-2. **新增组件**: 全局组件放 `components/`，页面组件放页面的 `components/`
-3. **新增 API**: 按模块在 `api/` 下创建对应文件夹
-4. **新增状态**: 在 `stores/` 下按模块创建
-5. **新增常量**: 放在 `constants/` 对应文件中
-6. **新增工具**: 放在 `utils/` 或 `hooks/` 中
-7. **新增类型**: 放在 `types/` 中，按模块组织
+### 🚀 标准开发步骤
+1. **分析需求** - 确定涉及的模块和功能
+2. **检查组件** - 优先使用现有全局组件和工具
+3. **后端开发** - 按Model→Repository→Service→Controller顺序
+4. **前端开发** - 按API→Store→Page→Component顺序  
+5. **测试验证** - 运行`make test`和前端测试
+6. **代码检查** - 运行`make full-check`确保质量
 
-### 📦 构建和部署
+### 🔍 质量检查规则
+- **类型安全**: 充分利用TypeScript，避免`any`类型
+- **错误处理**: 统一错误处理机制，友好错误提示
+- **代码复用**: 提取公共逻辑到hooks、utils或common中
+- **性能优化**: 合理使用组件懒加载、缓存等技术
 
-#### 构建命令
+---
+
+## ⚡ 快捷开发命令
+
+### 后端命令
 ```bash
-# 开发环境
-npm run dev               # 启动开发服务器
-
-# 构建相关  
-npm run build             # 生产构建 (带完整检查)
-npm run build-only        # 快速构建 (跳过检查)
-
-# 代码质量
-npm run lint              # ESLint 检查并修复
-npm run lint:check        # 仅检查不修复
-npm run type-check        # TypeScript 类型检查
+make new-module name=product  # 创建新模块脚手架
+make dev                      # 启动开发服务器
+make build                    # 构建应用程序
+make test                     # 运行测试
+make full-check              # 完整代码检查
+make migrate                 # 执行数据库迁移
 ```
 
-#### 部署流程
-1. 前端项目在 `web/` 目录独立开发
-2. 运行 `make web-build` 构建前端并复制到 `internal/static/`
-3. 运行 `make build` 构建包含前端的 Go 二进制文件
-4. 部署单个二进制文件即可
+### 前端命令
+```bash
+make web-dev                 # 启动前端开发服务器
+make web-build               # 构建前端
+make web-lint                # 前端代码检查
+```
+
+### 全栈命令
+```bash
+make fullstack-build         # 构建完整应用
+make fullstack-dev           # 并行启动前后端开发
+make fullstack-clean         # 清理所有构建文件
+```
 
 ---
 
-## 开发最佳实践
+## 📋 检查清单
 
-### 🔍 代码质量
-1. **类型安全**: 充分利用 TypeScript，避免 `any` 类型
-2. **错误处理**: 统一的错误处理机制，友好的错误提示
-3. **代码复用**: 提取公共逻辑到 hooks、utils 或 common 中
-4. **性能优化**: 合理使用组件懒加载、缓存等技术
+开发完成后请确认：
+- [ ] 严格按照目录结构组织文件
+- [ ] 后端使用分层架构，前端使用模块化结构
+- [ ] 所有Model使用UUID主键
+- [ ] 统一使用驼峰命名法
+- [ ] API有完整的类型定义
+- [ ] 路由有完整的meta信息
+- [ ] 优先使用现有组件和工具
+- [ ] 通过所有代码质量检查
+- [ ] 有适当的错误处理
+- [ ] 代码有必要的注释说明
 
-### 🧪 测试规范
-1. **单元测试**: 核心业务逻辑必须有单元测试
-2. **集成测试**: API 接口和数据库操作需要集成测试
-3. **E2E 测试**: 关键用户流程需要端到端测试
-
-### 📝 文档规范
-1. **代码注释**: 复杂逻辑必须添加注释说明
-2. **API 文档**: 所有 API 接口需要文档说明
-3. **组件文档**: 公共组件需要使用说明和示例
-
-### 🔧 工具配置
-1. **EditorConfig**: 统一编辑器配置
-2. **Prettier**: 代码格式化
-3. **ESLint**: 代码质量检查
-4. **Git Hooks**: 提交前自动检查
-
----
-
-## 总结
-
-这个全栈模板项目提供了完整的开发规范和最佳实践，旨在让 AI 开发者能够快速上手并保持代码的一致性和质量。
-
-**核心原则**:
-- 📏 **统一规范**: 严格遵循命名和文件组织规范
-- 🏗️ **模块化**: 清晰的分层架构和模块划分
-- 🔒 **类型安全**: 充分利用 TypeScript 类型系统
-- 🚀 **高效开发**: 丰富的工具链和自动化脚本
-- 📦 **简化部署**: 单文件部署，降低运维复杂度
-
-**请严格按照此规范进行开发，确保项目的可维护性和团队协作效率。** 
+**严格遵循以上规范，确保代码质量和项目一致性！** 
