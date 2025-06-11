@@ -2,18 +2,52 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
+# 简单的构建命令
 cmd = "go build -o ./tmp/main ./cmd/main.go"
 bin = "./tmp/main"
-include_ext = ["go", "tpl", "tmpl", "html", "yaml", "yml", "html"]
-exclude_dir = ["assets", "tmp", "vendor", "internal/static/dist", "build"]
+# 只监听Go相关文件
+include_ext = ["go", "yaml", "yml", "toml"]
+# 强力排除前端目录和其他不需要的目录
+exclude_dir = [
+    "assets", 
+    "tmp", 
+    "vendor", 
+    "internal/static", 
+    "build", 
+    "dist",
+    "web",
+    "admin", 
+    "node_modules", 
+    ".git",
+    ".vscode",
+    ".idea",
+    "logs",
+    "uploads"
+]
 exclude_file = []
-exclude_regex = ["_test\\.go"]
+# 排除测试文件和前端相关文件
+exclude_regex = [
+    "_test\\.go$",
+    "\\.js$",
+    "\\.ts$",
+    "\\.vue$",
+    "\\.css$",
+    "\\.scss$",
+    "\\.sass$",
+    "\\.less$",
+    "\\.json$",
+    "\\.html$",
+    "\\.md$",
+    "package.*\\.json$",
+    ".*\\.lock$"
+]
 exclude_unchanged = true
+follow_symlink = false
 poll = false
-poll_interval = 500
-log = true
-delay = 500
-send_interrupt = true
+poll_interval = 0
+delay = 1000
+stop_on_root = false
+send_interrupt = false
 kill_delay = 500
 
 [color]

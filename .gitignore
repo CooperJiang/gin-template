@@ -297,9 +297,9 @@ coverage.html
 *.prof
 
 # Build artifacts
-/internal/static/admin/
-/internal/static/web/
-/internal/static/dist/
+# /internal/static/admin/
+# /internal/static/web/
+# /internal/static/dist/
 
 # Frontend node_modules and build files
 # Admin frontend
