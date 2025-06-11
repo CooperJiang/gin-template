@@ -324,19 +324,6 @@ coverage.html
 /web/.eslintcache
 /web/.vite/
 
-# Frontend environment files
-/admin/.env
-/admin/.env.local
-/admin/.env.development.local
-/admin/.env.test.local
-/admin/.env.production.local
-
-/web/.env
-/web/.env.local
-/web/.env.development.local
-/web/.env.test.local
-/web/.env.production.local
-
 # Temporary files
 *.tmp
 *.temp
