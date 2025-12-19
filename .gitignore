@@ -73,7 +73,6 @@ __debug_bin
 # 构建目录
 /build/
 /web/dist/
-/admin/dist/
 /bin/
 
 # SQLite数据库文件
@@ -297,21 +296,11 @@ coverage.html
 *.prof
 
 # Build artifacts
-/internal/static/admin/
 /internal/static/web/
 /internal/static/dist/
 
 # Frontend node_modules and build files
 # Admin frontend
-/admin/node_modules/
-/admin/dist/
-/admin/.npm
-/admin/.pnpm-store
-/admin/pnpm-lock.yaml
-/admin/package-lock.json
-/admin/yarn.lock
-/admin/.eslintcache
-/admin/.vite/
 
 # Web frontend  
 /web/node_modules/
@@ -325,11 +314,6 @@ coverage.html
 /web/.vite/
 
 # Frontend environment files
-/admin/.env
-/admin/.env.local
-/admin/.env.development.local
-/admin/.env.test.local
-/admin/.env.production.local
 
 /web/.env
 /web/.env.local
@@ -351,7 +335,6 @@ docker-compose.override.yml
 tmp/
 
 # Static backup files
-/internal/static/admin_backup_*
 /internal/static/web_backup_*
 /internal/static/dist_backup_*
 

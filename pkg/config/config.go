@@ -97,7 +97,6 @@ type CORSConfig struct {
 
 // FrontendConfig 前端模块配置
 type FrontendConfig struct {
-	Admin    FrontendModuleConfig   `yaml:"admin" env:"ADMIN"`
 	Web      FrontendModuleConfig   `yaml:"web" env:"WEB"`
 	Fallback FrontendFallbackConfig `yaml:"fallback" env:"FALLBACK"`
 }

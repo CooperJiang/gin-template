@@ -10,12 +10,9 @@ BINARY_PATH := ./bin/$(BINARY_NAME)
 MAIN_PATH := ./cmd/main.go
 
 # 前端配置
-ADMIN_DIR := ./admin
 WEB_DIR := ./web
 STATIC_DIR := ./internal/static
-ADMIN_DIST_DIR := $(ADMIN_DIR)/dist
 WEB_DIST_DIR := $(WEB_DIR)/dist
-TARGET_ADMIN_DIR := $(STATIC_DIR)/admin
 TARGET_WEB_DIR := $(STATIC_DIR)/web
 
 # Docker配置
@@ -31,71 +28,6 @@ RESET := \033[0m
 
 # 设置默认目标为help
 .DEFAULT_GOAL := help
-
-# ========================================
-# 管理端前端命令
-# ========================================
-
-.PHONY: admin-install
-admin-install: ## 安装管理端前端依赖
-	@echo "$(GREEN)安装管理端前端依赖...$(RESET)"
-	@if [ ! -d "$(ADMIN_DIR)" ]; then \
-		echo "$(RED)错误: admin目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(ADMIN_DIR) && npm install
-	@echo "$(GREEN)管理端前端依赖安装完成$(RESET)"
-
-.PHONY: admin-dev
-admin-dev: ## 启动管理端前端开发服务器
-	@echo "$(GREEN)启动管理端前端开发服务器...$(RESET)"
-	@if [ ! -d "$(ADMIN_DIR)" ]; then \
-		echo "$(RED)错误: admin目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(ADMIN_DIR) && npm run dev
-
-.PHONY: admin-build
-admin-build: ## 构建管理端前端项目并部署到static/admin目录
-	@echo "$(GREEN)构建管理端前端项目...$(RESET)"
-	@./scripts/build_admin.sh
-
-.PHONY: admin-lint
-admin-lint: ## 检查管理端前端代码
-	@echo "$(GREEN)检查管理端前端代码...$(RESET)"
-	@if [ ! -d "$(ADMIN_DIR)" ]; then \
-		echo "$(RED)错误: admin目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(ADMIN_DIR) && npm run lint
-
-.PHONY: admin-format
-admin-format: ## 格式化管理端前端代码
-	@echo "$(GREEN)格式化管理端前端代码...$(RESET)"
-	@if [ ! -d "$(ADMIN_DIR)" ]; then \
-		echo "$(RED)错误: admin目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(ADMIN_DIR) && npm run format
-
-.PHONY: admin-type-check
-admin-type-check: ## 管理端前端类型检查
-	@echo "$(GREEN)运行管理端前端类型检查...$(RESET)"
-	@if [ ! -d "$(ADMIN_DIR)" ]; then \
-		echo "$(RED)错误: admin目录不存在$(RESET)"; \
-		exit 1; \
-	fi
-	@cd $(ADMIN_DIR) && npm run type-check
-
-.PHONY: admin-clean
-admin-clean: ## 清理管理端前端构建文件
-	@echo "$(YELLOW)清理管理端前端构建文件...$(RESET)"
-	@rm -rf $(ADMIN_DIST_DIR)
-	@rm -rf $(TARGET_ADMIN_DIR)
-	@if [ -d "$(ADMIN_DIR)" ]; then \
-		cd $(ADMIN_DIR) && npm run clean; \
-	fi
-	@echo "$(GREEN)管理端前端文件清理完成$(RESET)"
 
 # ========================================
 # 用户端前端命令
@@ -158,19 +90,19 @@ web-clean: ## 清理用户端前端构建文件
 # ========================================
 
 .PHONY: frontend-install
-frontend-install: admin-install web-install ## 安装所有前端依赖
+frontend-install: web-install ## 安装所有前端依赖
 
 .PHONY: frontend-build
-frontend-build: admin-build web-build ## 构建所有前端项目
+frontend-build: web-build ## 构建所有前端项目
 
 .PHONY: frontend-clean
-frontend-clean: admin-clean web-clean ## 清理所有前端构建文件
+frontend-clean: web-clean ## 清理所有前端构建文件
 
 .PHONY: frontend-lint
-frontend-lint: admin-lint web-lint ## 检查所有前端代码
+frontend-lint: web-lint ## 检查所有前端代码
 
 .PHONY: frontend-format
-frontend-format: admin-format web-format ## 格式化所有前端代码
+frontend-format: web-format ## 格式化所有前端代码
 
 # ========================================
 # 全栈构建命令
@@ -249,24 +181,20 @@ start: ## 🚀 一键启动三端开发环境 (系统终端模式)
 	echo "$(BLUE)🔧 启动后端 (Go) - 端口 9000$(RESET)"; \
 	osascript -e "tell application \"Terminal\" to do script \"cd $$PROJECT_DIR && echo '🔧 启动后端服务器...' && make dev\""; \
 	sleep 1; \
-	echo "$(BLUE)📱 启动管理端 (Vue3) - 端口 3000$(RESET)"; \
-	osascript -e "tell application \"Terminal\" to do script \"cd $$PROJECT_DIR && echo '📱 启动管理端...' && make admin-dev\""; \
-	sleep 1; \
 	echo "$(BLUE)🌐 启动用户端 (Vue3) - 端口 4000$(RESET)"; \
 	osascript -e "tell application \"Terminal\" to do script \"cd $$PROJECT_DIR && echo '🌐 启动用户端...' && make web-dev\""; \
 	echo ""
-	@echo "$(GREEN)✅ 三个终端窗口已打开！$(RESET)"
+	@echo "$(GREEN)✅ 两个终端窗口已打开！$(RESET)"
 	@echo ""
 	@echo "$(GREEN)📱 服务访问地址:$(RESET)"
 	@echo "  🎯 后端API:  http://localhost:9000"
-	@echo "  📱 管理端:   http://localhost:3000"
 	@echo "  🌐 用户端:   http://localhost:4000"
 	@echo ""
 	@echo "$(YELLOW)💡 停止服务: 在各个终端窗口中按 Ctrl+C，或运行 make stop$(RESET)"
 
 .PHONY: start-bg
-start-bg: ## 🚀 一键启动三端开发环境 (后台模式)
-	@echo "$(GREEN)🚀 启动三端开发环境 (后台模式)...$(RESET)"
+start-bg: ## 🚀 一键启动两端开发环境 (后台模式)
+	@echo "$(GREEN)🚀 启动两端开发环境 (后台模式)...$(RESET)"
 	@echo "$(BLUE)正在启动所有服务...$(RESET)"
 	@# 停止可能已存在的服务
 	@pkill -f "go run cmd/main.go" || true
@@ -277,25 +205,19 @@ start-bg: ## 🚀 一键启动三端开发环境 (后台模式)
 	@mkdir -p logs pids
 	@nohup go run cmd/main.go > logs/backend.log 2>&1 & echo $$! > pids/backend.pid
 	@sleep 2
-	@# 启动管理端 (后台)
-	@echo "$(BLUE)📱 启动管理端 (Vue3) - 端口 3000$(RESET)"
-	@cd admin && nohup npm run dev > ../logs/admin.log 2>&1 & echo $$! > ../pids/admin.pid; cd ..
-	@sleep 2
 	@# 启动用户端 (后台)
 	@echo "$(BLUE)🌐 启动用户端 (Vue3) - 端口 4000$(RESET)"
 	@cd web && nohup npm run dev > ../logs/web.log 2>&1 & echo $$! > ../pids/web.pid; cd ..
 	@sleep 2
 	@echo ""
-	@echo "$(GREEN)✅ 三端开发环境已启动！$(RESET)"
+	@echo "$(GREEN)✅ 两端开发环境已启动！$(RESET)"
 	@echo ""
 	@echo "$(GREEN)📱 服务访问地址:$(RESET)"
 	@echo "  🎯 后端API:  http://localhost:9000"
-	@echo "  📱 管理端:   http://localhost:3000"
 	@echo "  🌐 用户端:   http://localhost:4000"
 	@echo ""
 	@echo "$(YELLOW)💡 日志文件:$(RESET)"
 	@echo "  后端: logs/backend.log"
-	@echo "  管理端: logs/admin.log" 
 	@echo "  用户端: logs/web.log"
 	@echo ""
 	@echo "$(YELLOW)💡 停止服务: make stop$(RESET)"
@@ -305,8 +227,7 @@ stop: ## 🛑 停止所有开发服务
 	@echo "$(YELLOW)🛑 停止所有开发服务...$(RESET)"
 	@# 使用PID文件停止服务
 	@if [ -f pids/backend.pid ]; then kill $$(cat pids/backend.pid) 2>/dev/null || true; rm -f pids/backend.pid; fi
-	@if [ -f pids/admin.pid ]; then kill $$(cat pids/admin.pid) 2>/dev/null || true; rm -f pids/admin.pid; fi
-	@if [ -f pids/web.pid ]; then kill $$(cat pids/web.pid) 2>/dev/null || true; rm -f pids/web.pid; fi
+		@if [ -f pids/web.pid ]; then kill $$(cat pids/web.pid) 2>/dev/null || true; rm -f pids/web.pid; fi
 	@# 备用清理
 	@pkill -f "go run cmd/main.go" || true
 	@pkill -f "npm run dev" || true
@@ -320,13 +241,11 @@ status: ## 📊 查看服务状态
 	@# 检查端口占用
 	@echo "$(YELLOW)端口状态:$(RESET)"
 	@lsof -i :9000 2>/dev/null | head -2 || echo "  端口 9000: 未占用"
-	@lsof -i :3000 2>/dev/null | head -2 || echo "  端口 3000: 未占用"
 	@lsof -i :4000 2>/dev/null | head -2 || echo "  端口 4000: 未占用"
 	@echo ""
 	@# 检查PID文件
 	@echo "$(YELLOW)PID文件:$(RESET)"
 	@if [ -f pids/backend.pid ]; then echo "  后端PID: $$(cat pids/backend.pid)"; else echo "  后端PID: 不存在"; fi
-	@if [ -f pids/admin.pid ]; then echo "  管理端PID: $$(cat pids/admin.pid)"; else echo "  管理端PID: 不存在"; fi
 	@if [ -f pids/web.pid ]; then echo "  用户端PID: $$(cat pids/web.pid)"; else echo "  用户端PID: 不存在"; fi
 
 .PHONY: logs
@@ -336,8 +255,6 @@ logs: ## 📋 查看服务日志
 	@echo "$(YELLOW)=== 后端日志 (最后10行) ===$(RESET)"
 	@tail -n 10 logs/backend.log 2>/dev/null || echo "后端日志文件不存在"
 	@echo ""
-	@echo "$(YELLOW)=== 管理端日志 (最后10行) ===$(RESET)"
-	@tail -n 10 logs/admin.log 2>/dev/null || echo "管理端日志文件不存在"
 	@echo ""
 	@echo "$(YELLOW)=== 用户端日志 (最后10行) ===$(RESET)"
 	@tail -n 10 logs/web.log 2>/dev/null || echo "用户端日志文件不存在"
@@ -346,11 +263,9 @@ logs: ## 📋 查看服务日志
 fullstack-dev: ## 启动全栈开发环境 (并行启动前后端)
 	@echo "$(GREEN)启动全栈开发环境...$(RESET)"
 	@echo "$(YELLOW)后端将在 :9000 端口启动$(RESET)"
-	@echo "$(YELLOW)管理端将在 :3000 端口启动$(RESET)"
 	@echo "$(YELLOW)用户端将在 :4000 端口启动$(RESET)"
 	@echo "$(BLUE)按 Ctrl+C 停止所有服务$(RESET)"
 	@trap 'kill 0' INT; \
-	make admin-dev & \
 	make web-dev & \
 	make dev & \
 	wait
@@ -664,12 +579,11 @@ web-check: admin-type-check admin-lint ## 完整前端代码检查 (兼容性保
 
 .PHONY: help
 help: ## 显示帮助信息
-	@echo "$(BLUE)$(APP_NAME) 三端开发工具$(RESET)"
+	@echo "$(BLUE)$(APP_NAME) 全栈开发工具$(RESET)"
 	@echo ""
 	@echo "$(GREEN)📊 项目架构:$(RESET)"
 	@echo "  🎯 后端 (Go)     - 端口 9000"
-	@echo "  🎨 管理端 (Vue3) - 端口 3000 (开发) / /admin (生产)"  
-	@echo "  👥 用户端 (Vue3) - 端口 4000 (开发) / / (生产)"
+	@echo "  🌐 用户端 (Vue3) - 端口 4000 (开发) / / (生产)"
 	@echo ""
 	@echo "$(GREEN)🚀 快速开始:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^start:.*?## / {printf "  $(GREEN)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -680,13 +594,10 @@ help: ## 显示帮助信息
 	@echo "$(YELLOW)🚀 启动命令:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^(start|start-bg|stop|status|logs):.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@echo "$(YELLOW)📱 管理端命令:$(RESET)"
-	@awk 'BEGIN {FS = ":.*?## "} /^admin-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-	@echo ""
 	@echo "$(YELLOW)🌐 用户端命令:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^web-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
-	@echo "$(YELLOW)🔗 前端组合命令:$(RESET)"
+	@echo "$(YELLOW)🔗 前端命令:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^frontend-[a-zA-Z_-]+:.*?## / {printf "  $(YELLOW)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "$(YELLOW)🚀 全栈命令:$(RESET)"
@@ -737,3 +648,135 @@ help: ## 显示帮助信息
 .PHONY: build-deploy
 build-deploy: build-release deploy ## 🔨 一键构建并快速部署 (完整流程)
 	@echo "$(GREEN)🎉 构建并快速部署完成!$(RESET)"
+
+# ========================================
+# 代码质量和文档命令
+# ========================================
+
+.PHONY: lint
+lint: ## 运行 Go 代码检查
+	@echo "$(GREEN)运行 Go 代码检查...$(RESET)"
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run ./...; \
+	else \
+		echo "$(YELLOW)golangci-lint 未安装，跳过检查$(RESET)"; \
+		echo "安装命令: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+	fi
+
+.PHONY: lint-fix
+lint-fix: ## 运行 Go 代码检查并自动修复
+	@echo "$(GREEN)运行 Go 代码检查并修复...$(RESET)"
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run --fix ./...; \
+	else \
+		echo "$(YELLOW)golangci-lint 未安装$(RESET)"; \
+		echo "安装命令: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest"; \
+		exit 1; \
+	fi
+
+.PHONY: fmt
+fmt: ## 格式化 Go 代码
+	@echo "$(GREEN)格式化 Go 代码...$(RESET)"
+	@go fmt ./...
+	@gofmt -s -w .
+
+.PHONY: vet
+vet: ## 运行 Go vet 检查
+	@echo "$(GREEN)运行 Go vet 检查...$(RESET)"
+	@go vet ./...
+
+.PHONY: security
+security: ## 运行安全扫描
+	@echo "$(GREEN)运行安全扫描...$(RESET)"
+	@if command -v gosec >/dev/null 2>&1; then \
+		gosec -fmt=json -out=security-report.json ./...; \
+		echo "$(GREEN)安全扫描完成，报告已保存到 security-report.json$(RESET)"; \
+	else \
+		echo "$(YELLOW)gosec 未安装$(RESET)"; \
+		echo "安装命令: go install github.com/securego/gosec/v2/cmd/gosec@latest"; \
+	fi
+
+.PHONY: docs
+docs: ## 生成 API 文档
+	@echo "$(GREEN)生成 API 文档...$(RESET)"
+	@if command -v swag >/dev/null 2>&1; then \
+		swag init -g cmd/main.go -o docs --parseDependency --parseInternal; \
+		echo "$(GREEN)API 文档生成完成$(RESET)"; \
+		echo "访问: http://localhost:9000/swagger/index.html"; \
+	else \
+		echo "$(YELLOW)swag 未安装$(RESET)"; \
+		echo "安装命令: go install github.com/swaggo/swag/cmd/swag@latest"; \
+	fi
+
+.PHONY: docs-serve
+docs-serve: docs ## 生成文档并启动服务
+	@echo "$(GREEN)文档将在服务启动后可用$(RESET)"
+	@make dev
+
+.PHONY: test-coverage
+test-coverage: ## 运行测试并生成覆盖率报告
+	@echo "$(GREEN)运行测试并生成覆盖率报告...$(RESET)"
+	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "$(GREEN)覆盖率报告已生成: coverage.html$(RESET)"
+
+.PHONY: test-unit
+test-unit: ## 运行单元测试
+	@echo "$(GREEN)运行单元测试...$(RESET)"
+	@go test -v -short ./...
+
+.PHONY: test-integration
+test-integration: ## 运行集成测试
+	@echo "$(GREEN)运行集成测试...$(RESET)"
+	@go test -v -run Integration ./...
+
+.PHONY: benchmark
+benchmark: ## 运行性能基准测试
+	@echo "$(GREEN)运行性能基准测试...$(RESET)"
+	@go test -bench=. -benchmem ./...
+
+.PHONY: deps
+deps: ## 下载并整理依赖
+	@echo "$(GREEN)下载 Go 依赖...$(RESET)"
+	@go mod download
+	@go mod tidy
+	@go mod verify
+
+.PHONY: deps-update
+deps-update: ## 更新所有依赖
+	@echo "$(GREEN)更新 Go 依赖...$(RESET)"
+	@go get -u ./...
+	@go mod tidy
+
+.PHONY: tools
+tools: ## 安装开发工具
+	@echo "$(GREEN)安装开发工具...$(RESET)"
+	@echo "安装 golangci-lint..."
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	@echo "安装 gosec..."
+	@go install github.com/securego/gosec/v2/cmd/gosec@latest
+	@echo "安装 swag..."
+	@go install github.com/swaggo/swag/cmd/swag@latest
+	@echo "$(GREEN)开发工具安装完成$(RESET)"
+
+.PHONY: check
+check: fmt vet lint test ## 运行所有检查（格式化、检查、测试）
+	@echo "$(GREEN)所有检查完成$(RESET)"
+
+.PHONY: check-all
+check-all: check security ## 运行所有检查包括安全扫描
+	@echo "$(GREEN)完整检查完成$(RESET)"
+
+.PHONY: ci
+ci: deps check-all test-coverage ## CI 流程（依赖、检查、覆盖率）
+	@echo "$(GREEN)CI 流程完成$(RESET)"
+
+.PHONY: info
+info: ## 显示项目信息
+	@echo "$(GREEN)项目信息:$(RESET)"
+	@echo "  应用名称: $(APP_NAME)"
+	@echo "  版本: $(VERSION)"
+	@echo "  构建时间: $(BUILD_TIME)"
+	@echo "  Go 版本: $(GO_VERSION)"
+	@echo "  二进制文件: $(BINARY_PATH)"
+	@echo "  Docker 镜像: $(DOCKER_IMAGE)"

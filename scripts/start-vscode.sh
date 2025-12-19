@@ -1,10 +1,9 @@
 #!/bin/bash
-echo "🚀 在VSCode终端中启动三端开发环境"
+echo "🚀 在VSCode终端中启动全栈开发环境"
 echo ""
 echo "请按以下步骤操作:"
-echo "1. 使用 Cmd+Shift+\` 创建新终端 (重复3次)"
+echo "1. 使用 Cmd+Shift+\` 创建新终端 (重复2次)"
 echo "2. 在各终端中分别运行:"
-echo "   📱 管理端: ./scripts/start-admin.sh"
 echo "   🌐 用户端: ./scripts/start-web.sh"
 echo "   ⚙️  后端:   ./scripts/start-backend.sh"
 echo ""
