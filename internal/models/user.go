@@ -9,13 +9,14 @@ import (
 // User 用户模型
 type User struct {
 	BaseModel
-	Username string `gorm:"size:50;not null;uniqueIndex" json:"username"`
-	Password string `gorm:"size:100;not null" json:"-"`
-	Email    string `gorm:"size:100;uniqueIndex" json:"email"`
-	Avatar   string `gorm:"size:255" json:"avatar"`
-	Bio      string `gorm:"size:500" json:"bio"`
-	Status   int    `gorm:"default:1" json:"status"` // 1:正常 2:禁用 3:删除
-	Role     int    `gorm:"default:3" json:"role"`   // 1:超级管理员 2:管理员 3:普通用户
+	Username     string `gorm:"size:50;not null;uniqueIndex" json:"username"`
+	Password     string `gorm:"size:100;not null" json:"-"`
+	Email        string `gorm:"size:100;uniqueIndex" json:"email"`
+	Avatar       string `gorm:"size:255" json:"avatar"`
+	Bio          string `gorm:"size:500" json:"bio"`
+	Status       int    `gorm:"default:1" json:"status"`                // 1:正常 2:禁用 3:删除
+	Role         int    `gorm:"default:3" json:"role"`                  // 1:超级管理员 2:管理员 3:普通用户
+	TokenVersion int    `gorm:"default:1;not null" json:"tokenVersion"` // 令牌版本号（用于强制失效）
 }
 
 // TableName 指定表名
@@ -35,6 +36,9 @@ func (u *User) BeforeCreate(tx *gorm.DB) error {
 	}
 	if u.Role == 0 {
 		u.Role = common.UserRoleUser
+	}
+	if u.TokenVersion <= 0 {
+		u.TokenVersion = 1
 	}
 	return nil
 }

@@ -16,8 +16,16 @@ import (
 	"template/pkg/upload"
 )
 
-var uploadService *UploadService
-var config *upload.Config
+var defaultService Service
+
+// Service 上传服务能力边界，便于controller注入
+type Service interface {
+	SimpleUpload(file *multipart.FileHeader, userID string) (*response.SimpleUploadResponse, error)
+	InitChunkUpload(filename string, fileSize int64, md5Hash string, chunkSize int64, userID string) (*response.ChunkUploadInitResponse, error)
+	UploadChunk(fileID string, chunkIndex int, md5Hash string, chunk *multipart.FileHeader) (*response.ChunkUploadResponse, error)
+	MergeChunks(fileID string) (*response.ChunkMergeResponse, error)
+	GetUploadProgress(fileID string) (*response.UploadProgressResponse, error)
+}
 
 // UploadService 上传服务
 type UploadService struct {
@@ -26,60 +34,56 @@ type UploadService struct {
 	config     *upload.Config
 }
 
-// InitUploadService 初始化上传服务
-func InitUploadService() {
-	config = upload.NewDefaultConfig()
-	db := database.GetDB()
-	uploadService = &UploadService{
-		uploadRepo: uploadRepo.NewUploadRepository(db),
-		storage:    upload.NewLocalStorage(config.UploadDir),
-		config:     config,
+// NewService 创建上传服务实例
+func NewService(repo *uploadRepo.UploadRepository, storage upload.Storage, cfg *upload.Config) *UploadService {
+	return &UploadService{
+		uploadRepo: repo,
+		storage:    storage,
+		config:     cfg,
 	}
 }
 
-// GetUploadService 获取上传服务实例
-func GetUploadService() *UploadService {
-	return uploadService
+// InitUploadService 初始化默认上传服务（兼容旧调用）
+func InitUploadService() {
+	uploadCfg := upload.NewDefaultConfig()
+	defaultService = NewService(
+		uploadRepo.NewUploadRepository(database.GetDB()),
+		upload.NewLocalStorage(uploadCfg.UploadDir),
+		uploadCfg,
+	)
+}
+
+// GetUploadService 获取默认上传服务实例（兼容旧调用）
+func GetUploadService() Service {
+	if defaultService == nil {
+		InitUploadService()
+	}
+	return defaultService
 }
 
 // SimpleUpload 简单文件上传
 func SimpleUpload(file *multipart.FileHeader, userID string) (*response.SimpleUploadResponse, error) {
-	if uploadService == nil {
-		InitUploadService()
-	}
-	return uploadService.SimpleUpload(file, userID)
+	return GetUploadService().SimpleUpload(file, userID)
 }
 
 // InitChunkUpload 初始化分片上传
 func InitChunkUpload(filename string, fileSize int64, md5Hash string, chunkSize int64, userID string) (*response.ChunkUploadInitResponse, error) {
-	if uploadService == nil {
-		InitUploadService()
-	}
-	return uploadService.InitChunkUpload(filename, fileSize, md5Hash, chunkSize, userID)
+	return GetUploadService().InitChunkUpload(filename, fileSize, md5Hash, chunkSize, userID)
 }
 
 // UploadChunk 上传分片
 func UploadChunk(fileID string, chunkIndex int, md5Hash string, chunk *multipart.FileHeader) (*response.ChunkUploadResponse, error) {
-	if uploadService == nil {
-		InitUploadService()
-	}
-	return uploadService.UploadChunk(fileID, chunkIndex, md5Hash, chunk)
+	return GetUploadService().UploadChunk(fileID, chunkIndex, md5Hash, chunk)
 }
 
 // MergeChunks 合并分片
 func MergeChunks(fileID string) (*response.ChunkMergeResponse, error) {
-	if uploadService == nil {
-		InitUploadService()
-	}
-	return uploadService.MergeChunks(fileID)
+	return GetUploadService().MergeChunks(fileID)
 }
 
 // GetUploadProgress 获取上传进度
 func GetUploadProgress(fileID string) (*response.UploadProgressResponse, error) {
-	if uploadService == nil {
-		InitUploadService()
-	}
-	return uploadService.GetUploadProgress(fileID)
+	return GetUploadService().GetUploadProgress(fileID)
 }
 
 // SimpleUpload 简单文件上传

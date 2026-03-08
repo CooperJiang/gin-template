@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"strings"
 	"template/internal/models"
 	"template/pkg/common"
 	"template/pkg/config"
@@ -21,6 +22,12 @@ import (
 
 var db *gorm.DB
 
+type initOptions struct {
+	strictMode    bool
+	autoMigrate   bool
+	bootstrapRoot bool
+}
+
 // GetDB 获取数据库连接
 func GetDB() *gorm.DB {
 	return db
@@ -29,6 +36,7 @@ func GetDB() *gorm.DB {
 // InitDB 初始化数据库连接
 func InitDB() {
 	cfg := config.GetConfig().Database
+	opts := resolveInitOptions()
 
 	// 配置 GORM
 	gormConfig := &gorm.Config{
@@ -46,54 +54,123 @@ func InitDB() {
 	}
 
 	var err error
-
-	// 检查是否配置了MySQL数据库
-	if cfg.Host == "" || cfg.Username == "" || cfg.Name == "" {
-		// 未配置MySQL，使用SQLite
-		log.Info("未检测到MySQL配置，将使用SQLite数据库")
-		// 使用modernc.org/sqlite驱动的连接字符串
-		db, err = gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc"), gormConfig)
-		if err != nil {
-			log.Fatal("连接SQLite数据库失败: %v", err)
-		}
-	} else {
-		// 尝试使用MySQL数据库
-		// 构建 DSN
-		dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Asia%%2FShanghai",
-			cfg.Username,
-			cfg.Password,
-			cfg.Host,
-			cfg.Port,
-			cfg.Name,
-			cfg.Charset,
-		)
-
-		// 连接数据库
-		db, err = gorm.Open(mysql.Open(dsn), gormConfig)
-		if err != nil {
-			log.Error("连接MySQL数据库失败: %v", err)
-			log.Info("自动降级到SQLite数据库")
-			// 降级到SQLite
-			db, err = gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc"), gormConfig)
-			if err != nil {
-				log.Fatal("连接SQLite数据库失败: %v", err)
-			}
-		} else {
-			log.Info("成功连接到MySQL数据库")
-		}
+	db, err = openPreferredDatabase(cfg, gormConfig, opts)
+	if err != nil {
+		log.Fatal("初始化数据库连接失败: %v", err)
 	}
 
 	// 自动迁移
-	if err := autoMigrate(); err != nil {
-		log.Fatal("数据库迁移失败: %v", err)
+	if opts.autoMigrate {
+		if err := autoMigrate(); err != nil {
+			log.Fatal("数据库迁移失败: %v", err)
+		}
+	} else {
+		log.Info("已跳过自动迁移（APP_DB_AUTO_MIGRATE=false）")
 	}
 
 	// 检查并创建 root 用户
-	if err := createRootUserIfNotExists(); err != nil {
-		log.Fatal("创建 root 用户失败: %v", err)
+	if opts.bootstrapRoot {
+		if err := createRootUserIfNotExists(); err != nil {
+			log.Fatal("创建 root 用户失败: %v", err)
+		}
+	} else {
+		log.Info("已跳过 root 用户初始化（APP_DB_BOOTSTRAP_ROOT=false）")
 	}
 
 	log.Info("数据库连接成功")
+}
+
+func resolveInitOptions() initOptions {
+	return resolveInitOptionsByMode(config.GetConfig().App.Mode, config.GetEnvBool)
+}
+
+func resolveInitOptionsByMode(mode string, getEnvBool func(key string, defaultValue bool) bool) initOptions {
+	if getEnvBool == nil {
+		getEnvBool = func(_ string, defaultValue bool) bool { return defaultValue }
+	}
+
+	isStrictDefault := isReleaseMode(mode)
+
+	return initOptions{
+		strictMode:    getEnvBool("APP_DB_STRICT", isStrictDefault),
+		autoMigrate:   getEnvBool("APP_DB_AUTO_MIGRATE", !isStrictDefault),
+		bootstrapRoot: getEnvBool("APP_DB_BOOTSTRAP_ROOT", !isStrictDefault),
+	}
+}
+
+func isReleaseMode(mode string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(mode))
+	return normalized == "release" || normalized == "production" || normalized == "prod"
+}
+
+func openPreferredDatabase(cfg config.DatabaseConfig, gormConfig *gorm.Config, opts initOptions) (*gorm.DB, error) {
+	wantMySQL, mysqlReady := shouldUseMySQL(cfg)
+	if !wantMySQL {
+		log.Info("当前配置使用SQLite数据库")
+		return openSQLite(gormConfig)
+	}
+
+	if !mysqlReady {
+		if opts.strictMode {
+			return nil, fmt.Errorf("MySQL配置不完整，当前运行模式禁止自动降级到SQLite")
+		}
+		log.Warn("MySQL配置不完整，自动降级到SQLite数据库")
+		return openSQLite(gormConfig)
+	}
+
+	mysqlDB, err := openMySQL(cfg, gormConfig)
+	if err == nil {
+		log.Info("成功连接到MySQL数据库")
+		return mysqlDB, nil
+	}
+
+	if opts.strictMode {
+		return nil, fmt.Errorf("连接MySQL数据库失败: %w", err)
+	}
+
+	log.Error("连接MySQL数据库失败: %v", err)
+	log.Info("自动降级到SQLite数据库")
+	return openSQLite(gormConfig)
+}
+
+func shouldUseMySQL(cfg config.DatabaseConfig) (wantMySQL bool, mysqlReady bool) {
+	driver := strings.ToLower(strings.TrimSpace(cfg.Driver))
+	mysqlSignal := strings.TrimSpace(cfg.Host) != "" || strings.TrimSpace(cfg.Username) != "" || strings.TrimSpace(cfg.Name) != ""
+
+	switch driver {
+	case "sqlite":
+		return false, false
+	case "mysql":
+		return true, isMySQLConfigReady(cfg)
+	default:
+		if mysqlSignal {
+			return true, isMySQLConfigReady(cfg)
+		}
+		return false, false
+	}
+}
+
+func isMySQLConfigReady(cfg config.DatabaseConfig) bool {
+	return strings.TrimSpace(cfg.Host) != "" &&
+		strings.TrimSpace(cfg.Username) != "" &&
+		strings.TrimSpace(cfg.Name) != ""
+}
+
+func openMySQL(cfg config.DatabaseConfig, gormConfig *gorm.Config) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=True&loc=Asia%%2FShanghai",
+		cfg.Username,
+		cfg.Password,
+		cfg.Host,
+		cfg.Port,
+		cfg.Name,
+		cfg.Charset,
+	)
+
+	return gorm.Open(mysql.Open(dsn), gormConfig)
+}
+
+func openSQLite(gormConfig *gorm.Config) (*gorm.DB, error) {
+	return gorm.Open(sqlite.Open("file:app.db?cache=shared&mode=rwc"), gormConfig)
 }
 
 // autoMigrate 自动迁移数据库结构
@@ -133,7 +210,7 @@ func createRootUserIfNotExists() error {
 		if err := db.Create(&rootUser).Error; err != nil {
 			return err
 		}
-		log.Info("已成功创建 root 管理员用户, 密码是: %s", config.GetConfig().App.DefaultRootPass)
+		log.Info("已成功创建 root 管理员用户，请立即通过管理接口修改默认密码")
 	}
 
 	return nil

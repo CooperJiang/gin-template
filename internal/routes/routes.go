@@ -1,15 +1,16 @@
 package routes
 
 import (
-	"template/internal/middleware"
+	"template/internal/app"
 
 	"github.com/gin-gonic/gin"
 )
 
 // RegisterRoutes 注册所有路由
-func RegisterRoutes(r *gin.Engine) {
-	// 应用CORS中间件
-	r.Use(middleware.CORSMiddleware())
+func RegisterRoutes(r *gin.Engine, deps *app.Dependencies) {
+	if deps == nil {
+		deps = app.NewDependencies()
+	}
 
 	// 注册前端路由
 	RegisterClientRoutes(r)
@@ -23,10 +24,10 @@ func RegisterRoutes(r *gin.Engine) {
 	{
 		// 用户相关路由
 		userRoutes := version.Group("/user")
-		RegisterUserRoutes(userRoutes)
+		RegisterUserRoutes(userRoutes, deps.UserController)
 
 		// 上传相关路由
-		RegisterUploadRoutes(version)
+		RegisterUploadRoutes(version, deps.UploadController)
 
 		// 在这里添加其他模块路由
 		// 例如：

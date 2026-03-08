@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"strings"
+	"template/pkg/config"
 	"template/pkg/logger"
 	"time"
 )
@@ -27,11 +29,17 @@ func IsRedisEnabled() bool {
 func InitCache() {
 	// 尝试初始化Redis
 	if err := InitRedis(); err != nil {
-		// logger.Error("Redis初始化失败: %v，将使用内存缓存", err)
-		// Redis初始化失败，使用内存缓存
+		if shouldRequireRedis(config.GetConfig().App.Mode, config.GetConfig().JWT.BlacklistEnabled) {
+			logger.Fatal("Redis初始化失败，release模式且启用JWT黑名单时必须可用: %v", err)
+			return
+		}
+
 		defaultCache = InitMemCache()
-		logger.Info("内存缓存初始化成功")
+		logger.Warn("Redis初始化失败，已降级为内存缓存: %v", err)
+		return
 	}
+
+	logger.Info("Redis缓存初始化成功")
 }
 
 // GetCache 获取缓存实例
@@ -78,4 +86,16 @@ func Close() error {
 		return defaultCache.Close()
 	}
 	return nil
+}
+
+func shouldRequireRedis(mode string, blacklistEnabled bool) bool {
+	if !blacklistEnabled {
+		return false
+	}
+	return isReleaseMode(mode)
+}
+
+func isReleaseMode(mode string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(mode))
+	return normalized == "release" || normalized == "production" || normalized == "prod"
 }

@@ -21,7 +21,8 @@ RESET='\033[0m'
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="${PROJECT_ROOT}/web"
 STATIC_DIR="${PROJECT_ROOT}/internal/static"
-DIST_DIR="${WEB_DIR}/dist"
+DIST_DIR="${WEB_DIR}/packages/main/dist"
+APP_DIST_DIR="${WEB_DIR}/packages/app/dist"
 TARGET_WEB_DIR="${STATIC_DIR}/web"
 
 echo -e "${BLUE}开始用户端前端项目打包...${RESET}"
@@ -39,38 +40,39 @@ if [ ! -f "$WEB_DIR/package.json" ]; then
     exit 1
 fi
 
+# 检查pnpm是否可用
+if ! command -v pnpm &> /dev/null; then
+    echo -e "${RED}错误: pnpm未安装，请先安装: npm install -g pnpm${RESET}"
+    exit 1
+fi
+
 # 进入web目录
 cd "$WEB_DIR"
 
 # 检查是否安装了node_modules
 if [ ! -d "node_modules" ]; then
     echo -e "${YELLOW}未找到node_modules，正在安装依赖...${RESET}"
-    
-    # 检查npm是否可用
-    if ! command -v npm &> /dev/null; then
-        echo -e "${RED}错误: npm未安装，请先安装Node.js和npm${RESET}"
-        exit 1
-    fi
-    
-    npm install
+    pnpm install
     echo -e "${GREEN}依赖安装完成${RESET}"
 fi
 
 # 清理之前的构建
 echo -e "${YELLOW}清理之前的构建文件...${RESET}"
 rm -rf "$DIST_DIR"
-
-# 运行类型检查
-# echo -e "${BLUE}运行类型检查...${RESET}"
-# npm run type-check
+rm -rf "$APP_DIST_DIR"
 
 # 构建用户端项目
 echo -e "${BLUE}构建用户端项目...${RESET}"
-npm run build-only
+pnpm build
 
 # 检查构建是否成功
 if [ ! -d "$DIST_DIR" ]; then
-    echo -e "${RED}错误: 构建失败，dist目录不存在${RESET}"
+    echo -e "${RED}错误: 主应用构建失败，dist目录不存在${RESET}"
+    exit 1
+fi
+
+if [ ! -d "$APP_DIST_DIR" ]; then
+    echo -e "${RED}错误: 子应用构建失败，dist目录不存在${RESET}"
     exit 1
 fi
 
@@ -88,9 +90,14 @@ elif [ -d "$TARGET_WEB_DIR" ]; then
     rm -rf "$TARGET_WEB_DIR"
 fi
 
-# 复制新的dist目录到static/web目录
-echo -e "${BLUE}复制构建文件到静态目录...${RESET}"
+# 复制主应用dist到static/web目录
+echo -e "${BLUE}复制主应用构建文件到静态目录...${RESET}"
 cp -r "$DIST_DIR" "$TARGET_WEB_DIR"
+
+# 复制子应用dist到static/web/subapps/app/目录
+echo -e "${BLUE}复制子应用构建文件到静态目录...${RESET}"
+mkdir -p "$TARGET_WEB_DIR/subapps/app"
+cp -r "$APP_DIST_DIR"/* "$TARGET_WEB_DIR/subapps/app/"
 
 # 显示构建结果
 echo -e "${GREEN}用户端前端打包完成!${RESET}"
@@ -120,6 +127,13 @@ else
     echo -e "${YELLOW}⚠ assets目录不存在${RESET}"
 fi
 
+# 检查子应用文件
+if [ -f "$TARGET_WEB_DIR/subapps/app/index.html" ]; then
+    echo -e "${GREEN}✓ 子应用 index.html 存在${RESET}"
+else
+    echo -e "${RED}✗ 子应用 index.html 不存在${RESET}"
+fi
+
 echo -e "${GREEN}用户端打包流程完成!${RESET}"
-echo -e "${BLUE}提示: 用户端将通过根路径 / 访问${RESET}"
-echo -e "${BLUE}现在可以运行 'make build' 来构建包含静态文件的Go二进制文件${RESET}" 
+echo -e "${BLUE}提示: 主应用通过 / 访问，子应用通过 /subapps/app/ 加载${RESET}"
+echo -e "${BLUE}现在可以运行 'make build' 来构建包含静态文件的Go二进制文件${RESET}"

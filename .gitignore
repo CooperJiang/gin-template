@@ -10,6 +10,8 @@
 *.o
 *.a
 app
+!internal/app/
+!internal/app/**
 main
 
 # 依赖管理
@@ -72,8 +74,7 @@ __debug_bin
 
 # 构建目录
 /build/
-/web/dist/
-/admin/dist/
+/web/packages/app/dist/
 /bin/
 
 # SQLite数据库文件
@@ -91,66 +92,13 @@ go.work
 # Air工具的临时文件
 /tmp-air-*/
 
-# 前端项目相关忽略文件
-# Node.js 依赖
+# 前端项目相关忽略文件 (pnpm monorepo)
 web/node_modules/
-web/dist/
-web/dist-ssr/
-web/build/
-web/out/
-
-# 前端缓存和临时文件
-web/.cache/
-web/.parcel-cache/
-web/.next/
-web/.nuxt/
-web/.vite/
-web/.rollup.cache/
-web/.turbo/
-
-# 前端环境文件
-# web/.env
-# web/.env.local
-# web/.env.development.local
-# web/.env.test.local
-# web/.env.production.local
-
-# 前端测试和覆盖率
-web/coverage/
-web/.nyc_output/
-web/test-results/
-web/playwright-report/
-
-# 前端工具缓存
-web/.eslintcache
-web/.stylelintcache
-web/*.tsbuildinfo
-
-# 前端包管理器文件（可选，根据团队需要决定是否忽略）
-# web/package-lock.json
-# web/yarn.lock
-# web/pnpm-lock.yaml
-
-# 前端构建产物和打包文件
-web/*.tgz
-web/*.tar.gz
-web/bundle-analyzer-report.html
-
-# 前端自动生成文件
-web/auto-imports.d.ts
-web/components.d.ts
-
-# 前端部署相关
-web/.vercel/
-web/.netlify/
-web/.firebase/
-
-# 前端PWA相关
-web/sw.*
-web/workbox-*.js
-
-# 前端扩展开发
-web/*.crx
+web/packages/*/node_modules/
+web/packages/*/dist/
+web/packages/*/.vite/
+web/packages/*/*.tsbuildinfo
+web/packages/*/.eslintcache
 
 # 其他不需要提交的文件
 TODO.md
@@ -297,45 +245,18 @@ coverage.html
 *.prof
 
 # Build artifacts
-/internal/static/admin/
 /internal/static/web/
 /internal/static/dist/
 
 # Frontend node_modules and build files
-# Admin frontend
-/admin/node_modules/
-/admin/dist/
-/admin/.npm
-/admin/.pnpm-store
-/admin/pnpm-lock.yaml
-/admin/package-lock.json
-/admin/yarn.lock
-/admin/.eslintcache
-/admin/.vite/
-
-# Web frontend  
+# Frontend monorepo
 /web/node_modules/
-/web/dist/
-/web/.npm
+/web/packages/*/node_modules/
+/web/packages/*/dist/
+/web/packages/*/.vite/
 /web/.pnpm-store
-/web/pnpm-lock.yaml
-/web/package-lock.json
-/web/yarn.lock
-/web/.eslintcache
-/web/.vite/
 
-# Frontend environment files
-/admin/.env
-/admin/.env.local
-/admin/.env.development.local
-/admin/.env.test.local
-/admin/.env.production.local
-
-/web/.env
-/web/.env.local
-/web/.env.development.local
-/web/.env.test.local
-/web/.env.production.local
+# Frontend env files are committed (template defaults)
 
 # Temporary files
 *.tmp
@@ -351,7 +272,6 @@ docker-compose.override.yml
 tmp/
 
 # Static backup files
-/internal/static/admin_backup_*
 /internal/static/web_backup_*
 /internal/static/dist_backup_*
 

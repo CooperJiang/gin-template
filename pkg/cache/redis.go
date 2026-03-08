@@ -3,6 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"strconv"
 	"template/pkg/config"
 	"time"
 
@@ -28,7 +29,7 @@ func InitRedis() error {
 
 	// 创建Redis客户端
 	client := redis.NewClient(&redis.Options{
-		Addr:     cfg.Host + ":" + string(cfg.Port),
+		Addr:     cfg.Host + ":" + strconv.Itoa(cfg.Port),
 		Password: cfg.Password,
 		DB:       cfg.DB,
 	})

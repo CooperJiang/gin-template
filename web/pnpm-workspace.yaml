@@ -1,0 +1,5 @@
+packages:
+  - 'shared'
+  - 'core'
+  - 'auth'
+  - 'packages/*'

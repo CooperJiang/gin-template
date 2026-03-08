@@ -18,7 +18,7 @@ func FileAuthMiddleware() gin.HandlerFunc {
 		if fileID == "" {
 			fileID = c.Query("fileId")
 		}
-		
+
 		if fileID == "" {
 			common.BadRequest(c, "文件ID不能为空")
 			c.Abort()
@@ -47,9 +47,17 @@ func FileAuthMiddleware() gin.HandlerFunc {
 		// 私有文件需要登录验证
 		user, err := GetUserFromContext(c)
 		if err != nil {
-			common.Unauthorized(c, "此文件为私有文件，需要登录才能访问")
-			c.Abort()
-			return
+			claims, parseErr := parseClaimsFromRequest(c)
+			if parseErr != nil {
+				common.Unauthorized(c, "此文件为私有文件，需要登录才能访问")
+				c.Abort()
+				return
+			}
+
+			// 补齐上下文，保证后续处理链路一致
+			c.Set(ContextPayloadKey, claims)
+			c.Set("user_id", claims.UserID)
+			user = claims
 		}
 
 		if hasPrivateFilePermission(user.UserID, file) {
@@ -79,7 +87,7 @@ func hasPrivateFilePermission(userID string, file *models.UploadFile) bool {
 			return true
 		}
 	}
-	
+
 	return false
 }
 

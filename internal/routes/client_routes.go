@@ -16,57 +16,15 @@ import (
 func RegisterClientRoutes(r *gin.Engine) {
 	cfg := config.GetConfig()
 
-	// 注册管理端路由(如果启用)
-	if cfg.Frontend.Admin.Enabled {
-		registerAdminRoutes(r)
-	}
-
 	// 注册用户端路由(如果启用)
 	if cfg.Frontend.Web.Enabled {
 		registerWebRoutes(r)
 	}
 
 	// 如果所有前端模块都禁用，且启用了备用页面，则注册备用路由
-	if !cfg.Frontend.Admin.Enabled && !cfg.Frontend.Web.Enabled && cfg.Frontend.Fallback.Enabled {
+	if !cfg.Frontend.Web.Enabled && cfg.Frontend.Fallback.Enabled {
 		registerFallbackRoutes(r, cfg.Frontend.Fallback.Message)
 	}
-}
-
-// registerAdminRoutes 注册管理端路由
-func registerAdminRoutes(r *gin.Engine) {
-	cfg := config.GetConfig()
-	adminFS := static.GetAdminDistFS()
-	prefix := cfg.Frontend.Admin.RoutePrefix
-
-	// 管理端所有路由（包括静态资源和SPA路由）
-	r.GET(prefix+"/*filepath", func(c *gin.Context) {
-		filePath := strings.TrimPrefix(c.Param("filepath"), "/")
-
-		// 如果是根路径或空路径，返回index.html
-		if filePath == "" || filePath == "/" {
-			serveIndexHTML(c, adminFS, "admin")
-			return
-		}
-
-		// 尝试打开文件
-		file, err := adminFS.Open(filePath)
-		if err != nil {
-			// 如果文件不存在，返回admin首页（SPA路由支持）
-			serveIndexHTML(c, adminFS, "admin")
-			return
-		}
-		defer file.Close()
-
-		content, err := io.ReadAll(file)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Failed to read file")
-			return
-		}
-
-		// 设置正确的Content-Type
-		contentType := getContentType(filePath)
-		c.Data(http.StatusOK, contentType, content)
-	})
 }
 
 // registerWebRoutes 注册用户端路由
@@ -114,14 +72,46 @@ func registerWebRoutes(r *gin.Engine) {
 		c.Data(http.StatusOK, contentType, content)
 	})
 
+	// 子应用静态文件路由
+	r.GET("/subapps/app/*filepath", func(c *gin.Context) {
+		filePath := strings.TrimPrefix(c.Param("filepath"), "/")
+
+		// 子应用根路径 → 返回子应用 index.html
+		if filePath == "" || filePath == "index.html" {
+			subAppFS, err := fs.Sub(webFS, "subapps/app")
+			if err != nil {
+				c.AbortWithStatus(http.StatusNotFound)
+				return
+			}
+			serveIndexHTML(c, subAppFS, "app")
+			return
+		}
+
+		assetPath := filepath.Join("subapps/app", filePath)
+		file, err := webFS.Open(assetPath)
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		defer file.Close()
+
+		content, err := io.ReadAll(file)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "Failed to read sub-app asset")
+			return
+		}
+
+		c.Data(http.StatusOK, getContentType(filePath), content)
+	})
+
 	// 用户端SPA路由 - 使用NoRoute作为最后的fallback
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path
 
-		// 如果是 API、debug 或 admin 路径，跳过
+		// 如果是 API、debug 或子应用路径，跳过
 		if strings.HasPrefix(path, "/api/") ||
 			strings.HasPrefix(path, "/debug/") ||
-			strings.HasPrefix(path, "/admin") {
+			strings.HasPrefix(path, "/subapps/") {
 			c.Next()
 			return
 		}

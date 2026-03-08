@@ -1,10 +1,14 @@
 package user
 
 import (
+	cryptoRand "crypto/rand"
+	stdErrors "errors"
 	"fmt"
-	"log"
-	"math/rand"
+	"math/big"
+	"strconv"
+	"strings"
 	"template/internal/models"
+	userRepo "template/internal/repositories/user"
 	"template/pkg/cache"
 	"template/pkg/common"
 	"template/pkg/database"
@@ -12,83 +16,246 @@ import (
 	"template/pkg/errors"
 	"template/pkg/utils"
 	"time"
+
+	"gorm.io/gorm"
 )
 
-var userService *UserService
+const (
+	codeTTL                   = 5 * time.Minute
+	codeSendCooldown          = 60 * time.Second
+	codeRateLimitWindow       = 10 * time.Minute
+	maxCodeSendsPerWindow     = 5
+	genericLoginFailedMessage = "账号或密码错误"
+)
+
+// Mailer 邮件发送抽象，便于注入和测试
+// Enabled 返回邮件服务是否可用
+// Send 负责发送邮件内容
+type Mailer interface {
+	Enabled() bool
+	Send(to, subject, body string) error
+}
+
+type emailMailer struct{}
+
+// NewEmailMailer 创建默认邮件发送器
+func NewEmailMailer() Mailer {
+	return &emailMailer{}
+}
+
+func (m *emailMailer) Enabled() bool {
+	return email.IsMailEnabled()
+}
+
+func (m *emailMailer) Send(to, subject, body string) error {
+	return email.SendMail(to, subject, body)
+}
+
+// Service 定义用户服务能力边界，便于controller注入
+type Service interface {
+	Login(account, password string) (map[string]interface{}, *common.TokenPair, error)
+	RefreshToken(refreshToken string) (*common.TokenPair, error)
+	Logout(accessToken string) error
+	FindUsers() ([]models.User, error)
+	FindUserByID(id string) (*models.User, error)
+	FindUserByEmail(email string) (*models.User, error)
+	SendRegistrationCode(email string) error
+	SendResetPasswordCode(email string) error
+	SendChangeEmailCode(userID, newEmail string) error
+	ValidateCode(email, code, codeType string) bool
+	RegisterUser(username, emailAddr, password, code string) error
+	ResetPassword(emailAddr, code, newPassword string) error
+	GetUserInfo(userID string) (map[string]interface{}, error)
+	UpdateProfile(userID, username, emailAddr, avatar, code string) (map[string]interface{}, error)
+	ChangePassword(userID, oldPassword, newPassword string) error
+}
 
 // UserService 用户服务
 type UserService struct {
-	// 存储服务需要的依赖或状态
+	repo       *userRepo.Repository
+	cacheStore cache.Cache
+	mailer     Mailer
 }
 
-// InitUserService 初始化用户服务
+var defaultService Service
+
+// NewService 创建用户服务实例（显式依赖注入）
+func NewService(db *gorm.DB, cacheStore cache.Cache, mailer Mailer) *UserService {
+	if cacheStore == nil {
+		cacheStore = cache.GetCache()
+	}
+	if mailer == nil {
+		mailer = NewEmailMailer()
+	}
+
+	var repo *userRepo.Repository
+	if db != nil {
+		repo = userRepo.NewRepository(db)
+	}
+
+	return &UserService{
+		repo:       repo,
+		cacheStore: cacheStore,
+		mailer:     mailer,
+	}
+}
+
+// InitUserService 初始化默认用户服务（兼容旧调用）
 func InitUserService() {
-	userService = &UserService{}
+	defaultService = NewService(database.GetDB(), cache.GetCache(), NewEmailMailer())
 }
 
-// GetUserService 获取用户服务实例
-func GetUserService() *UserService {
-	return userService
+// GetUserService 获取默认用户服务实例（兼容旧调用）
+func GetUserService() Service {
+	if defaultService == nil {
+		InitUserService()
+	}
+	return defaultService
+}
+
+func (s *UserService) getRepo() (*userRepo.Repository, error) {
+	if s.repo == nil {
+		return nil, errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
+	}
+	return s.repo, nil
+}
+
+type userAuthState struct {
+	UserID       string
+	Username     string
+	Role         int
+	Status       int
+	TokenVersion int
+}
+
+func (s *UserService) getUserAuthState(userID string) (*userAuthState, error) {
+	repo, err := s.getRepo()
+	if err != nil {
+		return nil, err
+	}
+
+	row, err := repo.FindAuthByID(userID)
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(errors.CodeUserNotFound, "用户不存在")
+		}
+		return nil, errors.New(errors.CodeQueryFailed, "数据库查询失败")
+	}
+
+	if row.Status != common.UserStatusNormal {
+		return nil, errors.New(errors.CodeUserDisabled, "账号已被禁用")
+	}
+
+	if row.TokenVersion <= 0 {
+		row.TokenVersion = 1
+		_, _ = repo.UpdateByID(row.ID.String(), map[string]interface{}{"token_version": 1})
+	}
+
+	return &userAuthState{
+		UserID:       row.ID.String(),
+		Username:     row.Username,
+		Role:         row.Role,
+		Status:       row.Status,
+		TokenVersion: row.TokenVersion,
+	}, nil
+}
+
+func normalizeEmail(emailAddr string) string {
+	return strings.ToLower(strings.TrimSpace(emailAddr))
+}
+
+func (s *UserService) codeCacheKey(emailAddr, codeType string) string {
+	return fmt.Sprintf("auth:code:%s:%s", codeType, normalizeEmail(emailAddr))
+}
+
+func (s *UserService) codeCooldownKey(emailAddr, codeType string) string {
+	return fmt.Sprintf("auth:code:cooldown:%s:%s", codeType, normalizeEmail(emailAddr))
+}
+
+func (s *UserService) codeRateKey(emailAddr, codeType string) string {
+	return fmt.Sprintf("auth:code:rate:%s:%s", codeType, normalizeEmail(emailAddr))
+}
+
+func (s *UserService) consumeSendCodeQuota(emailAddr, codeType string) error {
+	if s.cacheStore == nil {
+		return errors.New(errors.CodeRedisError, "缓存服务不可用")
+	}
+
+	cooldownKey := s.codeCooldownKey(emailAddr, codeType)
+	if s.cacheStore.Exists(cooldownKey) {
+		return errors.New(errors.CodeRateLimited, "请求过于频繁，请稍后再试")
+	}
+
+	rateKey := s.codeRateKey(emailAddr, codeType)
+	count := 0
+	if raw, err := s.cacheStore.Get(rateKey); err == nil {
+		if parsed, parseErr := strconv.Atoi(strings.TrimSpace(raw)); parseErr == nil && parsed > 0 {
+			count = parsed
+		}
+	}
+
+	if count >= maxCodeSendsPerWindow {
+		return errors.New(errors.CodeRateLimited, "请求过于频繁，请稍后再试")
+	}
+
+	if err := s.cacheStore.Set(rateKey, strconv.Itoa(count+1), codeRateLimitWindow); err != nil {
+		return errors.New(errors.CodeRedisError, "验证码频控异常，请稍后再试")
+	}
+	if err := s.cacheStore.Set(cooldownKey, "1", codeSendCooldown); err != nil {
+		return errors.New(errors.CodeRedisError, "验证码频控异常，请稍后再试")
+	}
+
+	return nil
+}
+
+func (s *UserService) generateVerificationCode(emailAddr, codeType string) (string, error) {
+	n, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return "", errors.New(errors.CodeInternal, "生成验证码失败")
+	}
+
+	code := fmt.Sprintf("%06d", n.Int64())
+	if err := s.cacheStore.Set(s.codeCacheKey(emailAddr, codeType), code, codeTTL); err != nil {
+		return "", errors.New(errors.CodeInternal, "存储验证码失败")
+	}
+
+	return code, nil
 }
 
 // Login 用户登录
-func Login(account, password string) (map[string]interface{}, string, time.Time, error) {
-	db := database.GetDB()
-	if db == nil {
-		return nil, "", time.Time{}, errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
-	}
-
-	// 使用原始SQL查询来避免UUID扫描问题
-	var userRow struct {
-		ID        string `db:"id"`
-		Username  string `db:"username"`
-		Password  string `db:"password"`
-		Email     string `db:"email"`
-		Avatar    string `db:"avatar"`
-		Bio       string `db:"bio"`
-		Status    int    `db:"status"`
-		Role      int    `db:"role"`
-		CreatedAt string `db:"created_at"`
-		UpdatedAt string `db:"updated_at"`
-	}
-
-	err := db.Raw("SELECT id, username, password, email, avatar, bio, status, role, created_at, updated_at FROM user WHERE username = ? OR email = ? LIMIT 1", account, account).Scan(&userRow).Error
+func (s *UserService) Login(account, password string) (map[string]interface{}, *common.TokenPair, error) {
+	repo, err := s.getRepo()
 	if err != nil {
-		return nil, "", time.Time{}, errors.New(errors.CodeQueryFailed, "数据库查询失败")
+		return nil, nil, err
 	}
 
-	if userRow.ID == "" {
-		return nil, "", time.Time{}, errors.New(errors.CodeUserNotFound, "用户不存在")
+	userRow, err := repo.FindByAccount(strings.TrimSpace(account))
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, errors.New(errors.CodeWrongPassword, genericLoginFailedMessage)
+		}
+		return nil, nil, errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	// 验证密码
 	if !utils.ComparePasswords(userRow.Password, password) {
-		return nil, "", time.Time{}, errors.New(errors.CodeWrongPassword, "密码错误")
+		return nil, nil, errors.New(errors.CodeWrongPassword, genericLoginFailedMessage)
 	}
-
-	// 检查用户状态
 	if userRow.Status != common.UserStatusNormal {
-		return nil, "", time.Time{}, errors.New(errors.CodeUserDisabled, "账号已被禁用")
+		return nil, nil, errors.New(errors.CodeWrongPassword, genericLoginFailedMessage)
 	}
 
-	// 解析UUID
-	userID, err := common.ParseUUID(userRow.ID)
+	if userRow.TokenVersion <= 0 {
+		userRow.TokenVersion = 1
+		_, _ = repo.UpdateByID(userRow.ID.String(), map[string]interface{}{"token_version": 1})
+	}
+
+	tokenPair, err := common.GenerateTokenPair(userRow.ID.String(), userRow.Username, userRow.Role, userRow.TokenVersion)
 	if err != nil {
-		return nil, "", time.Time{}, errors.New(errors.CodeInternal, "用户ID格式错误")
+		return nil, nil, errors.New(errors.CodeInternal, "生成token失败")
 	}
 
-	// 生成 JWT token
-	token, err := common.GenerateToken(userID, userRow.Username, userRow.Role)
-	if err != nil {
-		return nil, "", time.Time{}, errors.New(errors.CodeInternal, "生成token失败")
-	}
-
-	// 计算过期时间
-	expiresAt := time.Now().Add(time.Duration(24) * time.Hour) // 默认24小时
-
-	// 构造用户信息
 	userInfo := map[string]interface{}{
-		"id":       userRow.ID,
+		"id":       userRow.ID.String(),
 		"username": userRow.Username,
 		"email":    userRow.Email,
 		"avatar":   userRow.Avatar,
@@ -97,74 +264,116 @@ func Login(account, password string) (map[string]interface{}, string, time.Time,
 		"status":   userRow.Status,
 	}
 
-	return userInfo, token, expiresAt, nil
+	return userInfo, tokenPair, nil
+}
+
+// RefreshToken 使用刷新令牌换发新令牌
+func (s *UserService) RefreshToken(refreshToken string) (*common.TokenPair, error) {
+	claims, err := common.ParseTokenByType(refreshToken, common.TokenTypeRefresh)
+	if err != nil {
+		return nil, errors.New(errors.CodeInvalidAuthToken, "刷新令牌无效或已过期")
+	}
+
+	state, err := s.getUserAuthState(claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	if claims.TokenVersion != state.TokenVersion {
+		return nil, errors.New(errors.CodeInvalidAuthToken, "登录状态已失效，请重新登录")
+	}
+
+	tokenPair, err := common.GenerateTokenPair(state.UserID, state.Username, state.Role, state.TokenVersion)
+	if err != nil {
+		return nil, errors.New(errors.CodeInternal, "刷新令牌失败")
+	}
+
+	if err := common.BlacklistToken(claims.ID, claims.ExpiresAt.Time); err != nil {
+		return nil, errors.New(errors.CodeRedisError, "令牌状态更新失败")
+	}
+
+	return tokenPair, nil
+}
+
+// Logout 退出登录（提升token_version，使当前用户已有会话全部失效）
+func (s *UserService) Logout(accessToken string) error {
+	claims, err := common.ParseTokenByType(accessToken, common.TokenTypeAccess)
+	if err != nil {
+		return errors.New(errors.CodeInvalidAuthToken, "访问令牌无效或已过期")
+	}
+
+	repo, err := s.getRepo()
+	if err != nil {
+		return err
+	}
+
+	rows, err := repo.IncrementTokenVersionByID(claims.UserID, true)
+	if err != nil {
+		return errors.New(errors.CodeInternal, "退出登录失败")
+	}
+	if rows == 0 {
+		return errors.New(errors.CodeInvalidAuthToken, "登录状态已失效，请重新登录")
+	}
+
+	if err := common.BlacklistToken(claims.ID, claims.ExpiresAt.Time); err != nil {
+		return errors.New(errors.CodeRedisError, "退出登录失败")
+	}
+
+	return nil
 }
 
 // FindUsers 获取用户列表
-func FindUsers() ([]models.User, error) {
-	db := database.GetDB()
-	var users []models.User
-	result := db.Find(&users)
-	return users, result.Error
+func (s *UserService) FindUsers() ([]models.User, error) {
+	repo, err := s.getRepo()
+	if err != nil {
+		return nil, err
+	}
+
+	return repo.FindAll()
 }
 
 // FindUserByID 根据ID查找用户
-func FindUserByID(id string) (*models.User, error) {
-	db := database.GetDB()
-	var user models.User
-	result := db.First(&user, id)
-	if result.Error != nil {
-		return nil, result.Error
+func (s *UserService) FindUserByID(id string) (*models.User, error) {
+	repo, err := s.getRepo()
+	if err != nil {
+		return nil, err
 	}
-	return &user, nil
+
+	return repo.FindByID(id)
 }
 
 // FindUserByEmail 根据邮箱查找用户
-func FindUserByEmail(email string) (*models.User, error) {
-	db := database.GetDB()
-	var user models.User
-	result := db.Where("email = ?", email).First(&user)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &user, nil
-}
-
-// generateVerificationCode 生成验证码
-func generateVerificationCode(email string, codeType string) string {
-	// 设置随机数种子
-	rand.Seed(time.Now().UnixNano())
-
-	// 生成6位随机数
-	code := fmt.Sprintf("%06d", rand.Intn(1000000))
-
-	// 使用email和类型作为key，存储到缓存中，5分钟过期
-	key := fmt.Sprintf("%s:%s:code", email, codeType)
-	err := cache.GetCache().Set(key, code, 5*time.Minute)
+func (s *UserService) FindUserByEmail(emailAddr string) (*models.User, error) {
+	repo, err := s.getRepo()
 	if err != nil {
-		log.Printf("存储验证码到缓存失败: %v", err)
-		return ""
+		return nil, err
 	}
 
-	return code
+	return repo.FindByEmail(normalizeEmail(emailAddr))
 }
 
 // SendRegistrationCode 发送注册验证码
-func SendRegistrationCode(email string) error {
-	// 检查邮箱是否已被注册
-	_, err := FindUserByEmail(email)
+func (s *UserService) SendRegistrationCode(emailAddr string) error {
+	emailAddr = normalizeEmail(emailAddr)
+
+	if err := s.consumeSendCodeQuota(emailAddr, common.CodeTypeRegister); err != nil {
+		return err
+	}
+
+	_, err := s.FindUserByEmail(emailAddr)
 	if err == nil {
 		return errors.New(errors.CodeEmailExists, "该邮箱已被注册")
 	}
-
-	// 生成注册验证码
-	code := generateVerificationCode(email, common.CodeTypeRegister)
-	if code == "" {
-		return errors.New(errors.CodeInternal, "生成验证码失败")
+	if !stdErrors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	// 发送验证码邮件
-	if err := sendVerificationEmail(email, code, common.CodeTypeRegister); err != nil {
+	code, err := s.generateVerificationCode(emailAddr, common.CodeTypeRegister)
+	if err != nil {
+		return err
+	}
+
+	if err := s.sendVerificationEmail(emailAddr, code, common.CodeTypeRegister); err != nil {
 		return fmt.Errorf("发送验证码失败: %v", err)
 	}
 
@@ -172,21 +381,27 @@ func SendRegistrationCode(email string) error {
 }
 
 // SendResetPasswordCode 发送重置密码验证码
-func SendResetPasswordCode(email string) error {
-	// 检查邮箱是否存在
-	_, err := FindUserByEmail(email)
+func (s *UserService) SendResetPasswordCode(emailAddr string) error {
+	emailAddr = normalizeEmail(emailAddr)
+
+	if err := s.consumeSendCodeQuota(emailAddr, common.CodeTypeResetPassword); err != nil {
+		return err
+	}
+
+	_, err := s.FindUserByEmail(emailAddr)
 	if err != nil {
-		return errors.New(errors.CodeUserNotFound, "该邮箱尚未注册")
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errors.CodeUserNotFound, "该邮箱尚未注册")
+		}
+		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	// 生成重置密码验证码
-	code := generateVerificationCode(email, common.CodeTypeResetPassword)
-	if code == "" {
-		return errors.New(errors.CodeInternal, "生成验证码失败")
+	code, err := s.generateVerificationCode(emailAddr, common.CodeTypeResetPassword)
+	if err != nil {
+		return err
 	}
 
-	// 发送验证码邮件
-	if err := sendVerificationEmail(email, code, common.CodeTypeResetPassword); err != nil {
+	if err := s.sendVerificationEmail(emailAddr, code, common.CodeTypeResetPassword); err != nil {
 		return fmt.Errorf("发送验证码失败: %v", err)
 	}
 
@@ -194,21 +409,27 @@ func SendResetPasswordCode(email string) error {
 }
 
 // SendChangeEmailCode 发送修改邮箱验证码
-func SendChangeEmailCode(userID, newEmail string) error {
-	// 检查新邮箱是否已被其他用户使用
-	existingUser, err := FindUserByEmail(newEmail)
-	if err == nil && existingUser.ID.String() != userID {
+func (s *UserService) SendChangeEmailCode(userID, newEmail string) error {
+	newEmail = normalizeEmail(newEmail)
+
+	if err := s.consumeSendCodeQuota(newEmail, common.CodeTypeChangeEmail); err != nil {
+		return err
+	}
+
+	existingUser, err := s.FindUserByEmail(newEmail)
+	if err == nil && existingUser.ID.String() != strings.TrimSpace(userID) {
 		return errors.New(errors.CodeEmailExists, "该邮箱已被其他用户使用")
 	}
-
-	// 生成修改邮箱验证码
-	code := generateVerificationCode(newEmail, common.CodeTypeChangeEmail)
-	if code == "" {
-		return errors.New(errors.CodeInternal, "生成验证码失败")
+	if err != nil && !stdErrors.Is(err, gorm.ErrRecordNotFound) {
+		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	// 发送验证码邮件
-	if err := sendVerificationEmail(newEmail, code, common.CodeTypeChangeEmail); err != nil {
+	code, err := s.generateVerificationCode(newEmail, common.CodeTypeChangeEmail)
+	if err != nil {
+		return err
+	}
+
+	if err := s.sendVerificationEmail(newEmail, code, common.CodeTypeChangeEmail); err != nil {
 		return fmt.Errorf("发送验证码失败: %v", err)
 	}
 
@@ -216,113 +437,107 @@ func SendChangeEmailCode(userID, newEmail string) error {
 }
 
 // ValidateCode 验证验证码
-func ValidateCode(email, code, codeType string) bool {
-	key := fmt.Sprintf("%s:%s:code", email, codeType)
-	cachedCode, err := cache.GetCache().Get(key)
+func (s *UserService) ValidateCode(emailAddr, code, codeType string) bool {
+	key := s.codeCacheKey(normalizeEmail(emailAddr), codeType)
+	cachedCode, err := s.cacheStore.Get(key)
 	if err != nil {
-		log.Printf("获取验证码失败: %v", err)
 		return false
 	}
 
-	// 验证码匹配
-	if code == cachedCode {
-		// 验证成功后删除验证码
-		_ = cache.GetCache().Del(key)
+	if strings.TrimSpace(code) == cachedCode {
+		_ = s.cacheStore.Del(key)
 		return true
 	}
-
 	return false
 }
 
 // RegisterUser 注册用户
-func RegisterUser(username, email, password, code string) error {
-	db := database.GetDB()
+func (s *UserService) RegisterUser(username, emailAddr, password, code string) error {
+	repo, err := s.getRepo()
+	if err != nil {
+		return err
+	}
 
-	// 验证验证码
-	if !ValidateCode(email, code, common.CodeTypeRegister) {
+	emailAddr = normalizeEmail(emailAddr)
+
+	if !s.ValidateCode(emailAddr, code, common.CodeTypeRegister) {
 		return errors.New(errors.CodeInvalidVerifyCode, "验证码无效或已过期")
 	}
 
-	// 检查用户名是否已存在
-	var count int64
-	db.Model(&models.User{}).Where("username = ?", username).Count(&count)
-	if count > 0 {
+	usernameCount, err := repo.CountByUsername(username)
+	if err != nil {
+		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
+	}
+	if usernameCount > 0 {
 		return errors.New(errors.CodeUserExists, "用户名已存在")
 	}
 
-	// 检查邮箱是否已存在
-	db.Model(&models.User{}).Where("email = ?", email).Count(&count)
-	if count > 0 {
+	emailCount, err := repo.CountByEmail(emailAddr)
+	if err != nil {
+		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
+	}
+	if emailCount > 0 {
 		return errors.New(errors.CodeEmailExists, "邮箱已被注册")
 	}
 
-	// 创建用户
 	hashedPassword, err := utils.HashPassword(password)
 	if err != nil {
 		return errors.New(errors.CodeInternal, "密码加密失败")
 	}
 
 	user := models.User{
-		Username: username,
-		Email:    email,
-		Password: hashedPassword,
-		Status:   common.UserStatusNormal,
-		Role:     common.UserRoleUser,
+		Username:     strings.TrimSpace(username),
+		Email:        emailAddr,
+		Password:     hashedPassword,
+		Status:       common.UserStatusNormal,
+		Role:         common.UserRoleUser,
+		TokenVersion: 1,
 	}
-
-	if err := db.Create(&user).Error; err != nil {
+	if err := repo.Create(&user); err != nil {
 		return errors.New(errors.CodeInternal, "创建用户失败")
 	}
 
 	return nil
 }
 
-// sendVerificationEmail 发送验证码邮件
-func sendVerificationEmail(emailAddr string, code string, codeType string) error {
-	// 检查邮件服务是否可用
-	if !email.IsMailEnabled() {
+func (s *UserService) sendVerificationEmail(emailAddr, code, codeType string) error {
+	if !s.mailer.Enabled() {
 		return errors.New(errors.CodeEmailServiceError, "邮件服务不可用，请联系管理员")
 	}
 
-	var subject string
+	subject := "重置密码验证码"
 	if codeType == common.CodeTypeRegister {
 		subject = "注册验证码"
 	} else if codeType == common.CodeTypeChangeEmail {
 		subject = "修改邮箱验证码"
-	} else {
-		subject = "重置密码验证码"
 	}
 
-	// 发送验证码邮件
-	err := email.SendMail(emailAddr, subject, fmt.Sprintf("您的验证码是: %s，5分钟内有效。", code))
+	return s.mailer.Send(emailAddr, subject, fmt.Sprintf("您的验证码是: %s，5分钟内有效。", code))
+}
+
+// ResetPassword 重置密码
+func (s *UserService) ResetPassword(emailAddr, code, newPassword string) error {
+	repo, err := s.getRepo()
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	emailAddr = normalizeEmail(emailAddr)
 
-// ResetPassword 重置密码
-func ResetPassword(email, code, newPassword string) error {
-	db := database.GetDB()
-
-	// 验证验证码
-	if !ValidateCode(email, code, common.CodeTypeResetPassword) {
+	if !s.ValidateCode(emailAddr, code, common.CodeTypeResetPassword) {
 		return errors.New(errors.CodeInvalidVerifyCode, "验证码无效或已过期")
 	}
 
-	// 更新密码
 	hashedPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
 		return errors.New(errors.CodeInternal, "密码加密失败")
 	}
 
-	result := db.Model(&models.User{}).Where("email = ?", email).Update("password", hashedPassword)
-	if result.Error != nil {
+	rows, err := repo.UpdatePasswordByEmail(emailAddr, hashedPassword)
+	if err != nil {
 		return errors.New(errors.CodeInternal, "更新密码失败")
 	}
-
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		return errors.New(errors.CodeUserNotFound, "未找到用户")
 	}
 
@@ -330,37 +545,22 @@ func ResetPassword(email, code, newPassword string) error {
 }
 
 // GetUserInfo 获取用户信息
-func GetUserInfo(userID string) (map[string]interface{}, error) {
-	db := database.GetDB()
-	if db == nil {
-		return nil, errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
-	}
-
-	// 使用原始SQL查询来避免UUID扫描问题
-	var userRow struct {
-		ID        string `db:"id"`
-		Username  string `db:"username"`
-		Email     string `db:"email"`
-		Avatar    string `db:"avatar"`
-		Bio       string `db:"bio"`
-		Status    int    `db:"status"`
-		Role      int    `db:"role"`
-		CreatedAt string `db:"created_at"`
-		UpdatedAt string `db:"updated_at"`
-	}
-
-	err := db.Raw("SELECT id, username, email, avatar, bio, status, role, created_at, updated_at FROM user WHERE id = ? LIMIT 1", userID).Scan(&userRow).Error
+func (s *UserService) GetUserInfo(userID string) (map[string]interface{}, error) {
+	repo, err := s.getRepo()
 	if err != nil {
+		return nil, err
+	}
+
+	userRow, err := repo.FindPublicByID(userID)
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New(errors.CodeUserNotFound, "用户不存在")
+		}
 		return nil, errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	if userRow.ID == "" {
-		return nil, errors.New(errors.CodeUserNotFound, "用户不存在")
-	}
-
-	// 构造用户信息
 	userInfo := map[string]interface{}{
-		"id":         userRow.ID,
+		"id":         userRow.ID.String(),
 		"username":   userRow.Username,
 		"email":      userRow.Email,
 		"avatar":     userRow.Avatar,
@@ -375,103 +575,154 @@ func GetUserInfo(userID string) (map[string]interface{}, error) {
 }
 
 // UpdateProfile 更新用户资料
-func UpdateProfile(userID, username, email, avatar, code string) (map[string]interface{}, error) {
-	db := database.GetDB()
-	if db == nil {
-		return nil, errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
+func (s *UserService) UpdateProfile(userID, username, emailAddr, avatar, code string) (map[string]interface{}, error) {
+	repo, err := s.getRepo()
+	if err != nil {
+		return nil, err
 	}
 
-	// 构建更新数据
 	updateData := make(map[string]interface{})
-	if username != "" {
-		// 检查用户名是否已被其他用户使用
-		var count int64
-		db.Model(&models.User{}).Where("username = ? AND id != ?", username, userID).Count(&count)
+	if strings.TrimSpace(username) != "" {
+		count, countErr := repo.CountByUsernameExcludeID(username, userID)
+		if countErr != nil {
+			return nil, errors.New(errors.CodeQueryFailed, "数据库查询失败")
+		}
 		if count > 0 {
 			return nil, errors.New(errors.CodeUserExists, "用户名已被使用")
 		}
-		updateData["username"] = username
+		updateData["username"] = strings.TrimSpace(username)
 	}
-	if email != "" {
-		// 如果修改邮箱，需要验证验证码
-		if code != "" {
-			// 验证验证码
-			if !ValidateCode(email, code, common.CodeTypeChangeEmail) {
-				return nil, errors.New(errors.CodeInvalidVerifyCode, "验证码无效或已过期")
-			}
+
+	if strings.TrimSpace(emailAddr) != "" {
+		normalizedEmail := normalizeEmail(emailAddr)
+		if strings.TrimSpace(code) == "" {
+			return nil, errors.New(errors.CodeInvalidParameter, "修改邮箱必须提供验证码")
+		}
+		if !s.ValidateCode(normalizedEmail, code, common.CodeTypeChangeEmail) {
+			return nil, errors.New(errors.CodeInvalidVerifyCode, "验证码无效或已过期")
 		}
 
-		// 检查邮箱是否已被其他用户使用
-		var count int64
-		db.Model(&models.User{}).Where("email = ? AND id != ?", email, userID).Count(&count)
+		count, countErr := repo.CountByEmailExcludeID(normalizedEmail, userID)
+		if countErr != nil {
+			return nil, errors.New(errors.CodeQueryFailed, "数据库查询失败")
+		}
 		if count > 0 {
 			return nil, errors.New(errors.CodeEmailExists, "邮箱已被使用")
 		}
-		updateData["email"] = email
-	}
-	if avatar != "" {
-		updateData["avatar"] = avatar
+		updateData["email"] = normalizedEmail
 	}
 
+	if strings.TrimSpace(avatar) != "" {
+		updateData["avatar"] = strings.TrimSpace(avatar)
+	}
 	if len(updateData) == 0 {
 		return nil, errors.New(errors.CodeInvalidParameter, "没有需要更新的数据")
 	}
 
-	// 更新用户信息
-	result := db.Model(&models.User{}).Where("id = ?", userID).Updates(updateData)
-	if result.Error != nil {
+	rows, err := repo.UpdateByID(userID, updateData)
+	if err != nil {
 		return nil, errors.New(errors.CodeInternal, "更新用户信息失败")
 	}
-
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		return nil, errors.New(errors.CodeUserNotFound, "用户不存在")
 	}
 
-	// 返回更新后的用户信息
-	return GetUserInfo(userID)
+	return s.GetUserInfo(userID)
 }
 
 // ChangePassword 修改密码
-func ChangePassword(userID, oldPassword, newPassword string) error {
-	db := database.GetDB()
-	if db == nil {
-		return errors.New(errors.CodeDBConnectionFailed, "数据库连接失败")
-	}
-
-	// 获取用户当前密码
-	var userRow struct {
-		Password string `db:"password"`
-	}
-
-	err := db.Raw("SELECT password FROM user WHERE id = ? LIMIT 1", userID).Scan(&userRow).Error
+func (s *UserService) ChangePassword(userID, oldPassword, newPassword string) error {
+	repo, err := s.getRepo()
 	if err != nil {
+		return err
+	}
+
+	userRow, err := repo.FindPasswordByID(userID)
+	if err != nil {
+		if stdErrors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New(errors.CodeUserNotFound, "用户不存在")
+		}
 		return errors.New(errors.CodeQueryFailed, "数据库查询失败")
 	}
 
-	if userRow.Password == "" {
-		return errors.New(errors.CodeUserNotFound, "用户不存在")
-	}
-
-	// 验证原密码
 	if !utils.ComparePasswords(userRow.Password, oldPassword) {
 		return errors.New(errors.CodeWrongPassword, "原密码错误")
 	}
 
-	// 加密新密码
 	hashedPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
 		return errors.New(errors.CodeInternal, "密码加密失败")
 	}
 
-	// 更新密码
-	result := db.Model(&models.User{}).Where("id = ?", userID).Update("password", hashedPassword)
-	if result.Error != nil {
+	rows, err := repo.UpdatePasswordByID(userID, hashedPassword)
+	if err != nil {
 		return errors.New(errors.CodeInternal, "更新密码失败")
 	}
-
-	if result.RowsAffected == 0 {
+	if rows == 0 {
 		return errors.New(errors.CodeUserNotFound, "用户不存在")
 	}
 
 	return nil
+}
+
+// -------------------- 兼容旧调用 --------------------
+
+func Login(account, password string) (map[string]interface{}, *common.TokenPair, error) {
+	return GetUserService().Login(account, password)
+}
+
+func RefreshToken(refreshToken string) (*common.TokenPair, error) {
+	return GetUserService().RefreshToken(refreshToken)
+}
+
+func Logout(accessToken string) error {
+	return GetUserService().Logout(accessToken)
+}
+
+func FindUsers() ([]models.User, error) {
+	return GetUserService().FindUsers()
+}
+
+func FindUserByID(id string) (*models.User, error) {
+	return GetUserService().FindUserByID(id)
+}
+
+func FindUserByEmail(emailAddr string) (*models.User, error) {
+	return GetUserService().FindUserByEmail(emailAddr)
+}
+
+func SendRegistrationCode(emailAddr string) error {
+	return GetUserService().SendRegistrationCode(emailAddr)
+}
+
+func SendResetPasswordCode(emailAddr string) error {
+	return GetUserService().SendResetPasswordCode(emailAddr)
+}
+
+func SendChangeEmailCode(userID, newEmail string) error {
+	return GetUserService().SendChangeEmailCode(userID, newEmail)
+}
+
+func ValidateCode(emailAddr, code, codeType string) bool {
+	return GetUserService().ValidateCode(emailAddr, code, codeType)
+}
+
+func RegisterUser(username, emailAddr, password, code string) error {
+	return GetUserService().RegisterUser(username, emailAddr, password, code)
+}
+
+func ResetPassword(emailAddr, code, newPassword string) error {
+	return GetUserService().ResetPassword(emailAddr, code, newPassword)
+}
+
+func GetUserInfo(userID string) (map[string]interface{}, error) {
+	return GetUserService().GetUserInfo(userID)
+}
+
+func UpdateProfile(userID, username, emailAddr, avatar, code string) (map[string]interface{}, error) {
+	return GetUserService().UpdateProfile(userID, username, emailAddr, avatar, code)
+}
+
+func ChangePassword(userID, oldPassword, newPassword string) error {
+	return GetUserService().ChangePassword(userID, oldPassword, newPassword)
 }

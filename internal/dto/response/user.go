@@ -8,9 +8,19 @@ import (
 
 // LoginResponse 登录响应
 type LoginResponse struct {
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-	User      UserInfo  `json:"user"`
+	Token            string    `json:"token"`
+	ExpiresAt        time.Time `json:"expires_at"`
+	RefreshToken     string    `json:"refresh_token"`
+	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
+	User             UserInfo  `json:"user"`
+}
+
+// RefreshTokenResponse 刷新令牌响应
+type RefreshTokenResponse struct {
+	Token            string    `json:"token"`
+	ExpiresAt        time.Time `json:"expires_at"`
+	RefreshToken     string    `json:"refresh_token"`
+	RefreshExpiresAt time.Time `json:"refresh_expires_at"`
 }
 
 // UserInfo 用户信息

@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(go build:*)",
+      "Bash(pnpm install:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter @app/web add:*)",
+      "Bash(pnpm --filter @app/app type-check:*)",
+      "Bash(tree:*)",
+      "Bash(pnpm -r type-check:*)",
+      "Bash(pnpm --filter @app/app build:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm --filter @app/main type-check:*)",
+      "Bash(node scripts/create-app.mjs:*)",
+      "Bash(pnpm --filter @app/test type-check:*)",
+      "Bash(pnpm --filter @app/test build:*)",
+      "Bash(grep:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(pnpm --filter @app/shared type-check:*)",
+      "Bash(pnpm --filter @app/theme-editor type-check:*)"
+    ]
+  }
+}

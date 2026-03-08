@@ -3,315 +3,332 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"runtime"
+	"template/internal/app"
+	"template/internal/middleware"
+	"template/internal/models"
 	"template/internal/routes"
+	"template/pkg/common"
 	"template/pkg/config"
 	"template/pkg/database"
+	apiErrors "template/pkg/errors"
 	"template/pkg/logger"
+	"template/pkg/utils"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
-// APITestSuite API集成测试套件
-type APITestSuite struct {
-	suite.Suite
-	router *gin.Engine
-	token  string
+var (
+	testRouter   *gin.Engine
+	testAccount  string
+	testEmail    string
+	testPassword = "integration_test_password_123"
+)
+
+type apiResponse struct {
+	Code int             `json:"code"`
+	Data json.RawMessage `json:"data"`
 }
 
-// SetupSuite 测试套件初始化
-func (suite *APITestSuite) SetupSuite() {
-	// 设置测试模式
+type loginData struct {
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+	User         struct {
+		Username string `json:"username"`
+	} `json:"user"`
+}
+
+func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
+	setProjectRoot()
 
-	// 初始化配置
-	config.Init("../../config.yaml")
-
-	// 初始化日志
 	logger.Init()
+	config.InitConfig()
+	database.InitDB()
 
-	// 初始化数据库
-	database.Init()
+	if err := seedIntegrationUser(); err != nil {
+		panic(fmt.Sprintf("seed integration user failed: %v", err))
+	}
 
-	// 初始化路由
-	suite.router = routes.SetupRoutes()
+	testRouter = buildTestRouter()
+
+	code := m.Run()
+
+	cleanupIntegrationUser()
+	_ = database.Close()
+	os.Exit(code)
 }
 
-// TearDownSuite 测试套件清理
-func (suite *APITestSuite) TearDownSuite() {
-	// 清理测试数据
+func setProjectRoot() {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		return
+	}
+
+	root := filepath.Clean(filepath.Join(filepath.Dir(file), "../.."))
+	_ = os.Chdir(root)
+}
+
+func buildTestRouter() *gin.Engine {
+	r := gin.New()
+	r.Use(gin.Recovery())
+	r.Use(apiErrors.ErrorHandler())
+	r.Use(middleware.CORSMiddleware())
+	routes.RegisterRoutes(r, app.NewDependencies())
+	return r
+}
+
+func seedIntegrationUser() error {
+	now := time.Now().UnixNano()
+	testAccount = fmt.Sprintf("itest_%d", now)
+	testEmail = fmt.Sprintf("%s@example.com", testAccount)
+
+	hashedPassword, err := utils.HashPassword(testPassword)
+	if err != nil {
+		return err
+	}
+
 	db := database.GetDB()
-	if db != nil {
-		// 这里可以添加清理逻辑
-		// db.Exec("DELETE FROM users WHERE email LIKE '%test%'")
-	}
+	return db.Create(&models.User{
+		Username: testAccount,
+		Email:    testEmail,
+		Password: hashedPassword,
+		Status:   common.UserStatusNormal,
+		Role:     common.UserRoleUser,
+	}).Error
 }
 
-// TestHealthCheck 测试健康检查
-func (suite *APITestSuite) TestHealthCheck() {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/health", nil)
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
+func cleanupIntegrationUser() {
+	db := database.GetDB()
+	if db == nil {
+		return
+	}
+	_ = db.Where("username = ?", testAccount).Delete(&models.User{}).Error
 }
 
-// TestAPIHealthCheck 测试API健康检查
-func (suite *APITestSuite) TestAPIHealthCheck() {
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/health", nil)
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
-}
-
-// TestUserRegistration 测试用户注册
-func (suite *APITestSuite) TestUserRegistration() {
-	// 先发送验证码
-	verifyData := map[string]string{
-		"email": "test@example.com",
-	}
-	verifyBody, _ := json.Marshal(verifyData)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/user/send-registration-code", bytes.NewBuffer(verifyBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	// 注册用户
-	registerData := map[string]string{
-		"username":          "testuser",
-		"password":          "password123",
-		"email":             "test@example.com",
-		"verification_code": "123456", // 测试环境使用固定验证码
-	}
-	registerBody, _ := json.Marshal(registerData)
-
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/api/v1/user/register", bytes.NewBuffer(registerBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
-}
-
-// TestUserLogin 测试用户登录
-func (suite *APITestSuite) TestUserLogin() {
-	loginData := map[string]string{
-		"username": "testuser",
-		"password": "password123",
-	}
-	loginBody, _ := json.Marshal(loginData)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/user/login", bytes.NewBuffer(loginBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
-
-	// 保存token用于后续测试
-	if data, ok := response["data"].(map[string]interface{}); ok {
-		if token, ok := data["token"].(string); ok {
-			suite.token = token
-		}
-	}
-}
-
-// TestGetUserProfile 测试获取用户信息
-func (suite *APITestSuite) TestGetUserProfile() {
-	if suite.token == "" {
-		suite.T().Skip("需要先登录获取token")
-	}
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/api/v1/user/profile", nil)
-	req.Header.Set("Authorization", "Bearer "+suite.token)
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
-
-	// 验证返回的用户信息
-	if data, ok := response["data"].(map[string]interface{}); ok {
-		assert.Equal(suite.T(), "testuser", data["username"])
-		assert.Equal(suite.T(), "test@example.com", data["email"])
-	}
-}
-
-// TestUpdateUserProfile 测试更新用户信息
-func (suite *APITestSuite) TestUpdateUserProfile() {
-	if suite.token == "" {
-		suite.T().Skip("需要先登录获取token")
-	}
-
-	updateData := map[string]string{
-		"username": "updated_testuser",
-	}
-	updateBody, _ := json.Marshal(updateData)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("PUT", "/api/v1/user/profile", bytes.NewBuffer(updateBody))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+suite.token)
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
-	assert.Equal(suite.T(), 200, int(response["code"].(float64)))
-}
-
-// TestInvalidRequests 测试无效请求
-func (suite *APITestSuite) TestInvalidRequests() {
-	// 测试无效的登录请求
-	invalidLoginData := map[string]string{
-		"username": "invalid",
-		"password": "invalid",
-	}
-	invalidLoginBody, _ := json.Marshal(invalidLoginData)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/user/login", bytes.NewBuffer(invalidLoginBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 400, w.Code)
-
-	// 测试未授权的请求
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/api/v1/user/profile", nil)
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 401, w.Code)
-
-	// 测试无效Token
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("GET", "/api/v1/user/profile", nil)
-	req.Header.Set("Authorization", "Bearer invalid_token")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 401, w.Code)
-}
-
-// TestPasswordReset 测试密码重置
-func (suite *APITestSuite) TestPasswordReset() {
-	// 发送重置密码验证码
-	resetCodeData := map[string]string{
-		"email": "test@example.com",
-	}
-	resetCodeBody, _ := json.Marshal(resetCodeData)
-
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("POST", "/api/v1/user/send-reset-password-code", bytes.NewBuffer(resetCodeBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	// 重置密码
-	resetData := map[string]string{
-		"email":             "test@example.com",
-		"verification_code": "123456",
-		"new_password":      "newpassword123",
-	}
-	resetBody, _ := json.Marshal(resetData)
-
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/api/v1/user/reset-password", bytes.NewBuffer(resetBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-
-	// 使用新密码登录
-	newLoginData := map[string]string{
-		"username": "updated_testuser",
-		"password": "newpassword123",
-	}
-	newLoginBody, _ := json.Marshal(newLoginData)
-
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/api/v1/user/login", bytes.NewBuffer(newLoginBody))
-	req.Header.Set("Content-Type", "application/json")
-	suite.router.ServeHTTP(w, req)
-
-	assert.Equal(suite.T(), 200, w.Code)
-}
-
-// makeRequest 辅助函数：发送HTTP请求
-func (suite *APITestSuite) makeRequest(method, url string, body []byte, headers map[string]string) *httptest.ResponseRecorder {
-	w := httptest.NewRecorder()
-	var req *http.Request
-
-	if body != nil {
-		req, _ = http.NewRequest(method, url, bytes.NewBuffer(body))
+func performJSONRequest(method, path string, payload interface{}, headers map[string]string) *httptest.ResponseRecorder {
+	var body *bytes.Reader
+	if payload == nil {
+		body = bytes.NewReader(nil)
 	} else {
-		req, _ = http.NewRequest(method, url, nil)
+		encoded, _ := json.Marshal(payload)
+		body = bytes.NewReader(encoded)
 	}
 
-	// 设置默认Content-Type
-	if body != nil {
+	rec := httptest.NewRecorder()
+	req, _ := http.NewRequest(method, path, body)
+	if payload != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-
-	// 设置自定义headers
-	for key, value := range headers {
-		req.Header.Set(key, value)
+	for k, v := range headers {
+		req.Header.Set(k, v)
 	}
 
-	suite.router.ServeHTTP(w, req)
-	return w
+	testRouter.ServeHTTP(rec, req)
+	return rec
 }
 
-// assertResponse 辅助函数：验证响应
-func (suite *APITestSuite) assertResponse(w *httptest.ResponseRecorder, expectedCode int, expectedAPICode int) map[string]interface{} {
-	assert.Equal(suite.T(), expectedCode, w.Code)
+func mustLoginToken(t *testing.T) string {
+	t.Helper()
 
-	var response map[string]interface{}
-	err := json.Unmarshal(w.Body.Bytes(), &response)
-	assert.NoError(suite.T(), err)
+	data := mustLoginData(t)
+	return data.Token
+}
 
-	if expectedAPICode > 0 {
-		assert.Equal(suite.T(), expectedAPICode, int(response["code"].(float64)))
+func mustLoginData(t *testing.T) loginData {
+	t.Helper()
+
+	rec := performJSONRequest(http.MethodPost, "/api/v1/user/login", map[string]string{
+		"account":  testAccount,
+		"password": testPassword,
+	}, nil)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("login status = %d, body = %s", rec.Code, rec.Body.String())
 	}
 
-	return response
+	var resp apiResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal login response failed: %v", err)
+	}
+	if resp.Code != 200 {
+		t.Fatalf("login business code = %d, body = %s", resp.Code, rec.Body.String())
+	}
+
+	var data loginData
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		t.Fatalf("unmarshal login data failed: %v", err)
+	}
+	if data.Token == "" {
+		t.Fatalf("empty token in login response: %s", rec.Body.String())
+	}
+	if data.RefreshToken == "" {
+		t.Fatalf("empty refresh token in login response: %s", rec.Body.String())
+	}
+
+	return data
 }
 
-// TestAPISuite 运行API测试套件
-func TestAPISuite(t *testing.T) {
-	suite.Run(t, new(APITestSuite))
+func TestLogin(t *testing.T) {
+	rec := performJSONRequest(http.MethodPost, "/api/v1/user/login", map[string]string{
+		"account":  testAccount,
+		"password": testPassword,
+	}, nil)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var resp apiResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response failed: %v", err)
+	}
+	if resp.Code != 200 {
+		t.Fatalf("business code = %d, body = %s", resp.Code, rec.Body.String())
+	}
+
+	var data loginData
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		t.Fatalf("unmarshal data failed: %v", err)
+	}
+	if data.User.Username != testAccount {
+		t.Fatalf("username mismatch, got %q, want %q", data.User.Username, testAccount)
+	}
+}
+
+func TestGetUserInfoUnauthorized(t *testing.T) {
+	rec := performJSONRequest(http.MethodGet, "/api/v1/user/info", nil, nil)
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestGetUserInfoAuthorized(t *testing.T) {
+	token := mustLoginToken(t)
+
+	rec := performJSONRequest(http.MethodGet, "/api/v1/user/info", nil, map[string]string{
+		"Authorization": "Bearer " + token,
+	})
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var raw map[string]interface{}
+	if err := json.Unmarshal(rec.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("unmarshal response failed: %v", err)
+	}
+
+	if int(raw["code"].(float64)) != 200 {
+		t.Fatalf("business code = %v, body = %s", raw["code"], rec.Body.String())
+	}
+
+	data, ok := raw["data"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("invalid data payload: %s", rec.Body.String())
+	}
+
+	if data["username"] != testAccount {
+		t.Fatalf("username mismatch, got %v, want %s", data["username"], testAccount)
+	}
+}
+
+func TestRefreshToken(t *testing.T) {
+	login := mustLoginData(t)
+
+	rec := performJSONRequest(http.MethodPost, "/api/v1/user/refresh-token", map[string]string{
+		"refreshToken": login.RefreshToken,
+	}, nil)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+
+	var resp apiResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response failed: %v", err)
+	}
+	if resp.Code != 200 {
+		t.Fatalf("business code = %d, body = %s", resp.Code, rec.Body.String())
+	}
+
+	var data struct {
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := json.Unmarshal(resp.Data, &data); err != nil {
+		t.Fatalf("unmarshal data failed: %v", err)
+	}
+	if data.Token == "" || data.RefreshToken == "" {
+		t.Fatalf("invalid token pair response: %s", rec.Body.String())
+	}
+}
+
+func TestLogoutRevokesAccessToken(t *testing.T) {
+	login := mustLoginData(t)
+
+	logoutRec := performJSONRequest(http.MethodPost, "/api/v1/user/logout", nil, map[string]string{
+		"Authorization": "Bearer " + login.Token,
+	})
+
+	if logoutRec.Code != http.StatusOK {
+		t.Fatalf("logout status = %d, body = %s", logoutRec.Code, logoutRec.Body.String())
+	}
+
+	infoRec := performJSONRequest(http.MethodGet, "/api/v1/user/info", nil, map[string]string{
+		"Authorization": "Bearer " + login.Token,
+	})
+
+	if infoRec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, body = %s", infoRec.Code, infoRec.Body.String())
+	}
+
+	// logout 后 refresh token 也应失效（由 token_version 控制）
+	refreshRec := performJSONRequest(http.MethodPost, "/api/v1/user/refresh-token", map[string]string{
+		"refreshToken": login.RefreshToken,
+	}, nil)
+
+	if refreshRec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, body = %s", refreshRec.Code, refreshRec.Body.String())
+	}
+}
+
+func TestUpdateProfileRequiresEmailCode(t *testing.T) {
+	token := mustLoginToken(t)
+	newEmail := fmt.Sprintf("new_%d@example.com", time.Now().UnixNano())
+
+	rec := performJSONRequest(http.MethodPut, "/api/v1/user/profile", map[string]string{
+		"email": newEmail,
+	}, map[string]string{
+		"Authorization": "Bearer " + token,
+	})
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestSendRegistrationCodeRateLimitedByCooldown(t *testing.T) {
+	emailAddr := fmt.Sprintf("rate_%d@example.com", time.Now().UnixNano())
+
+	first := performJSONRequest(http.MethodPost, "/api/v1/user/send-registration-code", map[string]string{
+		"email": emailAddr,
+	}, nil)
+	if first.Code == http.StatusTooManyRequests {
+		t.Fatalf("first request should not be rate limited, body = %s", first.Body.String())
+	}
+
+	second := performJSONRequest(http.MethodPost, "/api/v1/user/send-registration-code", map[string]string{
+		"email": emailAddr,
+	}, nil)
+	if second.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, body = %s", second.Code, second.Body.String())
+	}
 }

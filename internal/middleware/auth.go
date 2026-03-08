@@ -3,15 +3,93 @@ package middleware
 import (
 	"errors"
 	"strings"
+	"template/internal/models"
 	"template/pkg/common"
+	"template/pkg/database"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // 定义上下文中用户信息的键
 const (
 	ContextPayloadKey = "payload"
 )
+
+var (
+	errMissingAuthHeader = errors.New("missing authorization header")
+	errInvalidAuthHeader = errors.New("invalid authorization header")
+	errInvalidAuthToken  = errors.New("invalid authorization token")
+)
+
+// ExtractBearerToken 从请求头提取Bearer Token
+func ExtractBearerToken(c *gin.Context) (string, error) {
+	authHeader := strings.TrimSpace(c.GetHeader("Authorization"))
+	if authHeader == "" {
+		return "", errMissingAuthHeader
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return "", errInvalidAuthHeader
+	}
+
+	token := strings.TrimSpace(parts[1])
+	if token == "" {
+		return "", errInvalidAuthHeader
+	}
+
+	return token, nil
+}
+
+// parseClaimsFromRequest 解析并校验请求中的 Bearer Token
+func parseClaimsFromRequest(c *gin.Context) (*common.JWTClaims, error) {
+	token, err := ExtractBearerToken(c)
+	if err != nil {
+		return nil, err
+	}
+
+	claims, err := common.ParseTokenByType(token, common.TokenTypeAccess)
+	if err != nil {
+		return nil, errInvalidAuthToken
+	}
+
+	if err := validateClaimsWithUserState(claims); err != nil {
+		return nil, errInvalidAuthToken
+	}
+
+	return claims, nil
+}
+
+func validateClaimsWithUserState(claims *common.JWTClaims) error {
+	db := database.GetDB()
+	if db == nil {
+		return errInvalidAuthToken
+	}
+
+	var user models.User
+	if err := db.Select("id", "status", "token_version").Where("id = ?", claims.UserID).Take(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errInvalidAuthToken
+		}
+		return errInvalidAuthToken
+	}
+
+	expectedTokenVersion := user.TokenVersion
+	if expectedTokenVersion <= 0 {
+		expectedTokenVersion = 1
+	}
+
+	if user.Status != common.UserStatusNormal {
+		return errInvalidAuthToken
+	}
+
+	if claims.TokenVersion != expectedTokenVersion {
+		return errInvalidAuthToken
+	}
+
+	return nil
+}
 
 // GetUserFromContext 从上下文中获取用户信息
 func GetUserFromContext(c *gin.Context) (*common.JWTClaims, error) {
@@ -29,25 +107,13 @@ func GetUserFromContext(c *gin.Context) (*common.JWTClaims, error) {
 // RequireAuth 基础认证中间件，验证用户是否登录
 func RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从请求头获取token
-		token := c.GetHeader("Authorization")
-		// 如果请求头中不存在，则从查询参数获取
-		if token == "" {
-			token = c.Query("token")
-		}
-
-		// 去掉可能存在的Bearer前缀
-		token = strings.TrimPrefix(token, "Bearer ")
-
-		if token == "" {
-			common.Unauthorized(c, "未提供有效的认证凭证")
-			c.Abort()
-			return
-		}
-
-		// 验证JWT令牌
-		claims, err := common.ParseToken(token)
+		claims, err := parseClaimsFromRequest(c)
 		if err != nil {
+			if errors.Is(err, errMissingAuthHeader) {
+				common.Unauthorized(c, "未提供有效的认证凭证")
+				c.Abort()
+				return
+			}
 			common.Unauthorized(c, "认证凭证无效或已过期")
 			c.Abort()
 			return
@@ -57,6 +123,7 @@ func RequireAuth() gin.HandlerFunc {
 		c.Set(ContextPayloadKey, claims)
 		// 同时设置user_id便于控制器直接获取
 		c.Set("user_id", claims.UserID)
+		c.Set("token_id", claims.ID)
 		c.Next()
 	}
 }

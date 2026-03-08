@@ -110,3 +110,16 @@ func (r *ChangePasswordRequest) GetValidationMessages() map[string]string {
 		"NewPassword.max":      "密码长度不能大于20位",
 	}
 }
+
+// RefreshTokenRequest 刷新令牌请求
+type RefreshTokenRequest struct {
+	dto.BaseRequest
+	RefreshToken string `json:"refreshToken" binding:"required"`
+}
+
+// GetValidationMessages 获取验证消息
+func (r *RefreshTokenRequest) GetValidationMessages() map[string]string {
+	return map[string]string{
+		"RefreshToken.required": "refresh token不能为空",
+	}
+}

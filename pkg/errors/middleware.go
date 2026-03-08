@@ -90,9 +90,8 @@ func responseError(c *gin.Context, err error) {
 	}
 
 	// 获取请求ID
-	requestID, exists := c.Get("RequestID")
-	if exists {
-		apiErr.RequestID = requestID.(string)
+	if requestID := getRequestID(c); requestID != "" {
+		apiErr.RequestID = requestID
 	}
 
 	// 构建安全的响应
@@ -108,12 +107,11 @@ func responseError(c *gin.Context, err error) {
 
 // ResponseSuccess 成功响应
 func ResponseSuccess(c *gin.Context, data interface{}, message string) {
-	requestID, _ := c.Get("RequestID")
 	response := Response{
 		Code:      200,
 		Message:   message,
 		Data:      data,
-		RequestID: requestID.(string),
+		RequestID: getRequestID(c),
 		Timestamp: time.Now().Unix(),
 	}
 	c.JSON(http.StatusOK, response)
@@ -125,4 +123,22 @@ func HandleError(c *gin.Context, err error) {
 		return
 	}
 	responseError(c, err)
+}
+
+func getRequestID(c *gin.Context) string {
+	if c == nil {
+		return ""
+	}
+
+	value, exists := c.Get("RequestID")
+	if !exists {
+		return ""
+	}
+
+	requestID, ok := value.(string)
+	if !ok {
+		return ""
+	}
+
+	return requestID
 }

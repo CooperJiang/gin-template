@@ -1,0 +1,28 @@
+{
+  "name": "@app/auth",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./pages/*": "./src/pages/*"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@app/shared": "workspace:*",
+    "@app/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-router-dom": ">=6"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "~5.8.0"
+  }
+}
