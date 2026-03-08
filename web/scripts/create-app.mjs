@@ -10,21 +10,22 @@
  *   node scripts/create-app.mjs admin --port 3002 --title "管理后台"
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, cpSync } from 'node:fs'
-import { resolve, join, dirname, relative } from 'node:path'
+import { existsSync, readFileSync, writeFileSync, readdirSync, statSync, cpSync } from 'node:fs'
+import { resolve, join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = resolve(__dirname, '..')
 const TEMPLATE_DIR = join(ROOT, 'template')
 const PACKAGES_DIR = join(ROOT, 'packages')
-const MICRO_APPS_FILE = join(PACKAGES_DIR, 'main', 'src', 'micro-apps.ts')
+const MICRO_APP_REGISTRY_FILE = join(PACKAGES_DIR, 'main', 'src', 'micro-app-registry.ts')
 const ROOT_PKG_FILE = join(ROOT, 'package.json')
 
 // ─── 参数解析 ───
 
 function parseArgs() {
-  const args = process.argv.slice(2)
+  const rawArgs = process.argv.slice(2)
+  const args = rawArgs[0] === '--' ? rawArgs.slice(1) : rawArgs
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
     printUsage()
     process.exit(0)
@@ -154,21 +155,31 @@ function replaceInDir(dir, replacements) {
   }
 }
 
-// ─── 注册到主基座 ───
+// ─── 注册到主基座配置 ───
 
-function registerMicroApp(name, port) {
-  let content = readFileSync(MICRO_APPS_FILE, 'utf-8')
+function getNextMenuOrder(content) {
+  const matches = [...content.matchAll(/menuOrder:\s*(\d+)/g)]
+  if (matches.length === 0) return 10
+  const maxOrder = Math.max(...matches.map((m) => parseInt(m[1], 10)))
+  return maxOrder + 10
+}
+
+function registerMicroAppConfig(name, port, title) {
+  let content = readFileSync(MICRO_APP_REGISTRY_FILE, 'utf-8')
+  const menuOrder = getNextMenuOrder(content)
 
   const newEntry = `  {
     name: '${name}',
-    entry: isDev ? 'http://localhost:${port}' : '/subapps/${name}/',
-    container: '#subapp-container',
+    title: '${title}',
     activeRule: '/${name}',
+    entryDev: 'http://localhost:${port}',
+    entryProd: '/subapps/${name}/',
+    showInMenu: true,
+    menuOrder: ${menuOrder},
   },`
 
-  // 在 microApps 数组的最后一个 ] 前插入
-  // 找到 ]: Array<RegistrableApp 后面的数组结束
-  const arrayEndRegex = /(\n)(]\s*\n\s*\nexport function setupMicroApps)/
+  // 在 microAppRegistry 数组的 ] 前插入
+  const arrayEndRegex = /(\n)(]\s*\n\s*\nexport function getMicroAppMenuLinks)/
   const match = content.match(arrayEndRegex)
 
   if (match) {
@@ -182,12 +193,12 @@ function registerMicroApp(name, port) {
       const insertPos = lastMatch.index + lastMatch[1].length
       content = content.slice(0, insertPos) + newEntry + '\n' + content.slice(insertPos)
     } else {
-      console.error('\x1b[31m错误：无法自动注册到 micro-apps.ts，请手动添加\x1b[0m')
+      console.error('\x1b[31m错误：无法自动注册到 micro-app-registry.ts，请手动添加\x1b[0m')
       return false
     }
   }
 
-  writeFileSync(MICRO_APPS_FILE, content, 'utf-8')
+  writeFileSync(MICRO_APP_REGISTRY_FILE, content, 'utf-8')
   return true
 }
 
@@ -214,6 +225,9 @@ function updateRootPackageJson(name) {
   if (!pkg.scripts.create) {
     pkg.scripts.create = 'node scripts/create-app.mjs'
   }
+  if (!pkg.scripts['create:app']) {
+    pkg.scripts['create:app'] = 'node scripts/create-app.mjs'
+  }
 
   writeFileSync(ROOT_PKG_FILE, JSON.stringify(pkg, null, 2) + '\n', 'utf-8')
 }
@@ -237,10 +251,10 @@ function main() {
   const targetDir = copyTemplate(name, port, title)
   console.log(`\x1b[32m✓\x1b[0m 创建 packages/${name}/`)
 
-  // 2. 注册到主基座
-  const registered = registerMicroApp(name, port)
+  // 2. 注册到主基座（微应用 + 菜单）
+  const registered = registerMicroAppConfig(name, port, title)
   if (registered) {
-    console.log(`\x1b[32m✓\x1b[0m 注册到 micro-apps.ts`)
+    console.log(`\x1b[32m✓\x1b[0m 注册到 micro-app-registry.ts（包含菜单）`)
   }
 
   // 3. 更新 package.json

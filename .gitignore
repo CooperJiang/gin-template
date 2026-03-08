@@ -9,10 +9,10 @@
 *.out
 *.o
 *.a
-app
+/app
 !internal/app/
 !internal/app/**
-main
+/main
 
 # 依赖管理
 vendor/

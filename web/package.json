@@ -14,6 +14,7 @@
     "clean": "pnpm -r clean",
     "type-check": "pnpm -r type-check",
     "create": "node scripts/create-app.mjs",
+    "create:app": "node scripts/create-app.mjs",
     "dev:theme": "pnpm --filter @app/theme-editor dev"
   },
   "devDependencies": {
