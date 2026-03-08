@@ -206,10 +206,15 @@ function registerMicroAppConfig(name, port, title) {
 
 function updateRootPackageJson(name) {
   const pkg = JSON.parse(readFileSync(ROOT_PKG_FILE, 'utf-8'))
+  const devFilter = `--filter @app/${name}`
 
   // dev 脚本追加
   if (pkg.scripts.dev && !pkg.scripts.dev.includes(`@app/${name}`)) {
-    pkg.scripts.dev += ` & pnpm --filter @app/${name} dev`
+    if (pkg.scripts.dev.includes('pnpm -r --parallel') && /\sdev\s*$/.test(pkg.scripts.dev)) {
+      pkg.scripts.dev = pkg.scripts.dev.replace(/\sdev\s*$/, ` ${devFilter} dev`)
+    } else {
+      pkg.scripts.dev += ` & pnpm --filter @app/${name} dev`
+    }
   }
 
   // build 脚本追加

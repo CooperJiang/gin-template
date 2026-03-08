@@ -12,6 +12,8 @@ export function UserMenu() {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640)
+
   const close = useCallback(() => setOpen(false), [])
 
   useEffect(() => {
@@ -23,12 +25,11 @@ export function UserMenu() {
     return () => document.removeEventListener('mousedown', handler)
   }, [open, close])
 
-  const isMobile = window.innerWidth < 640
-
-  const menuItems = [
-    { href: '/app/profile', label: '个人资料', icon: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" /><circle cx="12" cy="7" r="4" /></> },
-    { href: '/app/settings', label: '设置', icon: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" /></> },
-  ]
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 640)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   return (
     <div className="relative" ref={ref}>
@@ -67,7 +68,6 @@ export function UserMenu() {
         >
           <style>{`@keyframes menuIn { from { opacity:0; transform:translateY(-4px) scale(.98); } to { opacity:1; transform:translateY(0) scale(1); } }`}</style>
 
-          {/* User info */}
           <div className="px-3.5 py-3 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #fafbfc, #f3f4f6)' }}>
             <div className="flex items-center gap-2.5">
               <div
@@ -83,23 +83,29 @@ export function UserMenu() {
             </div>
           </div>
 
-          {/* Menu items */}
           <div className="p-1">
-            {menuItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-gray-700 no-underline hover:bg-gray-50 transition-colors"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  {item.icon}
-                </svg>
-                {item.label}
-              </a>
-            ))}
+            <a
+              href="/app/profile"
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-gray-700 no-underline hover:bg-gray-50 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              个人资料
+            </a>
+            <a
+              href="/app/settings"
+              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] text-gray-700 no-underline hover:bg-gray-50 transition-colors"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+              </svg>
+              设置
+            </a>
           </div>
 
-          {/* Logout */}
           <div className="p-1 border-t border-gray-100">
             <button
               onClick={() => logout()}

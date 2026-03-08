@@ -2,7 +2,7 @@
   "name": "app-web",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @app/main dev & pnpm --filter @app/app dev",
+    "dev": "pnpm -r --parallel --filter @app/main --filter @app/app dev",
     "dev:main": "pnpm --filter @app/main dev",
     "dev:app": "pnpm --filter @app/app dev",
     "build": "pnpm --filter @app/main build && pnpm --filter @app/app build",
