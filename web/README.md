@@ -25,11 +25,11 @@ Backend API default target is `http://localhost:9000` via `/api` proxy.
 
 - `pnpm -C web start`: alias of `dev`
 - `pnpm -C web dev`: run host (`main`) + default child (`app`)
-- `pnpm -C web dev:full`: run host + app + theme-editor
+- `pnpm -C web dev:full`: run host + all locally registered child apps + theme-editor
 - `pnpm -C web dev:main`: run host only
 - `pnpm -C web dev:app`: run default child only
 - `pnpm -C web dev:theme`: run theme editor only
-- `pnpm -C web build`: build host + default child
+- `pnpm -C web build`: build host + locally registered child apps
 - `pnpm -C web type-check`: type-check all workspace packages
 - `pnpm -C web doctor`: run environment diagnostics
 - `pnpm -C web create:app -- <name> --port <port> --title <title>`: scaffold a new child app
@@ -64,13 +64,16 @@ This command will:
 1. Copy `web/template` to `web/packages/admin`
 2. Replace placeholders (name/port/title)
 3. Append app config into `web/packages/main/src/micro-app-registry.ts`
-4. Update root scripts (`dev`, `build`, `dev:admin`, `build:admin`)
+4. Update root scripts (`dev`, `dev:full`, `build`, `dev:admin`, `build:admin`)
+5. Include the app in production packaging flow (`scripts/build_web.sh`) via registry-based discovery
 
 Then run:
 ```bash
 pnpm -C web dev:admin
 pnpm -C web dev
 ```
+
+No manual update is required in Go client routes for new sub-apps. `internal/routes/client_routes.go` now serves `/subapps/:app/*` dynamically.
 
 ## 6. Environment Variables
 

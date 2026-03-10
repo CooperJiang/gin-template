@@ -12,13 +12,21 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,css}\"",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@app/shared": "workspace:*",
     "axios": "^1.9.0"
   },
+  "peerDependencies": {
+    "react": "^19.1.0"
+  },
   "devDependencies": {
+    "@types/react": "^19.1.0",
     "typescript": "~5.8.0"
   }
 }

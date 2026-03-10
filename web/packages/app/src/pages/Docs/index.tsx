@@ -55,10 +55,10 @@ export default function Docs() {
 git clone <repo-url>
 cd gin-template
 
-# 安装前端依赖
-cd web && pnpm install
+# 前端一键初始化（安装依赖 + 类型检查）
+cd web && pnpm setup
 
-# 启动前端开发服务器（主应用 + 所有子应用）
+# 启动前端开发服务器（主应用 + 默认子应用）
 pnpm dev
 
 # 另一个终端，启动 Go 后端
@@ -93,6 +93,9 @@ go run cmd/server/main.go`}</Code>
               <Code>{`# 启动所有前端应用
 pnpm dev
 
+# 启动主应用 + app + theme-editor
+pnpm dev:full
+
 # 只启动主应用
 pnpm --filter @app/main dev
 
@@ -101,6 +104,12 @@ pnpm --filter @app/app dev
 
 # 类型检查
 pnpm type-check
+
+# 环境诊断（网络/端口/registry）
+pnpm doctor
+
+# 一键创建子应用
+pnpm create:app -- admin --port 3002 --title "管理后台"
 
 # 构建所有前端应用
 pnpm build`}</Code>
@@ -114,55 +123,42 @@ pnpm build`}</Code>
             </Section>
 
             <Section id="add-subapp" title="新增子应用">
-              <P>项目提供了标准化的子应用模板，按以下步骤创建新子应用：</P>
+              <P>现在使用脚本一键创建，默认就是“零配置接入”。</P>
 
-              <H3>1. 复制模板</H3>
-              <Code>{`cp -r web/template web/packages/<name>
-# 例如：cp -r web/template web/packages/admin`}</Code>
+              <H3>1. 执行创建命令</H3>
+              <Code>{`cd web
+pnpm create:app -- admin --port 3002 --title "管理后台"`}</Code>
 
-              <H3>2. 替换占位符</H3>
-              <P>在新子应用目录中，全局替换以下占位符：</P>
+              <H3>2. 自动完成的内容</H3>
               <Table
-                headers={['占位符', '说明', '示例']}
+                headers={['动作', '说明']}
                 rows={[
-                  ['__NAME__', '子应用名称（英文）', 'admin'],
-                  ['__PORT__', '开发服务器端口', '3002'],
-                  ['__TITLE__', '页面标题（中文）', '管理后台'],
+                  ['创建子应用目录', '从 web/template 复制到 web/packages/admin 并替换占位符'],
+                  ['注册微前端', '自动写入 main/src/micro-app-registry.ts（含 activeRule 与 entry）'],
+                  ['注册菜单', '自动在主应用导航中显示菜单项'],
+                  ['更新脚本', '自动补充 dev/build/dev:admin/build:admin 脚本'],
                 ]}
               />
-              <Code>{`# macOS / Linux 批量替换
-cd web/packages/admin
-find . -type f \\( -name "*.ts" -o -name "*.tsx" -o -name "*.json" -o -name "*.html" \\) \\
-  -exec sed -i '' 's/__NAME__/admin/g; s/__PORT__/3002/g; s/__TITLE__/管理后台/g' {} +`}</Code>
 
-              <H3>3. 注册到 workspace</H3>
-              <P>编辑 <Mono>web/pnpm-workspace.yaml</Mono>，确认 <Mono>packages/*</Mono> 已包含新目录（通常通配符已覆盖）。然后在 web 根目录执行：</P>
-              <Code>{`pnpm install`}</Code>
+              <H3>3. 启动并验证</H3>
+              <Code>{`# 仅启动新子应用
+pnpm dev:admin
 
-              <H3>4. 注册到主基座</H3>
-              <P>编辑 <Mono>web/packages/main/src/micro-apps.ts</Mono>，在 <Mono>microApps</Mono> 数组中添加：</P>
-              <Code>{`{
-  name: 'admin',
-  entry: isDev ? '//localhost:3002' : '/subapps/admin/',
-  container: '#subapp-container',
-  activeRule: '/admin',
-  props: { globalStateActions },
-}`}</Code>
+# 启动主应用 + 默认子应用
+pnpm dev
 
-              <H3>5. 添加导航链接</H3>
-              <P>编辑 <Mono>web/packages/main/src/components/Layout.tsx</Mono>，在 <Mono>navLinks</Mono> 中添加：</P>
-              <Code>{`{ href: '/admin', label: '管理后台' }`}</Code>
+# 访问主应用路由
+http://localhost:3000/admin`}</Code>
 
-              <H3>6. 更新构建脚本</H3>
-              <P>编辑 <Mono>scripts/build_web.sh</Mono>，添加新子应用的 dist 复制逻辑：</P>
-              <Code>{`ADMIN_DIST_DIR="\${WEB_DIR}/packages/admin/dist"
+              <H3>4. 后续业务开发入口</H3>
+              <P>创建完成后，主要在这些目录开发：</P>
+              <Code>{`web/packages/admin/src/
+├── pages/      # 页面
+├── router/     # 路由定义与守卫
+├── api/        # 接口模块（request.ts + 业务 API）
+└── hooks/      # 页面通用 hooks`}</Code>
 
-# 在构建检查后添加
-mkdir -p "$TARGET_WEB_DIR/subapps/admin"
-cp -r "$ADMIN_DIST_DIR"/* "$TARGET_WEB_DIR/subapps/admin/"`}</Code>
-
-              <H3>7. 添加 Go 路由（生产部署）</H3>
-              <P>编辑 <Mono>internal/routes/client_routes.go</Mono>，参照 <Mono>/subapps/app/*filepath</Mono> 的模式，添加 <Mono>/subapps/admin/*filepath</Mono> 路由。</P>
+              <P>生产构建时，<Mono>scripts/build_web.sh</Mono> 会根据注册表自动复制所有子应用 dist；Go 端子应用静态路由也支持动态匹配，无需再手工加每个子应用路由。</P>
             </Section>
 
             <Section id="auth" title="认证系统">

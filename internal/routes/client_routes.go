@@ -72,36 +72,12 @@ func registerWebRoutes(r *gin.Engine) {
 		c.Data(http.StatusOK, contentType, content)
 	})
 
-	// 子应用静态文件路由
-	r.GET("/subapps/app/*filepath", func(c *gin.Context) {
-		filePath := strings.TrimPrefix(c.Param("filepath"), "/")
-
-		// 子应用根路径 → 返回子应用 index.html
-		if filePath == "" || filePath == "index.html" {
-			subAppFS, err := fs.Sub(webFS, "subapps/app")
-			if err != nil {
-				c.AbortWithStatus(http.StatusNotFound)
-				return
-			}
-			serveIndexHTML(c, subAppFS, "app")
-			return
-		}
-
-		assetPath := filepath.Join("subapps/app", filePath)
-		file, err := webFS.Open(assetPath)
-		if err != nil {
-			c.AbortWithStatus(http.StatusNotFound)
-			return
-		}
-		defer file.Close()
-
-		content, err := io.ReadAll(file)
-		if err != nil {
-			c.String(http.StatusInternalServerError, "Failed to read sub-app asset")
-			return
-		}
-
-		c.Data(http.StatusOK, getContentType(filePath), content)
+	// 子应用静态文件路由（动态支持任意子应用）
+	r.GET("/subapps/:app", func(c *gin.Context) {
+		serveSubAppResource(c, webFS)
+	})
+	r.GET("/subapps/:app/*filepath", func(c *gin.Context) {
+		serveSubAppResource(c, webFS)
 	})
 
 	// 用户端SPA路由 - 使用NoRoute作为最后的fallback
@@ -119,6 +95,58 @@ func registerWebRoutes(r *gin.Engine) {
 		// 用户端默认页面（SPA路由支持）
 		serveIndexHTML(c, webFS, "web")
 	})
+}
+
+func serveSubAppResource(c *gin.Context, webFS fs.FS) {
+	appName := strings.TrimSpace(c.Param("app"))
+	if appName == "" || strings.Contains(appName, "..") || strings.Contains(appName, "/") {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	filePath := strings.TrimPrefix(c.Param("filepath"), "/")
+	subAppBase := filepath.Join("subapps", appName)
+
+	// 子应用根路径 → 返回该子应用 index.html
+	if filePath == "" || filePath == "index.html" {
+		subAppFS, err := fs.Sub(webFS, subAppBase)
+		if err != nil {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		serveIndexHTML(c, subAppFS, appName)
+		return
+	}
+
+	cleanPath := filepath.Clean(filePath)
+	if cleanPath == "." || strings.HasPrefix(cleanPath, "..") {
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+
+	assetPath := filepath.Join(subAppBase, cleanPath)
+	file, err := webFS.Open(assetPath)
+	if err != nil {
+		// SPA 深层路由回退到该子应用 index.html
+		if !strings.Contains(filepath.Base(cleanPath), ".") {
+			subAppFS, subErr := fs.Sub(webFS, subAppBase)
+			if subErr == nil {
+				serveIndexHTML(c, subAppFS, appName)
+				return
+			}
+		}
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Failed to read sub-app asset")
+		return
+	}
+
+	c.Data(http.StatusOK, getContentType(cleanPath), content)
 }
 
 // registerFallbackRoutes 注册备用路由（当所有前端模块都禁用时）

@@ -7,13 +7,35 @@ import prettierConfig from 'eslint-config-prettier'
 
 export default tseslint.config(
   {
-    name: 'app/files-to-ignore',
-    ignores: ['**/dist/**', '**/dist-ssr/**', '**/coverage/**', '**/node_modules/**'],
+    name: 'global/files-to-ignore',
+    ignores: [
+      '**/dist/**',
+      '**/dist-ssr/**',
+      '**/coverage/**',
+      '**/node_modules/**',
+      '**/.vite/**',
+      '**/build/**',
+    ],
   },
   {
-    name: 'app/base-config',
-    files: ['**/*.{ts,tsx}'],
+    name: 'global/base-config',
+    files: ['**/*.{ts,tsx,mts}'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    languageOptions: {
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+    },
+  },
+  {
+    name: 'global/react-config',
+    files: ['packages/**/*.{ts,tsx}'],
     plugins: {
       react,
       'react-hooks': reactHooks,
@@ -40,13 +62,9 @@ export default tseslint.config(
       // React Refresh
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
 
-      // TypeScript
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/no-explicit-any': 'warn',
-
       // React specific
-      'react/prop-types': 'off', // Using TypeScript for prop validation
-      'react/react-in-jsx-scope': 'off', // Not needed in React 17+
+      'react/prop-types': 'off',
+      'react/react-in-jsx-scope': 'off',
     },
   },
   prettierConfig,

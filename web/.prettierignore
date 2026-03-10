@@ -1,0 +1,17 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+
+# Build outputs
+dist
+dist-ssr
+build
+.vite
+coverage
+
+# Generated files
+*.min.js
+*.min.css
+
+# Config files
+pnpm-workspace.yaml

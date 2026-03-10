@@ -57,6 +57,16 @@ web-dev: ## 启动用户端前端开发服务器
 web-build: ## 构建用户端前端项目并部署到static/web目录
 	@echo "$(GREEN)构建用户端前端项目...$(RESET)"
 	@./scripts/build_web.sh
+	@# 验证构建产物
+	@if [ ! -d "internal/static/web" ]; then \
+		echo "$(RED)❌ 错误：前端构建失败，internal/static/web 目录不存在$(RESET)"; \
+		exit 1; \
+	fi
+	@if [ ! -f "internal/static/web/index.html" ]; then \
+		echo "$(RED)❌ 错误：前端构建失败，缺少 index.html$(RESET)"; \
+		exit 1; \
+	fi
+	@echo "$(GREEN)✓ 前端构建验证通过$(RESET)"
 
 .PHONY: web-lint
 web-lint: ## 检查用户端前端代码

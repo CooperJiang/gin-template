@@ -12,6 +12,9 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "outDir": "./dist",
+    "declarationDir": "./dist",
+    "emitDeclarationOnly": true,
     "baseUrl": ".",
     "paths": {
       "@app/shared": ["./src/index.ts"],

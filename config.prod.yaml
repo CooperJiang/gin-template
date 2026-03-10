@@ -1,9 +1,10 @@
 # 生产环境配置
+# ⚠️ 重要：所有 ${VAR_NAME} 格式的配置项都需要通过环境变量提供！
 app:
   name: "template"
   port: 7500
   mode: "release"                # 生产模式
-  defaultRootPass: "123456"  # 生产环境请务必修改此密码
+  defaultRootPass: "${APP_DEFAULT_ROOT_PASS}"  # 必须通过环境变量设置
   timezone: "Asia/Shanghai"
   api_prefix: "/api/v1"
   static_path: "/static"
@@ -36,11 +37,11 @@ frontend:
 # 数据库配置 - 生产环境
 database:
   driver: "mysql"
-  host: "localhost"              # 生产环境数据库地址
+  host: "${DB_HOST:localhost}"        # 生产环境数据库地址
   port: 3306
-  username: "template"           # 生产环境数据库用户
-  password: "scRyXxfPsWjtbPSr" # 生产环境数据库密码
-  name: "template"         # 生产环境数据库名
+  username: "${DB_USERNAME}"          # 必须通过环境变量设置
+  password: "${DB_PASSWORD}"          # 必须通过环境变量设置
+  name: "${DB_NAME:template}"         # 生产环境数据库名
   charset: "utf8mb4"
   max_idle_conns: 10
   max_open_conns: 100
@@ -51,7 +52,7 @@ database:
 
 # JWT配置 - 生产环境
 jwt:
-  secret_key: "CHANGE-TO-YOUR-PRODUCTION-SECRET-KEY"  # 生产环境必须使用强密钥
+  secret_key: "${JWT_SECRET_KEY}"     # 必须通过环境变量设置（至少32字符）
   expires_in: 24
   refresh_expires_in: 168
   issuer: "template-app"

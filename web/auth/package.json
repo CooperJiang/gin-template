@@ -11,6 +11,10 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -18,8 +22,8 @@
     "@app/core": "workspace:*"
   },
   "peerDependencies": {
-    "react": ">=18",
-    "react-router-dom": ">=6"
+    "react": "^19.1.0",
+    "react-router-dom": "^7.6.1"
   },
   "devDependencies": {
     "@types/react": "^19.1.0",

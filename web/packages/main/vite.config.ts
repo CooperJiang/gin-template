@@ -1,29 +1,10 @@
-import { fileURLToPath, URL } from 'node:url'
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { createViteConfig } from '../../scripts/vite-config-base'
 
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:9000'
-
-  return {
-    plugins: [react()],
-    resolve: {
-      alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-      },
-    },
-    server: {
-      port: 3000,
-      proxy: {
-        '/api': {
-          target: apiProxyTarget,
-          changeOrigin: true,
-        },
-      },
-    },
-    build: {
-      outDir: 'dist',
-    },
-  }
-})
+export default defineConfig(
+  createViteConfig({
+    port: 3000,
+    isQiankunApp: false,
+    projectRoot: import.meta.url,
+  }),
+)
