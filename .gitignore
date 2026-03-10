@@ -23,9 +23,19 @@ vendor/
 app.db
 logs/
 *.log
+
+# 环境变量文件 (保留示例文件)
 .env
-.env.*
+.env.local
+.env.production
+.env.development
+.env.test
+# 允许所有 .example 结尾的环境变量示例文件
 !.env.example
+!.env*.example
+# 允许 web 目录下的所有示例环境变量文件
+!web/**/.env.example
+!web/**/.env*.example
 
 # 临时文件
 tmp/
@@ -69,7 +79,6 @@ profile.out
 tmp/
 
 # 其他
-.env
 __debug_bin
 
 # 构建目录
@@ -233,6 +242,11 @@ Thumbs.db
 /config.yaml
 /config.yml
 /config.json
+# 允许所有示例配置文件
+!config.example.yaml
+!config.example.yml
+!config.example.json
+!config*.example.yaml
 
 # Database files
 *.db
