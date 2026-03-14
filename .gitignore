@@ -83,7 +83,7 @@ __debug_bin
 
 # 构建目录
 /build/
-/web/packages/app/dist/
+/web/dist/
 /bin/
 
 # SQLite数据库文件
@@ -101,13 +101,12 @@ go.work
 # Air工具的临时文件
 /tmp-air-*/
 
-# 前端项目相关忽略文件 (pnpm monorepo)
+# 前端项目相关忽略文件
 web/node_modules/
-web/packages/*/node_modules/
-web/packages/*/dist/
-web/packages/*/.vite/
-web/packages/*/*.tsbuildinfo
-web/packages/*/.eslintcache
+web/dist/
+web/.vite/
+web/*.tsbuildinfo
+web/.eslintcache
 
 # 其他不需要提交的文件
 TODO.md
@@ -263,12 +262,9 @@ coverage.html
 /internal/static/dist/
 
 # Frontend node_modules and build files
-# Frontend monorepo
 /web/node_modules/
-/web/packages/*/node_modules/
-/web/packages/*/dist/
-/web/packages/*/.vite/
-/web/.pnpm-store
+/web/dist/
+/web/.vite/
 
 # Frontend env files are committed (template defaults)
 

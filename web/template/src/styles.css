@@ -1,3 +1,0 @@
-/* 子应用样式：不包含 reset/preflight，避免覆盖主应用 CSS */
-@tailwind components;
-@tailwind utilities;

@@ -12,8 +12,7 @@ MAIN_PATH := ./cmd/main.go
 # 前端配置
 WEB_DIR := ./web
 STATIC_DIR := ./internal/static
-WEB_DIST_DIR := $(WEB_DIR)/packages/main/dist
-APP_DIST_DIR := $(WEB_DIR)/packages/app/dist
+WEB_DIST_DIR := $(WEB_DIR)/dist
 TARGET_WEB_DIR := $(STATIC_DIR)/web
 
 # Docker配置
@@ -90,7 +89,6 @@ web-format: ## 格式化用户端前端代码
 web-clean: ## 清理用户端前端构建文件
 	@echo "$(YELLOW)清理用户端前端构建文件...$(RESET)"
 	@rm -rf $(WEB_DIST_DIR)
-	@rm -rf $(APP_DIST_DIR)
 	@rm -rf $(TARGET_WEB_DIR)
 	@if [ -d "$(WEB_DIR)" ]; then \
 		cd $(WEB_DIR) && pnpm clean 2>/dev/null || true; \
@@ -194,7 +192,7 @@ start: ## 🚀 一键启动开发环境 (系统终端模式)
 	echo "$(BLUE)🔧 启动后端 (Go) - 端口 9000$(RESET)"; \
 	osascript -e "tell application \"Terminal\" to do script \"cd $$PROJECT_DIR && echo '🔧 启动后端服务器...' && make dev\""; \
 	sleep 1; \
-	echo "$(BLUE)🌐 启动用户端 (Vue3) - 端口 3000$(RESET)"; \
+	echo "$(BLUE)🌐 启动用户端 (React) - 端口 3000$(RESET)"; \
 	osascript -e "tell application \"Terminal\" to do script \"cd $$PROJECT_DIR && echo '🌐 启动用户端...' && make web-dev\""; \
 	echo ""
 	@echo "$(GREEN)✅ 终端窗口已打开！$(RESET)"
@@ -220,7 +218,7 @@ start-bg: ## 🚀 一键启动开发环境 (后台模式)
 	@nohup go run cmd/main.go > logs/backend.log 2>&1 & echo $$! > pids/backend.pid
 	@sleep 2
 	@# 启动用户端 (后台)
-	@echo "$(BLUE)🌐 启动用户端 (Vue3) - 端口 3000$(RESET)"
+	@echo "$(BLUE)🌐 启动用户端 (React) - 端口 3000$(RESET)"
 	@cd web && nohup pnpm dev > ../logs/web.log 2>&1 & echo $$! > ../pids/web.pid; cd ..
 	@sleep 2
 	@echo ""
@@ -597,7 +595,7 @@ help: ## 显示帮助信息
 	@echo ""
 	@echo "$(GREEN)📊 项目架构:$(RESET)"
 	@echo "  🎯 后端 (Go)     - 端口 9000"
-	@echo "  👥 用户端 (Vue3) - 端口 3000 (开发) / / (生产)"
+	@echo "  👥 用户端 (React) - 端口 3000 (开发) / / (生产)"
 	@echo ""
 	@echo "$(GREEN)🚀 快速开始:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^start:.*?## / {printf "  $(GREEN)%-20s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST)

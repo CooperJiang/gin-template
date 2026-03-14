@@ -1,5 +1,6 @@
 node_modules
 dist
 *.local
-.vite
-*.tsbuildinfo
+.env
+.env.*
+\!.env.example
