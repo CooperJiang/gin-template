@@ -10,7 +10,13 @@ import {
   clearAuth,
 } from './store'
 import { authApi } from './api'
-import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from '@/types/auth'
+import type {
+  LoginRequest,
+  RegisterRequest,
+  ResetPasswordRequest,
+  ChangePasswordRequest,
+  UpdateProfileRequest,
+} from '@/types/auth'
 
 export function useAuth() {
   const [loading, setLoading] = useState(false)
@@ -95,6 +101,36 @@ export function useAuth() {
     }
   }, [])
 
+  const changePassword = useCallback(async (data: ChangePasswordRequest) => {
+    try {
+      setLoading(true)
+      setError('')
+      return await authApi.changePassword(data)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '修改密码失败'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const updateProfile = useCallback(async (data: UpdateProfileRequest) => {
+    try {
+      setLoading(true)
+      setError('')
+      const updated = await authApi.updateProfile(data)
+      setUser(updated)
+      return updated
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '更新资料失败'
+      setError(msg)
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   const getUserInfo = useCallback(async () => {
     try {
       setLoading(true)
@@ -110,11 +146,8 @@ export function useAuth() {
     }
   }, [])
 
-  const logout = useCallback((shouldRedirect = true) => {
+  const logout = useCallback(() => {
     clearAuth()
-    if (shouldRedirect) {
-      window.location.href = '/login'
-    }
   }, [])
 
   return {
@@ -128,6 +161,8 @@ export function useAuth() {
     sendRegistrationCode,
     sendResetPasswordCode,
     resetPassword,
+    changePassword,
+    updateProfile,
     getUserInfo,
     logout,
   }

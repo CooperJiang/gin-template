@@ -52,3 +52,8 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--theme-scrollbar-thumb)) rgb(var(--theme-scrollbar-track));
 }
+
+/* Brand gradient */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+}

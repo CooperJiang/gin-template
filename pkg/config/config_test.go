@@ -60,17 +60,14 @@ app:
 func TestLoadEnvToStructWithLookupSupportsNestedAndSlice(t *testing.T) {
 	cfg := Config{}
 	env := map[string]string{
-		"APP_APP_PORT":                    "8081",
-		"APP_JWT_BLACKLIST_ENABLED":       "false",
-		"APP_CORS_ALLOWED_ORIGINS":        `["https://a.example.com","https://b.example.com"]`,
-		"APP_CORS_ALLOWED_METHODS":        "GET, POST, OPTIONS",
-		"APP_FRONTEND_FALLBACK_ENABLED":   "true",
-		"APP_FRONTEND_FALLBACK_MESSAGE":   "maintenance",
-		"APP_FRONTEND_WEB_ENABLED":        "false",
-		"APP_CORS_ALLOW_CREDENTIALS":      "true",
-		"APP_CORS_ALLOWED_HEADERS":        "Authorization, Content-Type",
-		"APP_CORS_ENABLED":                "true",
-		"APP_FRONTEND_FALLBACK_NOT_EXIST": "ignored",
+		"APP_APP_PORT":               "8081",
+		"APP_JWT_BLACKLIST_ENABLED":  "false",
+		"APP_CORS_ALLOWED_ORIGINS":   `["https://a.example.com","https://b.example.com"]`,
+		"APP_CORS_ALLOWED_METHODS":   "GET, POST, OPTIONS",
+		"APP_CORS_ALLOW_CREDENTIALS": "true",
+		"APP_CORS_ALLOWED_HEADERS":   "Authorization, Content-Type",
+		"APP_CORS_ENABLED":           "true",
+		"APP_REDIS_ENABLED":          "true",
 	}
 
 	lookup := func(key string) (string, bool) {
@@ -81,7 +78,7 @@ func TestLoadEnvToStructWithLookupSupportsNestedAndSlice(t *testing.T) {
 	loadEnvToStructWithLookup("APP_APP_", &cfg.App, lookup)
 	loadEnvToStructWithLookup("APP_JWT_", &cfg.JWT, lookup)
 	loadEnvToStructWithLookup("APP_CORS_", &cfg.CORS, lookup)
-	loadEnvToStructWithLookup("APP_FRONTEND_", &cfg.Frontend, lookup)
+	loadEnvToStructWithLookup("APP_REDIS_", &cfg.Redis, lookup)
 
 	if cfg.App.Port != 8081 {
 		t.Fatalf("App.Port = %d, want %d", cfg.App.Port, 8081)
@@ -95,14 +92,8 @@ func TestLoadEnvToStructWithLookupSupportsNestedAndSlice(t *testing.T) {
 	if got := strings.Join(cfg.CORS.AllowedMethods, ","); got != "GET,POST,OPTIONS" {
 		t.Fatalf("CORS.AllowedMethods = %v, want trimmed CSV values", cfg.CORS.AllowedMethods)
 	}
-	if !cfg.Frontend.Fallback.Enabled {
-		t.Fatalf("Frontend.Fallback.Enabled = false, want true")
-	}
-	if cfg.Frontend.Fallback.Message != "maintenance" {
-		t.Fatalf("Frontend.Fallback.Message = %q, want %q", cfg.Frontend.Fallback.Message, "maintenance")
-	}
-	if cfg.Frontend.Web.Enabled {
-		t.Fatalf("Frontend.Web.Enabled = true, want false")
+	if !cfg.Redis.Enabled {
+		t.Fatalf("Redis.Enabled = false, want true")
 	}
 }
 
@@ -131,14 +122,14 @@ func TestValidateConfigReleaseRules(t *testing.T) {
 	}
 
 	noRedisInRelease := newValidReleaseConfigForTest()
-	noRedisInRelease.Redis.Host = ""
-	if err := validateConfig(&noRedisInRelease); err == nil || !strings.Contains(err.Error(), "redis.host") {
-		t.Fatalf("validateConfig(noRedisInRelease) error = %v, want redis.host validation", err)
+	noRedisInRelease.Redis.Enabled = false
+	if err := validateConfig(&noRedisInRelease); err == nil || !strings.Contains(err.Error(), "redis") {
+		t.Fatalf("validateConfig(noRedisInRelease) error = %v, want redis validation", err)
 	}
 
 	releaseBlacklistDisabled := newValidReleaseConfigForTest()
 	releaseBlacklistDisabled.JWT.BlacklistEnabled = false
-	releaseBlacklistDisabled.Redis.Host = ""
+	releaseBlacklistDisabled.Redis.Enabled = false
 	if err := validateConfig(&releaseBlacklistDisabled); err != nil {
 		t.Fatalf("validateConfig(releaseBlacklistDisabled) error = %v, want nil", err)
 	}
@@ -170,9 +161,10 @@ func newValidReleaseConfigForTest() Config {
 			BlacklistEnabled: true,
 		},
 		Redis: RedisConfig{
-			Host: "127.0.0.1",
-			Port: 6379,
-			DB:   0,
+			Enabled: true,
+			Host:    "127.0.0.1",
+			Port:    6379,
+			DB:      0,
 		},
 		CORS: CORSConfig{
 			Enabled:          true,

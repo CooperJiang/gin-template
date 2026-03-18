@@ -22,9 +22,12 @@ type RedisCache struct {
 func InitRedis() error {
 	cfg := config.GetConfig().Redis
 
-	// 如果未配置Redis主机，则不使用Redis
+	// 如果未启用Redis，则不使用Redis
+	if !cfg.Enabled {
+		return errors.New("Redis未启用")
+	}
 	if cfg.Host == "" {
-		return errors.New("Redis未配置")
+		return errors.New("Redis主机未配置")
 	}
 
 	// 创建Redis客户端

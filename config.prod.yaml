@@ -18,22 +18,6 @@ app:
     - "application/msword"
     - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-# 前端模块配置
-frontend:
-  admin:
-    enabled: true
-    route_prefix: "/admin"
-    title: "管理后台"
-    description: "系统管理后台"
-  web:
-    enabled: true
-    route_prefix: "/"
-    title: "用户端"
-    description: "用户前端应用"
-  fallback:
-    enabled: true
-    message: "服务正在维护中，请稍后访问"
-
 # 数据库配置 - 生产环境
 database:
   driver: "mysql"
@@ -62,6 +46,7 @@ jwt:
 
 # Redis配置 - 生产环境
 redis:
+  enabled: true                  # 生产环境启用Redis
   host: "localhost"              # 生产环境Redis地址
   port: 6379
   password: ""     # 生产环境Redis密码

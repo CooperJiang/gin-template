@@ -42,8 +42,7 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis" env:"REDIS"`
 	JWT      JWTConfig      `yaml:"jwt" env:"JWT"`
 	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
-	CORS     CORSConfig     `yaml:"cors" env:"CORS"`
-	Frontend FrontendConfig `yaml:"frontend" env:"FRONTEND"`
+	CORS CORSConfig `yaml:"cors" env:"CORS"`
 }
 
 // AppConfig 应用基础配置
@@ -68,6 +67,7 @@ type DatabaseConfig struct {
 
 // RedisConfig Redis配置
 type RedisConfig struct {
+	Enabled  bool   `yaml:"enabled" env:"ENABLED"`
 	Host     string `yaml:"host" env:"HOST"`
 	Port     int    `yaml:"port" env:"PORT"`
 	Password string `yaml:"password" env:"PASSWORD"`
@@ -104,23 +104,6 @@ type CORSConfig struct {
 	AllowedHeaders   []string `yaml:"allowed_headers" env:"ALLOWED_HEADERS"`
 	AllowCredentials bool     `yaml:"allow_credentials" env:"ALLOW_CREDENTIALS"`
 	MaxAge           int      `yaml:"max_age" env:"MAX_AGE"`
-}
-
-// FrontendConfig 前端模块配置
-type FrontendConfig struct {
-	Web      FrontendModuleConfig   `yaml:"web" env:"WEB"`
-	Fallback FrontendFallbackConfig `yaml:"fallback" env:"FALLBACK"`
-}
-
-// FrontendModuleConfig 前端模块具体配置
-type FrontendModuleConfig struct {
-	Enabled bool `yaml:"enabled" env:"ENABLED"`
-}
-
-// FrontendFallbackConfig 前端备用页面配置
-type FrontendFallbackConfig struct {
-	Enabled bool   `yaml:"enabled" env:"ENABLED"`
-	Message string `yaml:"message" env:"MESSAGE"`
 }
 
 var (
@@ -180,7 +163,6 @@ func loadConfigFromEnv(cfg *Config) {
 	loadEnvToStruct(envPrefix+"JWT_", &cfg.JWT)
 	loadEnvToStruct(envPrefix+"MAIL_", &cfg.Mail)
 	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)
-	loadEnvToStruct(envPrefix+"FRONTEND_", &cfg.Frontend)
 }
 
 // loadEnvToStruct 递归加载环境变量到结构体（支持嵌套结构和字符串切片）
@@ -367,11 +349,6 @@ func setDefaults(cfg *Config) {
 	if cfg.CORS.MaxAge == 0 {
 		cfg.CORS.MaxAge = defaultCORSMaxAge
 	}
-
-	cfg.Frontend.Web.Enabled = true
-	if strings.TrimSpace(cfg.Frontend.Fallback.Message) == "" {
-		cfg.Frontend.Fallback.Message = "服务暂不可用"
-	}
 }
 
 func applyDerivedDefaults(cfg *Config) {
@@ -408,7 +385,10 @@ func validateConfig(cfg *Config) error {
 		return fmt.Errorf("database.driver 无效: %s", cfg.Database.Driver)
 	}
 
-	if strings.TrimSpace(cfg.Redis.Host) != "" {
+	if cfg.Redis.Enabled {
+		if strings.TrimSpace(cfg.Redis.Host) == "" {
+			return errors.New("redis.enabled=true 时 redis.host 不能为空")
+		}
 		if cfg.Redis.Port <= 0 || cfg.Redis.Port > 65535 {
 			return fmt.Errorf("redis.port 超出范围: %d", cfg.Redis.Port)
 		}
@@ -442,8 +422,8 @@ func validateConfig(cfg *Config) error {
 			return errors.New("release模式下 jwt.secret_key 过弱，请使用高强度密钥")
 		}
 
-		if cfg.JWT.BlacklistEnabled && strings.TrimSpace(cfg.Redis.Host) == "" {
-			return errors.New("release模式下启用 jwt.blacklist_enabled 时必须配置 redis.host")
+		if cfg.JWT.BlacklistEnabled && !cfg.Redis.Enabled {
+			return errors.New("release模式下启用 jwt.blacklist_enabled 时必须启用 redis")
 		}
 
 		if strings.TrimSpace(cfg.App.DefaultRootPass) == "" || strings.TrimSpace(cfg.App.DefaultRootPass) == defaultRootPassword {

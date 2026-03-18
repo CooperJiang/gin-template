@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../useAuth'
 import { message } from '@/lib/message'
+import { VALIDATION, EMAIL_REGEX, INPUT_CLASS } from '@/lib/constants'
+import { Eye, EyeOff } from 'lucide-react'
 import type { RegisterRequest } from '@/types/auth'
 
 export default function Register() {
@@ -28,9 +30,9 @@ export default function Register() {
   )
 
   const canSubmit =
-    form.username.trim().length >= 2 &&
+    form.username.trim().length >= VALIDATION.USERNAME_MIN &&
     form.email.trim().length > 0 &&
-    form.password.length >= 6 &&
+    form.password.length >= VALIDATION.PASSWORD_MIN &&
     form.confirmPassword.length > 0 &&
     form.code.trim().length > 0
 
@@ -39,7 +41,7 @@ export default function Register() {
       setError('请输入邮箱')
       return
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    if (!EMAIL_REGEX.test(form.email.trim())) {
       setError('请输入有效的邮箱地址')
       return
     }
@@ -47,7 +49,7 @@ export default function Register() {
       setError('')
       await sendRegistrationCode(form.email.trim())
       message.success('验证码已发送到您的邮箱')
-      setCountdown(60)
+      setCountdown(VALIDATION.CODE_COUNTDOWN)
       timerRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -65,12 +67,18 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (form.username.trim().length < 2 || form.username.trim().length > 20) {
-      setError('用户名长度为 2-20 个字符')
+    if (
+      form.username.trim().length < VALIDATION.USERNAME_MIN ||
+      form.username.trim().length > VALIDATION.USERNAME_MAX
+    ) {
+      setError(`用户名长度为 ${VALIDATION.USERNAME_MIN}-${VALIDATION.USERNAME_MAX} 个字符`)
       return
     }
-    if (form.password.length < 6 || form.password.length > 20) {
-      setError('密码长度为 6-20 个字符')
+    if (
+      form.password.length < VALIDATION.PASSWORD_MIN ||
+      form.password.length > VALIDATION.PASSWORD_MAX
+    ) {
+      setError(`密码长度为 ${VALIDATION.PASSWORD_MIN}-${VALIDATION.PASSWORD_MAX} 个字符`)
       return
     }
     if (form.password !== form.confirmPassword) {
@@ -92,9 +100,6 @@ export default function Register() {
     }
   }
 
-  const inputCls =
-    'block w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition disabled:bg-gray-50 disabled:opacity-60'
-
   return (
     <div className="min-h-screen flex">
       {/* Left dark panel */}
@@ -108,10 +113,7 @@ export default function Register() {
 
         <div className="relative z-10 px-14 xl:px-20 max-w-lg">
           <div className="flex items-center gap-3 mb-14">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
-            >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-brand">
               <svg
                 width="20"
                 height="20"
@@ -141,82 +143,69 @@ export default function Register() {
           </p>
 
           <div className="mt-14 space-y-5">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
+            {[
+              {
+                icon: 'M7 11V7a5 5 0 0110 0v4',
+                rect: true,
+                title: '安全加密',
+                desc: '端到端数据加密，保护您的隐私',
+              },
+              {
+                icon: 'M13 2 3 14 12 14 11 22 21 10 12 10 13 2',
+                polygon: true,
+                title: '极速响应',
+                desc: '毫秒级加载，流畅无卡顿',
+              },
+              {
+                rects: true,
+                title: '模块化架构',
+                desc: '清晰的代码结构，易于扩展',
+              },
+            ].map((item) => (
+              <div key={item.title} className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#60a5fa"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    {item.rect && (
+                      <>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d={item.icon} />
+                      </>
+                    )}
+                    {item.polygon && <polygon points={item.icon} />}
+                    {item.rects && (
+                      <>
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-white">{item.title}</div>
+                  <div className="text-xs text-slate-500">{item.desc}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-sm font-medium text-white">安全加密</div>
-                <div className="text-xs text-slate-500">端到端数据加密，保护您的隐私</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-white">极速响应</div>
-                <div className="text-xs text-slate-500">毫秒级加载，流畅无卡顿</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#60a5fa"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="3" width="7" height="7" />
-                  <rect x="14" y="3" width="7" height="7" />
-                  <rect x="3" y="14" width="7" height="7" />
-                  <rect x="14" y="14" width="7" height="7" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-white">模块化架构</div>
-                <div className="text-xs text-slate-500">清晰的代码结构，易于扩展</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white">
+      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-12">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
-            >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-brand">
               <svg
                 width="18"
                 height="18"
@@ -233,18 +222,22 @@ export default function Register() {
               </svg>
             </div>
             <span
-              className="text-lg text-gray-900"
+              className="text-lg text-gray-900 dark:text-gray-100"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
               Gin Template
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">注册</h2>
-          <p className="text-gray-500 text-sm mt-1.5 mb-7">填写以下信息创建账户</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+            注册
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1.5 mb-7">
+            填写以下信息创建账户
+          </p>
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2">
+            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
               <svg
                 width="16"
                 height="16"
@@ -265,7 +258,10 @@ export default function Register() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 用户名
               </label>
               <input
@@ -277,13 +273,16 @@ export default function Register() {
                 disabled={loading}
                 value={form.username}
                 onChange={(e) => setForm({ ...form, username: e.target.value })}
-                placeholder="2-20 个字符"
-                className={inputCls}
+                placeholder={`${VALIDATION.USERNAME_MIN}-${VALIDATION.USERNAME_MAX} 个字符`}
+                className={INPUT_CLASS}
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 邮箱
               </label>
               <input
@@ -295,12 +294,15 @@ export default function Register() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="your@email.com"
-                className={inputCls}
+                className={INPUT_CLASS}
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="code"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 验证码
               </label>
               <div className="flex gap-2">
@@ -309,19 +311,19 @@ export default function Register() {
                   type="text"
                   required
                   disabled={loading}
-                  maxLength={6}
+                  maxLength={VALIDATION.CODE_LENGTH}
                   value={form.code}
                   onChange={(e) =>
                     setForm({ ...form, code: e.target.value.replace(/\D/g, '') })
                   }
-                  placeholder="6 位数字"
-                  className={inputCls + ' flex-1'}
+                  placeholder={`${VALIDATION.CODE_LENGTH} 位数字`}
+                  className={INPUT_CLASS + ' flex-1'}
                 />
                 <button
                   type="button"
                   onClick={handleSendCode}
                   disabled={loading || countdown > 0}
-                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
+                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
                 >
                   {countdown > 0 ? `${countdown}s` : '发送验证码'}
                 </button>
@@ -329,7 +331,10 @@ export default function Register() {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 密码
               </label>
               <div className="relative">
@@ -341,44 +346,19 @@ export default function Register() {
                   disabled={loading}
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="6-20 个字符"
-                  className={inputCls + ' pr-10'}
+                  placeholder={`${VALIDATION.PASSWORD_MIN}-${VALIDATION.PASSWORD_MAX} 个字符`}
+                  className={INPUT_CLASS + ' pr-10'}
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPwd ? (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
-                      <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -387,7 +367,7 @@ export default function Register() {
             <div className="mb-6">
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
               >
                 确认密码
               </label>
@@ -400,15 +380,14 @@ export default function Register() {
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 placeholder="请再次输入密码"
-                className={inputCls}
+                className={INPUT_CLASS}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || !canSubmit}
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
+              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm bg-gradient-brand hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -436,7 +415,7 @@ export default function Register() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-gray-500">
+          <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
             已有账户？
             <Link to="/login" className="ml-1 font-semibold text-blue-600 hover:text-blue-700">
               立即登录

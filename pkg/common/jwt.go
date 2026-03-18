@@ -168,19 +168,11 @@ func normalizeTokenVersion(tokenVersion int) int {
 }
 
 func getAccessTTL() time.Duration {
-	expiresIn := config.GetConfig().JWT.ExpiresIn
-	if expiresIn <= 0 {
-		expiresIn = 24
-	}
-	return time.Duration(expiresIn) * time.Hour
+	return time.Duration(config.GetConfig().JWT.ExpiresIn) * time.Hour
 }
 
 func getRefreshTTL() time.Duration {
-	expiresIn := config.GetConfig().JWT.RefreshExpiresIn
-	if expiresIn <= 0 {
-		expiresIn = 168
-	}
-	return time.Duration(expiresIn) * time.Hour
+	return time.Duration(config.GetConfig().JWT.RefreshExpiresIn) * time.Hour
 }
 
 func buildParserOptions(jwtConfig config.JWTConfig) []jwt.ParserOption {

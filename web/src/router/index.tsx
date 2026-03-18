@@ -1,5 +1,6 @@
+import { useSyncExternalStore } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { getIsAuthenticated } from '@/auth/store'
+import { subscribe, getSnapshot, getIsAuthenticated } from '@/auth/store'
 import AdminLayout from '@/layouts/AdminLayout'
 import Login from '@/auth/pages/Login'
 import Register from '@/auth/pages/Register'
@@ -10,6 +11,7 @@ import Settings from '@/pages/Settings'
 import NotFound from '@/pages/NotFound'
 
 function RequireAuth() {
+  useSyncExternalStore(subscribe, getSnapshot)
   if (!getIsAuthenticated()) {
     const redirect = window.location.pathname + window.location.search
     return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />
@@ -18,6 +20,7 @@ function RequireAuth() {
 }
 
 function GuestOnly() {
+  useSyncExternalStore(subscribe, getSnapshot)
   if (getIsAuthenticated()) {
     return <Navigate to="/" replace />
   }

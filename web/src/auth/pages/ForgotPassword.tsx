@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../useAuth'
 import { message } from '@/lib/message'
+import { VALIDATION, EMAIL_REGEX, INPUT_CLASS } from '@/lib/constants'
+import { Eye, EyeOff } from 'lucide-react'
 import type { ResetPasswordRequest } from '@/types/auth'
 
 export default function ForgotPassword() {
@@ -29,7 +31,7 @@ export default function ForgotPassword() {
   const canSubmit =
     form.email.trim().length > 0 &&
     form.code.trim().length > 0 &&
-    form.newPassword.length >= 6 &&
+    form.newPassword.length >= VALIDATION.PASSWORD_MIN &&
     form.confirmPassword.length > 0
 
   const handleSendCode = async () => {
@@ -37,7 +39,7 @@ export default function ForgotPassword() {
       setError('请输入邮箱')
       return
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+    if (!EMAIL_REGEX.test(form.email.trim())) {
       setError('请输入有效的邮箱地址')
       return
     }
@@ -45,7 +47,7 @@ export default function ForgotPassword() {
       setError('')
       await sendResetPasswordCode(form.email.trim())
       message.success('验证码已发送到您的邮箱')
-      setCountdown(60)
+      setCountdown(VALIDATION.CODE_COUNTDOWN)
       timerRef.current = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -63,8 +65,11 @@ export default function ForgotPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (form.newPassword.length < 6 || form.newPassword.length > 20) {
-      setError('密码长度为 6-20 个字符')
+    if (
+      form.newPassword.length < VALIDATION.PASSWORD_MIN ||
+      form.newPassword.length > VALIDATION.PASSWORD_MAX
+    ) {
+      setError(`密码长度为 ${VALIDATION.PASSWORD_MIN}-${VALIDATION.PASSWORD_MAX} 个字符`)
       return
     }
     if (form.newPassword !== form.confirmPassword) {
@@ -85,9 +90,6 @@ export default function ForgotPassword() {
     }
   }
 
-  const inputCls =
-    'block w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition disabled:bg-gray-50 disabled:opacity-60'
-
   return (
     <div className="min-h-screen flex">
       {/* Left dark panel */}
@@ -101,10 +103,7 @@ export default function ForgotPassword() {
 
         <div className="relative z-10 px-12 xl:px-20 max-w-lg">
           <div className="flex items-center gap-3 mb-16">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
-            >
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-brand">
               <svg
                 width="20"
                 height="20"
@@ -157,13 +156,10 @@ export default function ForgotPassword() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white">
+      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white dark:bg-gray-900">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-12">
-            <div
-              className="w-9 h-9 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
-            >
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-brand">
               <svg
                 width="18"
                 height="18"
@@ -180,18 +176,22 @@ export default function ForgotPassword() {
               </svg>
             </div>
             <span
-              className="text-lg text-gray-900"
+              className="text-lg text-gray-900 dark:text-gray-100"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
               Gin Template
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">重置密码</h2>
-          <p className="text-gray-500 text-sm mt-1.5 mb-7">通过邮箱验证码重置您的密码</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+            重置密码
+          </h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1.5 mb-7">
+            通过邮箱验证码重置您的密码
+          </p>
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600 flex items-center gap-2">
+            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
               <svg
                 width="16"
                 height="16"
@@ -212,7 +212,10 @@ export default function ForgotPassword() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 邮箱
               </label>
               <input
@@ -225,12 +228,15 @@ export default function ForgotPassword() {
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="请输入注册邮箱"
-                className={inputCls}
+                className={INPUT_CLASS}
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="code"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+              >
                 验证码
               </label>
               <div className="flex gap-2">
@@ -239,19 +245,19 @@ export default function ForgotPassword() {
                   type="text"
                   required
                   disabled={loading}
-                  maxLength={6}
+                  maxLength={VALIDATION.CODE_LENGTH}
                   value={form.code}
                   onChange={(e) =>
                     setForm({ ...form, code: e.target.value.replace(/\D/g, '') })
                   }
-                  placeholder="6 位数字"
-                  className={inputCls + ' flex-1'}
+                  placeholder={`${VALIDATION.CODE_LENGTH} 位数字`}
+                  className={INPUT_CLASS + ' flex-1'}
                 />
                 <button
                   type="button"
                   onClick={handleSendCode}
                   disabled={loading || countdown > 0}
-                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
+                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
                 >
                   {countdown > 0 ? `${countdown}s` : '发送验证码'}
                 </button>
@@ -261,7 +267,7 @@ export default function ForgotPassword() {
             <div className="mb-4">
               <label
                 htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
               >
                 新密码
               </label>
@@ -274,44 +280,19 @@ export default function ForgotPassword() {
                   disabled={loading}
                   value={form.newPassword}
                   onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
-                  placeholder="6-20 个字符"
-                  className={inputCls + ' pr-10'}
+                  placeholder={`${VALIDATION.PASSWORD_MIN}-${VALIDATION.PASSWORD_MAX} 个字符`}
+                  className={INPUT_CLASS + ' pr-10'}
                 />
                 <button
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   {showPwd ? (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                      <line x1="1" y1="1" x2="23" y2="23" />
-                    </svg>
+                    <EyeOff className="w-4 h-4" />
                   ) : (
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    <Eye className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -320,7 +301,7 @@ export default function ForgotPassword() {
             <div className="mb-6">
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-1.5"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
               >
                 确认密码
               </label>
@@ -333,15 +314,14 @@ export default function ForgotPassword() {
                 value={form.confirmPassword}
                 onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                 placeholder="请再次输入新密码"
-                className={inputCls}
+                className={INPUT_CLASS}
               />
             </div>
 
             <button
               type="submit"
               disabled={loading || !canSubmit}
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}
+              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm bg-gradient-brand hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -369,7 +349,7 @@ export default function ForgotPassword() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-gray-500">
+          <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
             想起密码了？
             <Link to="/login" className="ml-1 font-semibold text-blue-600 hover:text-blue-700">
               返回登录
