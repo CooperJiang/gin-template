@@ -101,26 +101,24 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left dark panel */}
-      <div
-        className="hidden lg:flex lg:w-[48%] relative overflow-hidden items-center justify-center"
-        style={{ background: 'linear-gradient(to bottom right, #0f172a, #1e293b)' }}
-      >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] rounded-full border border-white/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/5" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[680px] h-[680px] rounded-full border border-white/5" />
+    <div className="min-h-screen flex bg-nb-bg">
+      {/* Left panel — neubrutalism style */}
+      <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden items-center justify-center bg-[var(--nb-accent-pink)] border-r-nb border-nb-border">
+        {/* Decorative shapes */}
+        <div className="absolute top-[10%] left-[10%] w-40 h-40 border-nb border-nb-border bg-nb-primary rotate-12 opacity-50" />
+        <div className="absolute bottom-[15%] right-[10%] w-56 h-56 rounded-full border-nb border-nb-border bg-[var(--nb-accent-blue)] opacity-40" />
+        <div className="absolute top-[50%] right-[-20px] w-32 h-32 border-nb border-nb-border bg-nb-surface opacity-30 -rotate-6" />
 
         <div className="relative z-10 px-14 xl:px-20 max-w-lg">
           <div className="flex items-center gap-3 mb-14">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-brand">
+            <div className="w-10 h-10 rounded-[var(--nb-radius)] flex items-center justify-center bg-nb-surface border-nb border-nb-border shadow-nb-sm">
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2"
+                stroke="var(--nb-text)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -129,16 +127,13 @@ export default function Register() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span
-              className="text-white text-xl tracking-tight"
-              style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
-            >
+            <span className="text-[var(--nb-primary-text)] text-xl font-bold tracking-tight">
               Gin Template
             </span>
           </div>
 
-          <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">创建账户</h1>
-          <p className="mt-4 text-slate-400 text-base leading-relaxed">
+          <h1 className="text-4xl font-bold text-[var(--nb-primary-text)] leading-tight tracking-tight">创建账户</h1>
+          <p className="mt-4 text-[var(--nb-primary-text)] opacity-70 text-base leading-relaxed">
             注册您的账户，即刻体验现代化全栈应用的全部功能。
           </p>
 
@@ -163,14 +158,14 @@ export default function Register() {
               },
             ].map((item) => (
               <div key={item.title} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-[var(--nb-radius-sm)] bg-nb-surface border-nb border-nb-border shadow-nb-sm flex items-center justify-center shrink-0">
                   <svg
                     width="18"
                     height="18"
                     viewBox="0 0 24 24"
                     fill="none"
-                    stroke="#60a5fa"
-                    strokeWidth="1.5"
+                    stroke="var(--nb-text)"
+                    strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   >
@@ -192,8 +187,8 @@ export default function Register() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-white">{item.title}</div>
-                  <div className="text-xs text-slate-500">{item.desc}</div>
+                  <div className="text-sm font-bold text-[var(--nb-primary-text)]">{item.title}</div>
+                  <div className="text-xs text-[var(--nb-primary-text)] opacity-60">{item.desc}</div>
                 </div>
               </div>
             ))}
@@ -202,17 +197,17 @@ export default function Register() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-nb-bg">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-12">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-brand">
+            <div className="w-9 h-9 rounded-[var(--nb-radius)] flex items-center justify-center bg-nb-primary border-nb border-nb-border shadow-nb-sm">
               <svg
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2"
+                stroke="var(--nb-primary-text)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -221,30 +216,23 @@ export default function Register() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span
-              className="text-lg text-gray-900 dark:text-gray-100"
-              style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
-            >
+            <span className="text-lg text-nb-text font-bold tracking-tight">
               Gin Template
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            注册
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1.5 mb-7">
-            填写以下信息创建账户
-          </p>
+          <h2 className="text-2xl font-bold text-nb-text tracking-tight">注册</h2>
+          <p className="text-nb-text-secondary text-sm mt-1.5 mb-7">填写以下信息创建账户</p>
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+            <div className="mb-5 px-4 py-3 rounded-[var(--nb-radius)] bg-[var(--nb-accent-red)] border-nb border-nb-border shadow-nb-sm text-sm font-bold text-white flex items-center gap-2">
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -260,7 +248,7 @@ export default function Register() {
             <div className="mb-4">
               <label
                 htmlFor="username"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 用户名
               </label>
@@ -281,7 +269,7 @@ export default function Register() {
             <div className="mb-4">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 邮箱
               </label>
@@ -301,7 +289,7 @@ export default function Register() {
             <div className="mb-4">
               <label
                 htmlFor="code"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 验证码
               </label>
@@ -323,7 +311,7 @@ export default function Register() {
                   type="button"
                   onClick={handleSendCode}
                   disabled={loading || countdown > 0}
-                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
+                  className="shrink-0 px-4 py-2.5 text-sm font-bold text-[var(--nb-primary-text)] bg-nb-primary border-nb border-nb-border rounded-[var(--nb-radius)] shadow-nb-sm nb-interactive disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap"
                 >
                   {countdown > 0 ? `${countdown}s` : '发送验证码'}
                 </button>
@@ -333,7 +321,7 @@ export default function Register() {
             <div className="mb-4">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 密码
               </label>
@@ -353,7 +341,7 @@ export default function Register() {
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-nb-text-muted hover:text-nb-text"
                 >
                   {showPwd ? (
                     <EyeOff className="w-4 h-4" />
@@ -367,7 +355,7 @@ export default function Register() {
             <div className="mb-6">
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 确认密码
               </label>
@@ -387,7 +375,7 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading || !canSubmit}
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm bg-gradient-brand hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full rounded-[var(--nb-radius)] px-4 py-2.5 text-sm font-bold text-[var(--nb-primary-text)] bg-nb-primary border-nb border-nb-border shadow-nb nb-interactive focus:outline-none focus:ring-2 focus:ring-nb-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-nb"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -415,9 +403,9 @@ export default function Register() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-7 text-center text-sm text-nb-text-secondary">
             已有账户？
-            <Link to="/login" className="ml-1 font-semibold text-blue-600 hover:text-blue-700">
+            <Link to="/login" className="ml-1 font-bold text-nb-text underline underline-offset-2 hover:text-nb-primary">
               立即登录
             </Link>
           </p>

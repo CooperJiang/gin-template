@@ -58,8 +58,8 @@ export default function Profile() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">个人资料</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">查看和管理您的账户信息</p>
+        <h1 className="text-2xl font-bold text-nb-text">个人资料</h1>
+        <p className="text-nb-text-secondary mt-1">查看和管理您的账户信息</p>
       </div>
 
       <div className="max-w-2xl">
@@ -93,16 +93,16 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-6 mb-8">
-              <div className="w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                <span className="text-3xl font-bold text-blue-700 dark:text-blue-400">
+              <div className="w-20 h-20 rounded-[var(--nb-radius)] bg-nb-primary border-nb border-nb-border shadow-nb flex items-center justify-center">
+                <span className="text-3xl font-bold text-[var(--nb-primary-text)]">
                   {user?.username?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                <h3 className="text-lg font-bold text-nb-text">
                   {user?.username || '—'}
                 </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-nb-text-secondary">
                   {user?.bio || '暂无简介'}
                 </p>
               </div>
@@ -111,7 +111,7 @@ export default function Profile() {
             {editing ? (
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="block text-sm font-bold text-nb-text mb-1.5">
                     用户名
                   </label>
                   <input
@@ -131,32 +131,32 @@ export default function Profile() {
                 </div>
               </form>
             ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <User className="w-5 h-5 text-gray-400" />
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-4 bg-nb-bg-soft border-nb border-nb-border rounded-[var(--nb-radius)] shadow-nb-sm">
+                  <User className="w-5 h-5 text-nb-text-muted" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">用户名</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="text-xs font-medium text-nb-text-secondary">用户名</p>
+                    <p className="text-sm font-bold text-nb-text">
                       {user?.username || '—'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <Mail className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-3 p-4 bg-nb-bg-soft border-nb border-nb-border rounded-[var(--nb-radius)] shadow-nb-sm">
+                  <Mail className="w-5 h-5 text-nb-text-muted" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">邮箱</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="text-xs font-medium text-nb-text-secondary">邮箱</p>
+                    <p className="text-sm font-bold text-nb-text">
                       {user?.email || '—'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <Calendar className="w-5 h-5 text-gray-400" />
+                <div className="flex items-center gap-3 p-4 bg-nb-bg-soft border-nb border-nb-border rounded-[var(--nb-radius)] shadow-nb-sm">
+                  <Calendar className="w-5 h-5 text-nb-text-muted" />
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">注册时间</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    <p className="text-xs font-medium text-nb-text-secondary">注册时间</p>
+                    <p className="text-sm font-bold text-nb-text">
                       {user?.created_at
                         ? new Date(user.created_at).toLocaleDateString('zh-CN')
                         : '—'}

@@ -50,31 +50,34 @@ export default function AdminLayout() {
   const themeLabel = themeOptions.find((o) => o.value === currentTheme)?.label ?? '浅色'
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-nb-bg transition-colors">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+      {/* Header — full width, pinned top */}
+      <header className="sticky top-0 z-50 h-16 bg-nb-surface border-b-nb border-nb-border flex items-center px-6 transition-colors">
+        {/* Logo area — same width as sidebar */}
+        <div className="flex items-center w-64 shrink-0">
+          <button
+            className="lg:hidden p-2 mr-3 rounded-[var(--nb-radius-sm)] border-nb border-nb-border hover:bg-nb-bg-soft shadow-nb-sm nb-interactive"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="w-5 h-5 text-nb-text" /> : <Menu className="w-5 h-5 text-nb-text" />}
+          </button>
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gradient-brand">
+            <div className="w-8 h-8 rounded-[var(--nb-radius-sm)] flex items-center justify-center bg-nb-primary border-nb border-nb-border shadow-nb-sm">
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2"
+                stroke="var(--nb-primary-text)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -83,126 +86,116 @@ export default function AdminLayout() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="font-bold text-gray-900 dark:text-gray-100 text-sm">Gin Template</span>
+            <span className="font-bold text-nb-text text-sm">Gin Template</span>
           </Link>
-          <button
-            className="lg:hidden p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
         </div>
 
-        <nav className="p-4 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const active = isActive(item.path)
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  active
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {item.label}
-              </Link>
-            )
-          })}
-        </nav>
-      </aside>
+        <div className="flex-1" />
 
-      {/* Main content */}
-      <div className="lg:ml-64">
-        {/* Header */}
-        <header className="sticky top-0 z-30 h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6 transition-colors">
+        {/* Theme toggle */}
+        <button
+          onClick={cycleTheme}
+          title={themeLabel}
+          className="p-2 rounded-[var(--nb-radius-sm)] border-nb border-nb-border text-nb-text hover:bg-nb-bg-soft shadow-nb-sm nb-interactive mr-3"
+        >
+          <ThemeIcon className="w-5 h-5" />
+        </button>
+
+        {/* User menu */}
+        <div className="relative">
           <button
-            className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center gap-2 px-2 py-2 rounded-[var(--nb-radius-sm)] border-nb border-nb-border hover:bg-nb-bg-soft shadow-nb-sm nb-interactive"
           >
-            <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-
-          <div className="flex-1" />
-
-          {/* Theme toggle */}
-          <button
-            onClick={cycleTheme}
-            title={themeLabel}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors mr-2"
-          >
-            <ThemeIcon className="w-5 h-5" />
-          </button>
-
-          {/* User menu */}
-          <div className="relative">
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            >
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                  {user?.username?.charAt(0).toUpperCase() || 'U'}
-                </span>
-              </div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">
-                {user?.username || '用户'}
+            <div className="w-5 h-5 rounded-[var(--nb-radius-sm)] bg-nb-primary border-nb border-nb-border flex items-center justify-center">
+              <span className="text-xs font-bold text-[var(--nb-primary-text)]">
+                {user?.username?.charAt(0).toUpperCase() || 'U'}
               </span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
-            </button>
+            </div>
+            <span className="text-sm font-bold text-nb-text hidden sm:block">
+              {user?.username || '用户'}
+            </span>
+            <ChevronDown className="w-4 h-4 text-nb-text-muted" />
+          </button>
 
-            {userMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-50">
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {user?.username}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user?.email}
-                    </p>
-                  </div>
-                  <Link
-                    to="/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <User className="w-4 h-4" />
-                    个人资料
-                  </Link>
-                  <Link
-                    to="/settings"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <Settings className="w-4 h-4" />
-                    系统设置
-                  </Link>
-                  <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
-                    <button
-                      onClick={() => {
-                        setUserMenuOpen(false)
-                        logout()
-                      }}
-                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      退出登录
-                    </button>
-                  </div>
+          {userMenuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
+              <div className="absolute right-0 mt-2 w-48 bg-nb-surface rounded-[var(--nb-radius)] border-nb border-nb-border shadow-nb py-1 z-50">
+                <div className="px-4 py-2 border-b-nb border-nb-border">
+                  <p className="text-sm font-bold text-nb-text">
+                    {user?.username}
+                  </p>
+                  <p className="text-xs text-nb-text-muted truncate">
+                    {user?.email}
+                  </p>
                 </div>
-              </>
-            )}
-          </div>
-        </header>
+                <Link
+                  to="/profile"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-nb-text hover:bg-nb-bg-soft"
+                >
+                  <User className="w-4 h-4" />
+                  个人资料
+                </Link>
+                <Link
+                  to="/settings"
+                  onClick={() => setUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-nb-text hover:bg-nb-bg-soft"
+                >
+                  <Settings className="w-4 h-4" />
+                  系统设置
+                </Link>
+                <div className="border-t-nb border-nb-border mt-1">
+                  <button
+                    onClick={() => {
+                      setUserMenuOpen(false)
+                      logout()
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-nb-red hover:bg-red-50 dark:hover:bg-red-900/20 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    退出登录
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </header>
 
-        {/* Page content */}
-        <main className="p-6">
+      <div className="flex">
+        {/* Sidebar — below header */}
+        <aside
+          className={`fixed top-16 left-0 z-30 h-[calc(100vh-4rem)] w-64 bg-nb-surface border-r-nb border-nb-border transform transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <nav className="p-4 space-y-2">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const active = isActive(item.path)
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-[var(--nb-radius)] text-sm font-bold transition-all border-nb ${
+                    active
+                      ? 'bg-nb-primary text-[var(--nb-primary-text)] border-nb-border shadow-nb-sm'
+                      : 'text-nb-text-secondary border-transparent hover:bg-nb-bg-soft hover:border-nb-border hover:shadow-nb-sm'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+        </aside>
+
+        {/* Main content */}
+        <main className="flex-1 lg:ml-64 p-6">
           <Outlet />
         </main>
       </div>

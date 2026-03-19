@@ -91,26 +91,24 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left dark panel */}
-      <div
-        className="hidden lg:flex lg:w-[45%] relative overflow-hidden items-center justify-center"
-        style={{ background: 'linear-gradient(to bottom right, #0f172a, #1e293b)' }}
-      >
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full border border-white/[0.04]" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full border border-white/[0.03]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/[0.02]" />
+    <div className="min-h-screen flex bg-nb-bg">
+      {/* Left panel — neubrutalism style */}
+      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden items-center justify-center bg-[var(--nb-accent-blue)] border-r-nb border-nb-border">
+        {/* Decorative shapes */}
+        <div className="absolute top-[20%] left-[15%] w-48 h-48 rounded-full border-nb border-nb-border bg-nb-primary opacity-50" />
+        <div className="absolute bottom-[10%] right-[5%] w-36 h-36 border-nb border-nb-border bg-[var(--nb-accent-orange)] opacity-40 rotate-45" />
+        <div className="absolute top-[60%] left-[-20px] w-28 h-28 border-nb border-nb-border bg-nb-surface opacity-30" />
 
         <div className="relative z-10 px-12 xl:px-20 max-w-lg">
           <div className="flex items-center gap-3 mb-16">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-brand">
+            <div className="w-10 h-10 rounded-[var(--nb-radius)] flex items-center justify-center bg-nb-surface border-nb border-nb-border shadow-nb-sm">
               <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2"
+                stroke="var(--nb-text)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -119,16 +117,13 @@ export default function ForgotPassword() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span
-              className="text-white text-xl"
-              style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
-            >
+            <span className="text-[var(--nb-primary-text)] text-xl font-bold">
               Gin Template
             </span>
           </div>
 
-          <h1 className="text-4xl font-bold text-white leading-tight tracking-tight">重置密码</h1>
-          <p className="mt-4 text-slate-400 text-base leading-relaxed">
+          <h1 className="text-4xl font-bold text-[var(--nb-primary-text)] leading-tight tracking-tight">重置密码</h1>
+          <p className="mt-4 text-[var(--nb-primary-text)] opacity-70 text-base leading-relaxed">
             通过邮箱验证码安全地重置您的密码，整个过程只需几步。
           </p>
 
@@ -140,14 +135,14 @@ export default function ForgotPassword() {
             ].map((item, i) => (
               <div key={item.step} className="flex items-start gap-4">
                 <div className="relative flex flex-col items-center">
-                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-blue-400">{item.step}</span>
+                  <div className="w-10 h-10 rounded-[var(--nb-radius-sm)] bg-nb-surface border-nb border-nb-border shadow-nb-sm flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-nb-text">{item.step}</span>
                   </div>
-                  {i < 2 && <div className="w-px h-8 bg-white/10 mt-1" />}
+                  {i < 2 && <div className="w-[2.5px] h-8 bg-nb-border mt-1" />}
                 </div>
                 <div className="pt-2">
-                  <div className="text-sm font-medium text-white">{item.t}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{item.d}</div>
+                  <div className="text-sm font-bold text-[var(--nb-primary-text)]">{item.t}</div>
+                  <div className="text-xs text-[var(--nb-primary-text)] opacity-60 mt-0.5">{item.d}</div>
                 </div>
               </div>
             ))}
@@ -156,17 +151,17 @@ export default function ForgotPassword() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-white dark:bg-gray-900">
+      <div className="flex-1 flex items-center justify-center px-6 sm:px-12 py-12 bg-nb-bg">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-12">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-gradient-brand">
+            <div className="w-9 h-9 rounded-[var(--nb-radius)] flex items-center justify-center bg-nb-primary border-nb border-nb-border shadow-nb-sm">
               <svg
                 width="18"
                 height="18"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2"
+                stroke="var(--nb-primary-text)"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -175,30 +170,23 @@ export default function ForgotPassword() {
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span
-              className="text-lg text-gray-900 dark:text-gray-100"
-              style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
-            >
+            <span className="text-lg text-nb-text font-bold">
               Gin Template
             </span>
           </div>
 
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-            重置密码
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1.5 mb-7">
-            通过邮箱验证码重置您的密码
-          </p>
+          <h2 className="text-2xl font-bold text-nb-text tracking-tight">重置密码</h2>
+          <p className="text-nb-text-secondary text-sm mt-1.5 mb-7">通过邮箱验证码重置您的密码</p>
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+            <div className="mb-5 px-4 py-3 rounded-[var(--nb-radius)] bg-[var(--nb-accent-red)] border-nb border-nb-border shadow-nb-sm text-sm font-bold text-white flex items-center gap-2">
               <svg
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -214,7 +202,7 @@ export default function ForgotPassword() {
             <div className="mb-4">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 邮箱
               </label>
@@ -235,7 +223,7 @@ export default function ForgotPassword() {
             <div className="mb-4">
               <label
                 htmlFor="code"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 验证码
               </label>
@@ -257,7 +245,7 @@ export default function ForgotPassword() {
                   type="button"
                   onClick={handleSendCode}
                   disabled={loading || countdown > 0}
-                  className="shrink-0 px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition"
+                  className="shrink-0 px-4 py-2.5 text-sm font-bold text-[var(--nb-primary-text)] bg-nb-primary border-nb border-nb-border rounded-[var(--nb-radius)] shadow-nb-sm nb-interactive disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none whitespace-nowrap"
                 >
                   {countdown > 0 ? `${countdown}s` : '发送验证码'}
                 </button>
@@ -267,7 +255,7 @@ export default function ForgotPassword() {
             <div className="mb-4">
               <label
                 htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 新密码
               </label>
@@ -287,7 +275,7 @@ export default function ForgotPassword() {
                   type="button"
                   tabIndex={-1}
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-nb-text-muted hover:text-nb-text"
                 >
                   {showPwd ? (
                     <EyeOff className="w-4 h-4" />
@@ -301,7 +289,7 @@ export default function ForgotPassword() {
             <div className="mb-6">
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
+                className="block text-sm font-bold text-nb-text mb-1.5"
               >
                 确认密码
               </label>
@@ -321,7 +309,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading || !canSubmit}
-              className="w-full rounded-lg px-4 py-2.5 text-sm font-semibold text-white shadow-sm bg-gradient-brand hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full rounded-[var(--nb-radius)] px-4 py-2.5 text-sm font-bold text-[var(--nb-primary-text)] bg-nb-primary border-nb border-nb-border shadow-nb nb-interactive focus:outline-none focus:ring-2 focus:ring-nb-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-nb"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
@@ -349,9 +337,9 @@ export default function ForgotPassword() {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-7 text-center text-sm text-nb-text-secondary">
             想起密码了？
-            <Link to="/login" className="ml-1 font-semibold text-blue-600 hover:text-blue-700">
+            <Link to="/login" className="ml-1 font-bold text-nb-text underline underline-offset-2 hover:text-nb-primary">
               返回登录
             </Link>
           </p>

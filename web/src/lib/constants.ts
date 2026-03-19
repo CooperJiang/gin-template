@@ -10,4 +10,4 @@ export const VALIDATION = {
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export const INPUT_CLASS =
-  'block w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3.5 py-2.5 text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:opacity-60'
+  'block w-full border-nb border-nb-border bg-nb-surface px-3.5 py-2.5 text-sm text-nb-text placeholder:text-nb-text-muted focus:ring-2 focus:ring-nb-primary focus:border-nb-border outline-none transition-shadow disabled:opacity-60 rounded-[var(--nb-radius)] shadow-nb-sm focus:shadow-nb'

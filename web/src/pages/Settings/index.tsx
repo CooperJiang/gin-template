@@ -49,8 +49,8 @@ export default function Settings() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">系统设置</h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">管理应用程序设置和偏好</p>
+        <h1 className="text-2xl font-bold text-nb-text">系统设置</h1>
+        <p className="text-nb-text-secondary mt-1">管理应用程序设置和偏好</p>
       </div>
 
       <div className="max-w-2xl space-y-6">
@@ -62,7 +62,7 @@ export default function Settings() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-sm font-bold text-nb-text mb-1.5">
                   当前密码
                 </label>
                 <div className="relative">
@@ -80,7 +80,7 @@ export default function Settings() {
                     type="button"
                     tabIndex={-1}
                     onClick={() => setShowOld(!showOld)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-nb-text-muted hover:text-nb-text"
                   >
                     {showOld ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -88,7 +88,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-sm font-bold text-nb-text mb-1.5">
                   新密码
                 </label>
                 <div className="relative">
@@ -106,7 +106,7 @@ export default function Settings() {
                     type="button"
                     tabIndex={-1}
                     onClick={() => setShowNew(!showNew)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-nb-text-muted hover:text-nb-text"
                   >
                     {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -114,7 +114,7 @@ export default function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-sm font-bold text-nb-text mb-1.5">
                   确认新密码
                 </label>
                 <input
