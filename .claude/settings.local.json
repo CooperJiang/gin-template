@@ -24,7 +24,9 @@
       "Bash(cd:*)",
       "Bash(cd /c/Users/92789/Desktop/github/gin-template/web && npx tsc --noEmit 2>&1)",
       "Bash(cd /c/Users/92789/Desktop/github/gin-template/web && pnpm lint 2>&1)",
-      "Bash(cd /c/Users/92789/Desktop/github/gin-template/web && pnpm add -D jiti 2>&1)"
+      "Bash(cd /c/Users/92789/Desktop/github/gin-template/web && pnpm add -D jiti 2>&1)",
+      "Bash(cp:*)",
+      "Bash(cd /c/Users/92789/Desktop/github/gin-template/web && npx eslint . 2>&1)"
     ]
   }
 }

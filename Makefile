@@ -55,7 +55,7 @@ web-dev: ## 启动用户端前端开发服务器
 .PHONY: web-build
 web-build: ## 构建用户端前端项目并部署到static/web目录
 	@echo "$(GREEN)构建用户端前端项目...$(RESET)"
-	@./scripts/build_web.sh
+	@bash ./scripts/build_web.sh
 	@# 验证构建产物
 	@if [ ! -d "internal/static/web" ]; then \
 		echo "$(RED)❌ 错误：前端构建失败，internal/static/web 目录不存在$(RESET)"; \
@@ -388,7 +388,7 @@ deploy-config: ## 配置部署参数
 		exit 1; \
 	fi
 	@chmod +x scripts/deploy_functions.sh
-	@./scripts/deploy_functions.sh config $(APP_NAME)
+	@bash ./scripts/deploy_functions.sh config $(APP_NAME)
 
 .PHONY: deploy-env-config
 deploy-env-config: ## 配置环境特定参数
@@ -398,7 +398,7 @@ deploy-env-config: ## 配置环境特定参数
 		exit 1; \
 	fi
 	@chmod +x scripts/deploy_functions.sh
-	@./scripts/deploy_functions.sh config_env
+	@bash ./scripts/deploy_functions.sh config_env
 
 .PHONY: deploy-check
 deploy-check: ## 检查部署配置
@@ -425,13 +425,13 @@ deploy-setup: ## 初始化服务器环境
 	@if [ -z "$(DEPLOY_HOST)" ]; then echo "$(RED)请先运行 make deploy-config$(RESET)"; exit 1; fi
 	@echo "$(YELLOW)设置服务器环境...$(RESET)"
 	@chmod +x scripts/deploy_functions.sh
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	$$SSH_CMD "mkdir -p $(DEPLOY_DIR)/{releases,shared,shared/config,tmp}"
 	@echo "$(BLUE)生成服务脚本...$(RESET)"
-	@./scripts/deploy_functions.sh generate_service $(APP_NAME) $(DEPLOY_DIR) /tmp/service_script.sh
-	@SCP_CMD=$$(./scripts/deploy_functions.sh build_scp "$(DEPLOY_KEY)" "$(DEPLOY_PORT)"); \
+	@bash ./scripts/deploy_functions.sh generate_service $(APP_NAME) $(DEPLOY_DIR) /tmp/service_script.sh
+	@SCP_CMD=$$(bash ./scripts/deploy_functions.sh build_scp "$(DEPLOY_KEY)" "$(DEPLOY_PORT)"); \
 	$$SCP_CMD /tmp/service_script.sh $(DEPLOY_USER)@$(DEPLOY_HOST):$(DEPLOY_DIR)/service.sh
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	$$SSH_CMD "chmod +x $(DEPLOY_DIR)/service.sh"
 	@rm -f /tmp/service_script.sh
 	@echo "$(GREEN)服务器环境设置完成$(RESET)"
@@ -441,7 +441,7 @@ deploy: deploy-check ## 🚀 快速切换部署（2-3秒停机时间）
 	@echo "$(BLUE)开始应用部署...$(RESET)"
 	@chmod +x scripts/deploy_functions.sh
 	@# 检查必要参数
-	@if ! ./scripts/deploy_functions.sh check_params "$(DEPLOY_HOST)" "$(DEPLOY_USER)"; then \
+	@if ! bash ./scripts/deploy_functions.sh check_params "$(DEPLOY_HOST)" "$(DEPLOY_USER)"; then \
 		exit 1; \
 	fi
 	@# 检查部署包是否存在
@@ -455,7 +455,7 @@ deploy: deploy-check ## 🚀 快速切换部署（2-3秒停机时间）
 	echo "$$EXPECTED_PACKAGE" > .tmp_package_path
 	@# 检查远程环境
 	@echo "$(BLUE)检查远程环境...$(RESET)"
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	if ! $$SSH_CMD "[ -d \"$(DEPLOY_DIR)\" ]" 2>/dev/null; then \
 		echo "$(RED)错误: 远程目录 $(DEPLOY_DIR) 不存在$(RESET)"; \
 		echo "$(YELLOW)提示: 请先运行 'make deploy-setup' 初始化服务器环境$(RESET)"; \
@@ -474,20 +474,20 @@ deploy: deploy-check ## 🚀 快速切换部署（2-3秒停机时间）
 	elif [ -f "config.$(DEPLOY_ENV).yaml" ]; then \
 		CONFIG_SRC="config.$(DEPLOY_ENV).yaml"; \
 	fi; \
-	if ! ./scripts/deploy_functions.sh check_port "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)" "$(DEPLOY_DIR)" "$(APP_NAME)" "$$CONFIG_SRC"; then \
+	if ! bash ./scripts/deploy_functions.sh check_port "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)" "$(DEPLOY_DIR)" "$(APP_NAME)" "$$CONFIG_SRC"; then \
 		echo "$(RED)端口检查失败，部署终止$(RESET)"; \
 		exit 1; \
 	fi
 	@# 准备环境变量
 	@echo "$(BLUE)准备环境变量...$(RESET)"
-	@./scripts/deploy_functions.sh prepare_env "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)" "$(DEPLOY_DIR)" "$(DEPLOY_ENV)" "$(VERSION)" || true
+	@bash ./scripts/deploy_functions.sh prepare_env "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)" "$(DEPLOY_DIR)" "$(DEPLOY_ENV)" "$(VERSION)" || true
 	@# 执行部署流程
 	@echo "$(BLUE)开始应用部署流程...$(RESET)"
 	@PACKAGE_PATH=$$(cat .tmp_package_path); \
 	TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
 	RELEASE_DIR="$(DEPLOY_DIR)/releases/$$TIMESTAMP"; \
-	SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
-	SCP_CMD=$$(./scripts/deploy_functions.sh build_scp "$(DEPLOY_KEY)" "$(DEPLOY_PORT)"); \
+	SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	SCP_CMD=$$(bash ./scripts/deploy_functions.sh build_scp "$(DEPLOY_KEY)" "$(DEPLOY_PORT)"); \
 	\
 	echo "$(BLUE)步骤1: 创建版本目录...$(RESET)"; \
 	$$SSH_CMD "mkdir -p $$RELEASE_DIR"; \
@@ -532,7 +532,7 @@ deploy: deploy-check ## 🚀 快速切换部署（2-3秒停机时间）
 deploy-rollback: ## 回滚到上一个版本
 	@if [ -z "$(DEPLOY_HOST)" ]; then echo "$(RED)请先运行 make deploy-config$(RESET)"; exit 1; fi
 	@echo "$(YELLOW)正在回滚到上一个版本...$(RESET)"
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	CURRENT_VERSION=$$( $$SSH_CMD "readlink $(DEPLOY_DIR)/current | xargs basename" ); \
 	PREV_VERSION=$$( $$SSH_CMD "ls -t $(DEPLOY_DIR)/releases | sed -n '2p'" ); \
 	if [ -z "$$PREV_VERSION" ]; then \
@@ -555,13 +555,13 @@ deploy-rollback: ## 回滚到上一个版本
 deploy-restart: ## 重启远程应用
 	@if [ -z "$(DEPLOY_HOST)" ]; then echo "$(RED)请先运行 make deploy-config$(RESET)"; exit 1; fi
 	@echo "$(YELLOW)正在重启应用...$(RESET)"
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	$$SSH_CMD "$(DEPLOY_DIR)/service.sh restart"
 
 .PHONY: deploy-status
 deploy-status: ## 查看应用状态
 	@if [ -z "$(DEPLOY_HOST)" ]; then echo "$(RED)请先运行 make deploy-config$(RESET)"; exit 1; fi
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	if ! $$SSH_CMD "[ -f \"$(DEPLOY_DIR)/service.sh\" ]" 2>/dev/null; then \
 		echo "$(RED)错误: 服务管理脚本不存在$(RESET)"; \
 		echo "$(YELLOW)提示: 请先运行 'make deploy-setup' 初始化服务器环境$(RESET)"; \
@@ -573,7 +573,7 @@ deploy-status: ## 查看应用状态
 .PHONY: deploy-logs
 deploy-logs: ## 查看应用日志
 	@if [ -z "$(DEPLOY_HOST)" ]; then echo "$(RED)请先运行 make deploy-config$(RESET)"; exit 1; fi
-	@SSH_CMD=$$(./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
+	@SSH_CMD=$$(bash ./scripts/deploy_functions.sh build_ssh "$(DEPLOY_KEY)" "$(DEPLOY_PORT)" "$(DEPLOY_USER)" "$(DEPLOY_HOST)"); \
 	echo "$(YELLOW)应用日志 (最后50行):$(RESET)"; \
 	$$SSH_CMD "$(DEPLOY_DIR)/service.sh logs $${LINES:-50}"
 
