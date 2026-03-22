@@ -3,11 +3,11 @@ package upload
 import (
 	"strconv"
 
-	"template/internal/dto/request"
-	"template/internal/middleware"
-	uploadService "template/internal/services/upload"
-	"template/pkg/common"
-	"template/pkg/upload"
+	"email-manage/internal/dto/request"
+	"email-manage/internal/middleware"
+	uploadService "email-manage/internal/services/upload"
+	"email-manage/pkg/common"
+	"email-manage/pkg/upload"
 
 	"github.com/gin-gonic/gin"
 )

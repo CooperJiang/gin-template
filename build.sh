@@ -14,7 +14,7 @@ GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 
 # 默认值
 OUTPUT_DIR="./release"
-BINARY_NAME="template"
+BINARY_NAME="email-manage"
 MAIN_PATH="./cmd/main.go"
 
 # 打印帮助信息
@@ -26,7 +26,7 @@ show_help() {
     echo "选项:"
     echo "  -h, --help          显示帮助信息"
     echo "  -o, --output        指定输出目录 (默认: ./release)"
-    echo "  -n, --name          指定二进制文件名 (默认: template)"
+    echo "  -n, --name          指定二进制文件名 (默认: email-manage)"
     echo "  --local             为当前平台打包"
     echo "  --all               为所有主要平台打包"
     echo "  --windows           为Windows平台打包 (amd64)"
@@ -81,8 +81,12 @@ do_build() {
         return 1
     fi
     
-    # 复制配置文件
-    cp config.yaml "${OUTPUT_DIR}/${os}_${arch}/" 2>/dev/null || echo -e "${YELLOW}警告: 配置文件未复制${NC}"
+    # 复制配置文件：优先使用 config.prod.yaml 作为线上 config.yaml
+    if [ -f config.prod.yaml ]; then
+        cp config.prod.yaml "${OUTPUT_DIR}/${os}_${arch}/config.yaml"
+    else
+        cp config.yaml "${OUTPUT_DIR}/${os}_${arch}/" 2>/dev/null || echo -e "${YELLOW}警告: 配置文件未复制${NC}"
+    fi
     
     # 创建运行脚本
     if [ "$os" = "windows" ]; then

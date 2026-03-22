@@ -1,8 +1,8 @@
 package file
 
 import (
-	fileController "template/internal/controllers/file"
-	"template/internal/middleware"
+	fileController "email-manage/internal/controllers/file"
+	"email-manage/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

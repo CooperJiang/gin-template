@@ -1,100 +1,55 @@
 # 生产环境配置
-# ⚠️ 重要：所有 ${VAR_NAME} 格式的配置项都需要通过环境变量提供！
 app:
-  name: "template"
-  port: 7500
-  mode: "release"                # 生产模式
-  defaultRootPass: "${APP_DEFAULT_ROOT_PASS}"  # 必须通过环境变量设置
+  name: "email-manage"
+  port: 7900
+  mode: "release"
+  defaultRootPass: "sunny521"
   timezone: "Asia/Shanghai"
-  api_prefix: "/api/v1"
-  static_path: "/static"
-  upload_path: "uploads"
-  max_upload_size: 20
-  allowed_file_types:
-    - "image/jpeg"
-    - "image/png"
-    - "image/gif"
-    - "application/pdf"
-    - "application/msword"
-    - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 # 数据库配置 - 生产环境
 database:
   driver: "mysql"
-  host: "${DB_HOST:localhost}"        # 生产环境数据库地址
-  port: 3306
-  username: "${DB_USERNAME}"          # 必须通过环境变量设置
-  password: "${DB_PASSWORD}"          # 必须通过环境变量设置
-  name: "${DB_NAME:template}"         # 生产环境数据库名
+  host: "110.42.111.49"
+  port: 1244
+  username: "email"
+  password: "tgiyGk32"
+  name: "email"
   charset: "utf8mb4"
-  max_idle_conns: 10
-  max_open_conns: 100
-  conn_max_lifetime: 3600
-  slow_query_threshold: 200
-  enable_logging: false          # 生产环境关闭SQL日志
-  table_prefix: ""
 
-# JWT配置 - 生产环境
+# JWT配置 - 一个月有效期
 jwt:
-  secret_key: "${JWT_SECRET_KEY}"     # 必须通过环境变量设置（至少32字符）
-  expires_in: 24
-  refresh_expires_in: 168
-  issuer: "template-app"
-  audience: "template-users"
+  secret_key: "PD4GbH02PHF3YvRjonJf/2pgf5HGVwJOQguiYrRiZzdDIm/Bh0fH/8tmCkqr3krh"
+  expires_in: 720                  # access token 30天（720小时）
+  refresh_expires_in: 1440         # refresh token 60天（1440小时）
+  issuer: "email-manage-app"
+  audience: "email-manage-users"
   blacklist_enabled: true
-  blacklist_cleanup_interval: 24
 
 # Redis配置 - 生产环境
 redis:
-  enabled: true                  # 生产环境启用Redis
-  host: "localhost"              # 生产环境Redis地址
+  enabled: true
+  host: "localhost"
   port: 6379
-  password: ""     # 生产环境Redis密码
+  password: ""
   db: 0
-  pool_size: 20                  # 生产环境增加连接池
-  min_idle_conns: 10
-  max_conn_age: 3600
-  idle_timeout: 240
-  read_timeout: 3
-  write_timeout: 3
-  dial_timeout: 5
-
-# 日志配置 - 生产环境
-log:
-  level: "info"                  # 生产环境日志级别
-  path: "logs"
-  filename: "app.log"
-  max_size: 100
-  max_backups: 30                # 生产环境保留更多日志
-  max_age: 30                    # 生产环境保留30天日志
-  compress: true
-  json_format: true              # 生产环境使用JSON格式便于分析
-  show_caller: false             # 生产环境关闭调用者信息
-  show_line: false               # 生产环境关闭行号信息
-  show_stack: false
-  enable_console: false          # 生产环境关闭控制台输出
 
 # 邮件服务配置 - 生产环境
 mail:
-  host: "smtpdm.aliyun.com"   # 生产环境SMTP服务器
+  host: "smtpdm.aliyun.com"
   port: 465
   username: "nine_team@nineai.jiangly.com"
-  password: "Nine98Mailer"      # 生产环境SMTP密码
+  password: "Nine98Mailer"
   from: "nine_team@nineai.jiangly.com"
   from_name: "系统通知"
   reply_to: "nine_team@nineai.jiangly.com"
-  ssl: true
-  enabled: true                  # 生产环境启用邮件服务
-  template_path: "templates/mail"
-  max_retries: 3
-  retry_interval: 5
+  enabled: true
 
 # CORS配置 - 生产环境
 cors:
   enabled: true
-  allowed_origins:               # 生产环境只允许特定域名
-    - "https://template.mmmss.com"
-    - "http://template.mmmss.com"
+  allowed_origins:
+    - "https://email-manage.mmmss.com"
+    - "http://email-manage.mmmss.com"
   allowed_methods:
     - "GET"
     - "POST"
@@ -107,6 +62,11 @@ cors:
     - "Authorization"
   allow_credentials: true
   max_age: 86400
-  expose_headers:
-    - "Content-Length"
-    - "Content-Type" 
+
+# 字段加密配置
+security:
+  encryption_key: "change-this-to-a-strong-random-key"
+
+# 外部邮箱提供方配置
+mail_provider:
+  base_url: "https://app.wyx66.com"

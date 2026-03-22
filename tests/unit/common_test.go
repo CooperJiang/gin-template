@@ -1,8 +1,8 @@
 package unit
 
 import (
-	"template/pkg/common"
-	"template/pkg/constants"
+	"email-manage/pkg/common"
+	"email-manage/pkg/constants"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

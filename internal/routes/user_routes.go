@@ -1,8 +1,8 @@
 package routes
 
 import (
-	userController "template/internal/controllers/user"
-	userModule "template/internal/modules/user"
+	userController "email-manage/internal/controllers/user"
+	userModule "email-manage/internal/modules/user"
 
 	"github.com/gin-gonic/gin"
 )

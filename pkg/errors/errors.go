@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
-	"template/pkg/logger"
+	"email-manage/pkg/logger"
 	"time"
 )
 

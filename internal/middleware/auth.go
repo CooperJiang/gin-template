@@ -3,9 +3,9 @@ package middleware
 import (
 	"errors"
 	"strings"
-	"template/internal/models"
-	"template/pkg/common"
-	"template/pkg/database"
+	"email-manage/internal/models"
+	"email-manage/pkg/common"
+	"email-manage/pkg/database"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"

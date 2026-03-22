@@ -2,8 +2,8 @@ package user
 
 import (
 	"strings"
-	"template/internal/models"
-	"template/pkg/common"
+	"email-manage/internal/models"
+	"email-manage/pkg/common"
 
 	"gorm.io/gorm"
 )

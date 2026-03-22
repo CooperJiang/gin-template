@@ -28,7 +28,7 @@
 ### 第一步：克隆项目
 ```bash
 git clone <your-repo-url>
-cd gin-template
+cd email-manage
 ```
 
 ### 第二步：一键初始化
@@ -52,7 +52,7 @@ database:
   port: 3306
   username: "root"
   password: "password"
-  name: "gin_template"
+  name: "email_manage"
 
 # 使用Redis（可选）
 redis:

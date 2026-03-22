@@ -2,8 +2,8 @@ package common
 
 import (
 	"strings"
-	"template/pkg/cache"
-	"template/pkg/config"
+	"email-manage/pkg/cache"
+	"email-manage/pkg/config"
 	"time"
 )
 

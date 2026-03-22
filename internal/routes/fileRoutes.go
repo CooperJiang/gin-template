@@ -1,7 +1,7 @@
 package routes
 
 import (
-	fileModule "template/internal/modules/file"
+	fileModule "email-manage/internal/modules/file"
 
 	"github.com/gin-gonic/gin"
 )

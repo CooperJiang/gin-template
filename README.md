@@ -5,7 +5,7 @@
 ## 📊 项目架构
 
 ```
-gin-template/
+email-manage/
 ├── 🎯 后端 API (Go + Gin)              - 端口 9000
 ├── 🎨 管理端前端 (Vue3 + TypeScript)    - 端口 3000 (开发) / /admin (生产)
 └── 👥 用户端前端 (Vue3 + TypeScript)    - 端口 4000 (开发) / / (生产)
@@ -34,7 +34,7 @@ gin-template/
 ### 1️⃣ 克隆项目
 ```bash
 git clone <repository-url>
-cd gin-template
+cd email-manage
 ```
 
 ### 2️⃣ 启动后端服务
@@ -78,7 +78,7 @@ make fullstack-dev
 ## 📁 目录结构
 
 ```
-gin-template/
+email-manage/
 ├── 📂 cmd/                    # 应用入口
 ├── 📂 internal/               # 内部代码
 │   ├── 📂 api/               # API控制器
@@ -219,7 +219,7 @@ make deploy-rollback  # 回滚到上一版本
 make fullstack-build
 
 # 2. 运行二进制文件
-./bin/template
+./bin/email-manage
 
 # 应用将在端口9000启动，包含：
 # - API服务

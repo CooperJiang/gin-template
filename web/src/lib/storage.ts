@@ -1,5 +1,5 @@
 class SimpleEncryption {
-  private static key = 'gin-template-secret-key-2024'
+  private static key = 'email-manage-secret-key-2024'
 
   static encrypt(text: string): string {
     const keyBytes = new TextEncoder().encode(this.key)
@@ -47,7 +47,7 @@ interface StorageOptions {
 }
 
 class SecureStorage {
-  private static PREFIX = 'gin_template_frontend_'
+  private static PREFIX = 'email_manage_frontend_'
 
   static setItem<T>(key: string, value: T, options: StorageOptions = {}): void {
     try {

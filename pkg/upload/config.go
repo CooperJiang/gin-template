@@ -1,7 +1,7 @@
 package upload
 
 import (
-	"template/pkg/constants"
+	"email-manage/pkg/constants"
 )
 
 // Config 上传配置

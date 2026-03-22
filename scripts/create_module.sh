@@ -41,7 +41,7 @@ cat > "internal/models/${MODULE_NAME_LOWER}.go" << EOF
 package models
 
 import (
-	"template/pkg/common"
+	"email-manage/pkg/common"
 	"gorm.io/gorm"
 )
 
@@ -89,7 +89,7 @@ echo -e "${YELLOW}创建请求DTO...${NC}"
 cat > "internal/dto/request/${MODULE_NAME_LOWER}.go" << EOF
 package request
 
-import "template/internal/dto"
+import "email-manage/internal/dto"
 
 // Create${MODULE_NAME_TITLE}Request 创建${MODULE_NAME_LOWER}请求
 type Create${MODULE_NAME_TITLE}Request struct {
@@ -153,8 +153,8 @@ cat > "internal/dto/response/${MODULE_NAME_LOWER}.go" << EOF
 package response
 
 import (
-	"template/internal/dto"
-	"template/internal/models"
+	"email-manage/internal/dto"
+	"email-manage/internal/models"
 	"time"
 )
 
@@ -203,9 +203,9 @@ package ${MODULE_NAME_LOWER}
 
 import (
 	"context"
-	"template/internal/models"
-	"template/internal/repositories"
-	"template/pkg/errors"
+	"email-manage/internal/models"
+	"email-manage/internal/repositories"
+	"email-manage/pkg/errors"
 	
 	"gorm.io/gorm"
 )
@@ -269,12 +269,12 @@ package ${MODULE_NAME_LOWER}
 
 import (
 	"context"
-	"template/internal/models"
-	"template/internal/repositories/${MODULE_NAME_LOWER}"
-	"template/internal/dto/request"
-	"template/internal/dto/response"
-	"template/pkg/common"
-	"template/pkg/errors"
+	"email-manage/internal/models"
+	"email-manage/internal/repositories/${MODULE_NAME_LOWER}"
+	"email-manage/internal/dto/request"
+	"email-manage/internal/dto/response"
+	"email-manage/pkg/common"
+	"email-manage/pkg/errors"
 )
 
 // ${MODULE_NAME_TITLE}Service ${MODULE_NAME_LOWER}服务接口
@@ -446,10 +446,10 @@ cat > "internal/controllers/${MODULE_NAME_LOWER}/${MODULE_NAME_LOWER}_controller
 package ${MODULE_NAME_LOWER}
 
 import (
-	"template/internal/services/${MODULE_NAME_LOWER}"
-	"template/internal/dto/request"
-	"template/pkg/common"
-	"template/pkg/errors"
+	"email-manage/internal/services/${MODULE_NAME_LOWER}"
+	"email-manage/internal/dto/request"
+	"email-manage/pkg/common"
+	"email-manage/pkg/errors"
 	
 	"github.com/gin-gonic/gin"
 )
@@ -617,10 +617,10 @@ cat > "internal/routes/api/v1/${MODULE_NAME_LOWER}.go" << EOF
 package v1
 
 import (
-	"template/internal/controllers/${MODULE_NAME_LOWER}"
-	"template/internal/repositories/${MODULE_NAME_LOWER}"
-	"template/internal/services/${MODULE_NAME_LOWER}"
-	"template/pkg/database"
+	"email-manage/internal/controllers/${MODULE_NAME_LOWER}"
+	"email-manage/internal/repositories/${MODULE_NAME_LOWER}"
+	"email-manage/internal/services/${MODULE_NAME_LOWER}"
+	"email-manage/pkg/database"
 	
 	"github.com/gin-gonic/gin"
 )
@@ -703,11 +703,11 @@ package services
 import (
 	"context"
 	"testing"
-	"template/internal/models"
-	"template/internal/dto/request"
-	"template/internal/services/${MODULE_NAME_LOWER}"
-	"template/pkg/common"
-	"template/pkg/errors"
+	"email-manage/internal/models"
+	"email-manage/internal/dto/request"
+	"email-manage/internal/services/${MODULE_NAME_LOWER}"
+	"email-manage/pkg/common"
+	"email-manage/pkg/errors"
 	
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

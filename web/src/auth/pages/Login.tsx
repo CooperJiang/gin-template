@@ -88,7 +88,7 @@ export default function Login() {
               className="text-white text-lg tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
-              Gin Template
+              Email Manage
             </span>
           </div>
 
@@ -160,7 +160,7 @@ export default function Login() {
               className="text-gray-900 dark:text-gray-100 text-lg tracking-tight"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
-              Gin Template
+              Email Manage
             </span>
           </div>
 

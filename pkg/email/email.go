@@ -2,7 +2,7 @@ package email
 
 import (
 	"errors"
-	"template/pkg/config"
+	"email-manage/pkg/config"
 
 	"gopkg.in/gomail.v2"
 )

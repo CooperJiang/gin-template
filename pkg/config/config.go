@@ -21,7 +21,7 @@ const (
 	envPrefix = "APP_"
 
 	defaultConfigFilePath  = "config.yaml"
-	defaultAppName         = "template"
+	defaultAppName         = "email-manage"
 	defaultAppMode         = "debug"
 	defaultTimezone        = "Asia/Shanghai"
 	defaultRootPassword    = "123456"
@@ -37,12 +37,14 @@ const (
 
 // Config 应用配置结构
 type Config struct {
-	App      AppConfig      `yaml:"app" env:"APP"`
-	Database DatabaseConfig `yaml:"database" env:"DB"`
-	Redis    RedisConfig    `yaml:"redis" env:"REDIS"`
-	JWT      JWTConfig      `yaml:"jwt" env:"JWT"`
-	Mail     MailConfig     `yaml:"mail" env:"MAIL"`
-	CORS CORSConfig `yaml:"cors" env:"CORS"`
+	App         AppConfig         `yaml:"app" env:"APP"`
+	Database    DatabaseConfig    `yaml:"database" env:"DB"`
+	Redis       RedisConfig       `yaml:"redis" env:"REDIS"`
+	JWT         JWTConfig         `yaml:"jwt" env:"JWT"`
+	Mail        MailConfig        `yaml:"mail" env:"MAIL"`
+	CORS        CORSConfig        `yaml:"cors" env:"CORS"`
+	Security    SecurityConfig    `yaml:"security" env:"SECURITY"`
+	MailProvider MailProviderConfig `yaml:"mail_provider" env:"MAIL_PROVIDER"`
 }
 
 // AppConfig 应用基础配置
@@ -106,6 +108,16 @@ type CORSConfig struct {
 	MaxAge           int      `yaml:"max_age" env:"MAX_AGE"`
 }
 
+// SecurityConfig 安全相关配置
+type SecurityConfig struct {
+	EncryptionKey string `yaml:"encryption_key" env:"ENCRYPTION_KEY"`
+}
+
+// MailProviderConfig 邮件提供方配置
+type MailProviderConfig struct {
+	BaseURL string `yaml:"base_url" env:"BASE_URL"`
+}
+
 var (
 	config Config
 	once   sync.Once
@@ -163,6 +175,8 @@ func loadConfigFromEnv(cfg *Config) {
 	loadEnvToStruct(envPrefix+"JWT_", &cfg.JWT)
 	loadEnvToStruct(envPrefix+"MAIL_", &cfg.Mail)
 	loadEnvToStruct(envPrefix+"CORS_", &cfg.CORS)
+	loadEnvToStruct(envPrefix+"SECURITY_", &cfg.Security)
+	loadEnvToStruct(envPrefix+"MAIL_PROVIDER_", &cfg.MailProvider)
 }
 
 // loadEnvToStruct 递归加载环境变量到结构体（支持嵌套结构和字符串切片）
@@ -314,7 +328,7 @@ func setDefaults(cfg *Config) {
 		cfg.Database.Port = defaultDatabasePort
 	}
 	if strings.TrimSpace(cfg.Database.Name) == "" {
-		cfg.Database.Name = "gin_template"
+		cfg.Database.Name = "email_manage"
 	}
 	if strings.TrimSpace(cfg.Database.Charset) == "" {
 		cfg.Database.Charset = defaultDatabaseCharset
@@ -348,6 +362,11 @@ func setDefaults(cfg *Config) {
 	cfg.CORS.AllowCredentials = true
 	if cfg.CORS.MaxAge == 0 {
 		cfg.CORS.MaxAge = defaultCORSMaxAge
+	}
+
+	// 默认不启用外部邮件提供方，避免误调用第三方
+	if strings.TrimSpace(cfg.MailProvider.BaseURL) == "" {
+		cfg.MailProvider.BaseURL = "https://app.wyx66.com"
 	}
 }
 

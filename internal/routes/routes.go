@@ -1,7 +1,9 @@
 package routes
 
 import (
-	"template/internal/app"
+	"email-manage/internal/app"
+	"email-manage/internal/modules/compat"
+	"email-manage/internal/routes/mail_account"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,6 +23,9 @@ func RegisterRoutes(r *gin.Engine, deps *app.Dependencies) {
 	prefix := r.Group("/api")
 	version := prefix.Group("/v1")
 
+	// 注册兼容 team-helper 插件的路由（/api 下，不经过 /v1）
+	compat.RegisterRoutes(prefix, deps.CompatController)
+
 	{
 		// 用户相关路由
 		userRoutes := version.Group("/user")
@@ -28,6 +33,10 @@ func RegisterRoutes(r *gin.Engine, deps *app.Dependencies) {
 
 		// 上传相关路由
 		RegisterUploadRoutes(version, deps.UploadController)
+
+		// 邮箱账号相关路由
+		mailAccountRoutes := version.Group("/mail-accounts")
+		mail_account.RegisterMailAccountRoutes(mailAccountRoutes, deps.MailAccountController)
 
 		// 在这里添加其他模块路由
 		// 例如：

@@ -3,8 +3,8 @@ package file
 import (
 	"os"
 	"strconv"
-	"template/internal/models"
-	"template/pkg/common"
+	"email-manage/internal/models"
+	"email-manage/pkg/common"
 
 	"github.com/gin-gonic/gin"
 )

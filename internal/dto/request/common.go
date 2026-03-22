@@ -1,6 +1,6 @@
 package request
 
-import "template/pkg/common"
+import "email-manage/pkg/common"
 
 // IDRequest ID请求参数
 type IDRequest struct {

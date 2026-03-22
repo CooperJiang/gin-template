@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"template/pkg/logger"
+	"email-manage/pkg/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"

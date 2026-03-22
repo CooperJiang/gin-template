@@ -1,7 +1,7 @@
 package common
 
 import (
-	"template/pkg/config"
+	"email-manage/pkg/config"
 	"testing"
 	"time"
 

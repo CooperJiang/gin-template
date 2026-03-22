@@ -1,8 +1,8 @@
 package user
 
 import (
-	userController "template/internal/controllers/user"
-	"template/internal/middleware"
+	userController "email-manage/internal/controllers/user"
+	"email-manage/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

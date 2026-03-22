@@ -21,7 +21,7 @@
 
 ```
 ┌─────────────────────────────────────────┐
-│     单一 Go 二进制文件（template）        │
+│     单一 Go 二进制文件（email-manage）        │
 ├─────────────────────────────────────────┤
 │  Go Embed (编译时嵌入)                    │
 │  ├─ internal/static/web/                │
@@ -70,7 +70,7 @@ ls -la internal/static/web/subapps/app/  # 子应用应该存在
 
 # 3. 后端编译验证
 make build
-ls -lh bin/template  # 应该 > 20MB（包含前端资源）
+ls -lh bin/email-manage  # 应该 > 20MB（包含前端资源）
 
 # 4. 配置文件检查
 grep "\${" config.prod.yaml  # 应该有环境变量占位符
@@ -82,7 +82,7 @@ grep "\${" config.prod.yaml  # 应该有环境变量占位符
 |----------|--------|----------|
 | `internal/static/web/index.html` | 存在性 | 必须存在 |
 | `internal/static/web/assets/*.js` | 文件大小 | > 100KB |
-| `bin/template` | 二进制大小 | > 20MB（包含前端）|
+| `bin/email-manage` | 二进制大小 | > 20MB（包含前端）|
 | `config.prod.yaml` | 敏感信息 | 无明文密码 |
 | `.env.production` | 敏感信息 | 已配置，不提交Git |
 
@@ -126,7 +126,7 @@ JWT_SECRET_KEY=<至少32字符的随机字符串>
 
 # === 根据实际情况配置 ===
 DB_HOST=localhost
-DB_NAME=template
+DB_NAME=email-manage
 APP_APP_PORT=7500
 APP_APP_MODE=release
 ```
@@ -141,7 +141,7 @@ chmod 600 .env.production
 chmod 644 config.prod.yaml
 
 # 二进制文件可执行
-chmod 755 bin/template
+chmod 755 bin/email-manage
 ```
 
 ### 🚫 安全检查
@@ -179,7 +179,7 @@ grep "CHANGE-TO" config.prod.yaml && echo "❌ 发现默认密钥！"
 | `DB_HOST` | database.host | localhost | ✅ |
 | `DB_USERNAME` | database.username | - | ✅ |
 | `DB_PASSWORD` | database.password | - | ✅ |
-| `DB_NAME` | database.name | template | ❌ |
+| `DB_NAME` | database.name | email-manage | ❌ |
 | `REDIS_HOST` | redis.host | "" (禁用) | ❌ |
 | `REDIS_PASSWORD` | redis.password | "" | ❌ |
 | `APP_APP_PORT` | app.port | 7500 | ❌ |
@@ -196,7 +196,7 @@ export JWT_SECRET_KEY=$(openssl rand -base64 48)
 export DB_USERNAME="prod_user"
 export DB_PASSWORD="prod_password"
 
-./bin/template --config=config.prod.yaml
+./bin/email-manage --config=config.prod.yaml
 ```
 
 **方式2：一次性设置**
@@ -206,16 +206,16 @@ APP_DEFAULT_ROOT_PASS="password" \
 JWT_SECRET_KEY="..." \
 DB_USERNAME="user" \
 DB_PASSWORD="pass" \
-./bin/template --config=config.prod.yaml
+./bin/email-manage --config=config.prod.yaml
 ```
 
 **方式3：使用 systemd（推荐生产环境）**
 
 ```ini
-# /etc/systemd/system/template.service
+# /etc/systemd/system/email-manage.service
 [Service]
 EnvironmentFile=/opt/myapp/shared/config/.env.production
-ExecStart=/opt/myapp/current/template --config=/opt/myapp/shared/config/config.prod.yaml
+ExecStart=/opt/myapp/current/email-manage --config=/opt/myapp/shared/config/config.prod.yaml
 ```
 
 ---
@@ -265,11 +265,11 @@ cd ../..
 
 ```bash
 # 开发环境（包含调试信息）
-go build -o bin/template cmd/main.go
+go build -o bin/email-manage cmd/main.go
 
 # 生产环境（优化 + 压缩）
 CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-go build -ldflags="-s -w" -o bin/template cmd/main.go
+go build -ldflags="-s -w" -o bin/email-manage cmd/main.go
 ```
 
 **编译标志说明**:
@@ -282,17 +282,17 @@ go build -ldflags="-s -w" -o bin/template cmd/main.go
 
 ```bash
 # 检查二进制文件大小（应该 > 20MB）
-ls -lh bin/template
+ls -lh bin/email-manage
 
 # 验证前端资源已嵌入
-strings bin/template | grep "index.html"  # 应该有输出
+strings bin/email-manage | grep "index.html"  # 应该有输出
 
 # 运行测试
-./bin/template --config=config.prod.yaml &
+./bin/email-manage --config=config.prod.yaml &
 sleep 2
 curl http://localhost:7500/  # 应该返回 HTML
 curl http://localhost:7500/api/v1/health  # 应该返回 JSON
-killall template
+killall email-manage
 ```
 
 ---
@@ -312,7 +312,7 @@ COPY web/packages/ ./packages/
 COPY web/shared/ ./shared/
 COPY web/core/ ./core/
 COPY web/auth/ ./auth/
-COPY web/template/ ./template/
+COPY web/email-manage/ ./email-manage/
 COPY web/scripts/ ./scripts/
 
 # 安装依赖并构建
@@ -343,7 +343,7 @@ COPY --from=frontend-builder /app/web/packages/app/dist ./internal/static/web/su
 RUN test -f internal/static/web/index.html || (echo "❌ 前端构建失败" && exit 1)
 
 # 编译 Go 应用
-RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o template ./cmd
+RUN CGO_ENABLED=1 GOOS=linux go build -ldflags="-s -w" -o email-manage ./cmd
 
 # ===== 阶段3：运行时镜像 =====
 FROM alpine:3.17
@@ -359,12 +359,12 @@ RUN adduser -D -H -h /app appuser
 WORKDIR /app
 
 # 复制二进制文件
-COPY --from=backend-builder /app/template ./
+COPY --from=backend-builder /app/email-manage ./
 COPY --from=backend-builder /app/config.prod.yaml ./config.yaml
 
 # 设置权限
 RUN chown -R appuser:appuser /app && \
-    chmod 755 ./template && \
+    chmod 755 ./email-manage && \
     chmod 600 ./config.yaml
 
 USER appuser
@@ -375,7 +375,7 @@ EXPOSE 7500
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:7500/api/v1/health || exit 1
 
-CMD ["./template", "--config=config.yaml"]
+CMD ["./email-manage", "--config=config.yaml"]
 ```
 
 ### docker-compose.yml（生产）
@@ -447,9 +447,9 @@ volumes:
 cat > .env <<EOF
 APP_DEFAULT_ROOT_PASS=$(openssl rand -base64 16)
 JWT_SECRET_KEY=$(openssl rand -base64 48)
-DB_USERNAME=template_user
+DB_USERNAME=email-manage_user
 DB_PASSWORD=$(openssl rand -base64 24)
-DB_NAME=template
+DB_NAME=email-manage
 MYSQL_ROOT_PASSWORD=$(openssl rand -base64 24)
 REDIS_PASSWORD=$(openssl rand -base64 16)
 EOF
@@ -512,7 +512,7 @@ sudo chown $USER:$USER /opt/myapp
 make build-deploy
 
 # 上传到服务器
-scp release/template_prod_package.tar.gz user@server:/opt/myapp/
+scp release/email-manage_prod_package.tar.gz user@server:/opt/myapp/
 ```
 
 #### 3. 解压并配置
@@ -520,7 +520,7 @@ scp release/template_prod_package.tar.gz user@server:/opt/myapp/
 ```bash
 # 在服务器上
 cd /opt/myapp
-tar -xzf template_prod_package.tar.gz
+tar -xzf email-manage_prod_package.tar.gz
 
 # 创建配置文件
 cat > .env.production <<EOF
@@ -529,7 +529,7 @@ JWT_SECRET_KEY=your_jwt_secret
 DB_HOST=localhost
 DB_USERNAME=db_user
 DB_PASSWORD=db_password
-DB_NAME=template
+DB_NAME=email-manage
 EOF
 
 chmod 600 .env.production
@@ -538,7 +538,7 @@ chmod 600 .env.production
 #### 4. 配置 systemd 服务
 
 ```bash
-sudo tee /etc/systemd/system/template.service > /dev/null <<EOF
+sudo tee /etc/systemd/system/email-manage.service > /dev/null <<EOF
 [Unit]
 Description=Template Application
 After=network.target mysql.service
@@ -548,7 +548,7 @@ Type=simple
 User=$USER
 WorkingDirectory=/opt/myapp
 EnvironmentFile=/opt/myapp/.env.production
-ExecStart=/opt/myapp/template --config=/opt/myapp/config.yaml
+ExecStart=/opt/myapp/email-manage --config=/opt/myapp/config.yaml
 Restart=on-failure
 RestartSec=5s
 
@@ -560,13 +560,13 @@ EOF
 sudo systemctl daemon-reload
 
 # 启动服务
-sudo systemctl start template
+sudo systemctl start email-manage
 
 # 设置开机自启
-sudo systemctl enable template
+sudo systemctl enable email-manage
 
 # 查看状态
-sudo systemctl status template
+sudo systemctl status email-manage
 ```
 
 #### 5. 配置 Nginx 反向代理
@@ -629,7 +629,7 @@ ls -la internal/static/web/index.html
 make web-build
 
 # 验证嵌入
-strings bin/template | grep "index.html"
+strings bin/email-manage | grep "index.html"
 
 # 重新编译
 make build
@@ -724,7 +724,7 @@ log:
 
 ```bash
 # systemd 日志
-sudo journalctl -u template -f
+sudo journalctl -u email-manage -f
 
 # 应用日志
 tail -f /opt/myapp/logs/app.log
@@ -737,7 +737,7 @@ grep ERROR /opt/myapp/logs/app.log | tail -20
 
 ```bash
 # CPU 和内存使用
-top -p $(pgrep template)
+top -p $(pgrep email-manage)
 
 # 连接数
 netstat -an | grep :7500 | wc -l
@@ -794,7 +794,7 @@ tar -czf backup_$(date +%Y%m%d).tar.gz \
 
 - 查看 [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
 - 查看 [web/QUICK_START.md](./web/QUICK_START.md)
-- 检查应用日志：`sudo journalctl -u template -f`
+- 检查应用日志：`sudo journalctl -u email-manage -f`
 
 ---
 

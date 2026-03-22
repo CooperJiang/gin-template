@@ -1,8 +1,8 @@
 package upload
 
 import (
-	"template/internal/models"
-	"template/pkg/constants"
+	"email-manage/internal/models"
+	"email-manage/pkg/constants"
 
 	"gorm.io/gorm"
 )

@@ -3,7 +3,7 @@ package common
 import (
 	stdErrors "errors"
 	"strings"
-	"template/pkg/config"
+	"email-manage/pkg/config"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -194,7 +194,7 @@ func resolveIssuerAudience(jwtConfig config.JWTConfig) (string, string) {
 		issuer = strings.TrimSpace(config.GetConfig().App.Name)
 	}
 	if issuer == "" {
-		issuer = "template"
+		issuer = "email-manage"
 	}
 
 	audience := strings.TrimSpace(jwtConfig.Audience)

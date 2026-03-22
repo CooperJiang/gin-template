@@ -1,8 +1,8 @@
 package upload
 
 import (
-	uploadController "template/internal/controllers/upload"
-	"template/internal/middleware"
+	uploadController "email-manage/internal/controllers/upload"
+	"email-manage/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 )

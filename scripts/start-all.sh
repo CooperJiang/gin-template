@@ -5,7 +5,7 @@ echo "正在启动服务..."
 echo ""
 
 # 使用Makefile传入的项目根目录
-PROJECT_ROOT="/Users/lilithgames/Desktop/cooper-core/gin-template"
+PROJECT_ROOT="/Users/lilithgames/Desktop/cooper-core/email-manage"
 
 # 启动后端
 echo "🔧 启动后端 (Go) - 端口 9000"

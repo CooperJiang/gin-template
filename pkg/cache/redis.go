@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"template/pkg/config"
+	"email-manage/pkg/config"
 	"time"
 
 	"github.com/redis/go-redis/v9"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
-	"template/pkg/logger"
+	"email-manage/pkg/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -94,10 +94,14 @@ func responseError(c *gin.Context, err error) {
 		apiErr.RequestID = requestID
 	}
 
-	// 构建安全的响应
+	// 构建安全的响应，优先使用 Detail 作为更具体的消息
+	msg := apiErr.Message
+	if apiErr.Detail != "" {
+		msg = apiErr.Detail
+	}
 	response := Response{
 		Code:      int(apiErr.Code),
-		Message:   apiErr.Message,
+		Message:   msg,
 		RequestID: apiErr.RequestID,
 		Timestamp: time.Now().Unix(),
 	}

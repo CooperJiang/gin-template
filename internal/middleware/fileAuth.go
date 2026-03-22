@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"template/internal/models"
-	"template/internal/repositories/upload"
-	"template/pkg/common"
-	"template/pkg/database"
+	"email-manage/internal/models"
+	"email-manage/internal/repositories/upload"
+	"email-manage/pkg/common"
+	"email-manage/pkg/database"
 	"time"
 
 	"github.com/gin-gonic/gin"

@@ -1,20 +1,29 @@
 package app
 
 import (
-	uploadController "template/internal/controllers/upload"
-	userController "template/internal/controllers/user"
-	uploadRepo "template/internal/repositories/upload"
-	uploadService "template/internal/services/upload"
-	userService "template/internal/services/user"
-	"template/pkg/cache"
-	"template/pkg/database"
-	uploadPkg "template/pkg/upload"
+	compatController "email-manage/internal/controllers/compat"
+	mailAccountController "email-manage/internal/controllers/mail_account"
+	uploadController "email-manage/internal/controllers/upload"
+	userController "email-manage/internal/controllers/user"
+	"email-manage/internal/integrations/mail_provider"
+	mailAccountRepo "email-manage/internal/repositories/mail_account"
+	uploadRepo "email-manage/internal/repositories/upload"
+	mailAccountService "email-manage/internal/services/mail_account"
+	uploadService "email-manage/internal/services/upload"
+	userService "email-manage/internal/services/user"
+	"email-manage/pkg/cache"
+	"email-manage/pkg/config"
+	"email-manage/pkg/database"
+	"email-manage/pkg/security"
+	uploadPkg "email-manage/pkg/upload"
 )
 
 // Dependencies 应用运行时依赖容器
 type Dependencies struct {
-	UserController   *userController.Controller
-	UploadController *uploadController.Controller
+	UserController        *userController.Controller
+	UploadController      *uploadController.Controller
+	MailAccountController *mailAccountController.Controller
+	CompatController      *compatController.Controller
 }
 
 // NewDependencies 构建默认依赖集合
@@ -30,8 +39,25 @@ func NewDependencies() *Dependencies {
 		uploadCfg,
 	)
 
+	// mail account dependencies
+	cfg := config.GetConfig()
+	var fieldCipher *security.FieldCipher
+	if cfg.Security.EncryptionKey != "" {
+		if cipher, err := security.NewFieldCipher(cfg.Security.EncryptionKey); err == nil {
+			fieldCipher = cipher
+		}
+	}
+
+	mailProviderClient := mail_provider.NewClient(mail_provider.ClientConfig{
+		BaseURL: cfg.MailProvider.BaseURL,
+	})
+	mailAccountRepo := mailAccountRepo.NewRepository(db)
+	mailAccountSvc := mailAccountService.NewService(mailAccountRepo, mailProviderClient, fieldCipher)
+
 	return &Dependencies{
-		UserController:   userController.NewController(userSvc),
-		UploadController: uploadController.NewController(uploadSvc),
+		UserController:        userController.NewController(userSvc),
+		UploadController:      uploadController.NewController(uploadSvc),
+		MailAccountController: mailAccountController.NewController(mailAccountSvc),
+		CompatController:      compatController.NewController(userSvc, mailAccountSvc),
 	}
 }

@@ -1,12 +1,12 @@
 package user
 
 import (
-	"template/internal/dto/request"
-	"template/internal/dto/response"
-	"template/internal/middleware"
-	userService "template/internal/services/user"
-	"template/pkg/common"
-	"template/pkg/errors"
+	"email-manage/internal/dto/request"
+	"email-manage/internal/dto/response"
+	"email-manage/internal/middleware"
+	userService "email-manage/internal/services/user"
+	"email-manage/pkg/common"
+	"email-manage/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )

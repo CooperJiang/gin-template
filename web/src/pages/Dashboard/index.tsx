@@ -1,74 +1,127 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/auth/useAuth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { LayoutDashboard, Users, Activity, TrendingUp } from 'lucide-react'
-
-interface StatItem {
-  title: string
-  value: string
-  icon: typeof Users
-  color: string
-}
+import { Mail, MailCheck, MailX, Loader2 } from 'lucide-react'
+import { mailAccountsApi } from '@/api/mailAccounts'
+import type { MailAccountStats, DailyUsageItem } from '@/types/mailAccount'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
 
 export default function Dashboard() {
   const { user } = useAuth()
-  const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState<StatItem[]>([])
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [usageLoading, setUsageLoading] = useState(true)
+  const [stats, setStats] = useState<MailAccountStats | null>(null)
+  const [dailyUsage, setDailyUsage] = useState<DailyUsageItem[]>([])
 
   useEffect(() => {
-    // TODO: 替换为真实 API 调用，例如 apiClient.get('/dashboard/stats')
-    const timer = setTimeout(() => {
-      setStats([
-        { title: '总用户', value: '128', icon: Users, color: 'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30' },
-        { title: '活跃用户', value: '42', icon: Activity, color: 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' },
-        { title: '今日访问', value: '1,024', icon: TrendingUp, color: 'text-purple-600 bg-purple-100 dark:text-purple-400 dark:bg-purple-900/30' },
-        { title: '系统状态', value: '正常', icon: LayoutDashboard, color: 'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30' },
-      ])
-      setLoading(false)
-    }, 600)
-    return () => clearTimeout(timer)
+    const loadStats = async () => {
+      try {
+        const data = await mailAccountsApi.stats()
+        setStats(data)
+      } catch {
+        // handled by apiClient
+      } finally {
+        setStatsLoading(false)
+      }
+    }
+
+    const loadUsage = async () => {
+      try {
+        const data = await mailAccountsApi.dailyUsage()
+        setDailyUsage(data.items ?? [])
+      } catch {
+        // handled by apiClient
+      } finally {
+        setUsageLoading(false)
+      }
+    }
+
+    void loadStats()
+    void loadUsage()
   }, [])
+
+  const statCards = [
+    {
+      title: '总邮箱数',
+      value: stats?.total ?? 0,
+      icon: Mail,
+      color:
+        'text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/30',
+      valueColor: 'text-blue-700 dark:text-blue-300',
+    },
+    {
+      title: '未使用',
+      value: stats?.unused ?? 0,
+      icon: MailCheck,
+      color:
+        'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/30',
+      valueColor: 'text-emerald-700 dark:text-emerald-300',
+    },
+    {
+      title: '已使用',
+      value: stats?.used ?? 0,
+      icon: MailX,
+      color:
+        'text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-900/30',
+      valueColor: 'text-orange-700 dark:text-orange-300',
+    },
+  ]
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
           欢迎回来，{user?.username || '用户'}
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">以下是您的系统概览</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+          以下是您的邮箱资源概览
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {loading
-          ? Array.from({ length: 4 }).map((_, i) => (
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {statsLoading
+          ? Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
-                <CardContent className="p-6">
+                <CardContent className="p-5">
                   <div className="flex items-center justify-between animate-pulse">
                     <div>
                       <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded mb-3" />
                       <div className="h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
                     </div>
-                    <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700" />
+                    <div className="w-11 h-11 rounded-lg bg-gray-200 dark:bg-gray-700" />
                   </div>
                 </CardContent>
               </Card>
             ))
-          : stats.map((stat) => {
-              const Icon = stat.icon
+          : statCards.map((card) => {
+              const Icon = card.icon
               return (
-                <Card key={stat.title}>
-                  <CardContent className="p-6">
+                <Card key={card.title}>
+                  <CardContent className="p-5">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{stat.title}</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                          {stat.value}
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {card.title}
+                        </p>
+                        <p
+                          className={`text-2xl font-bold mt-1 ${card.valueColor}`}
+                        >
+                          {card.value.toLocaleString()}
                         </p>
                       </div>
                       <div
-                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${stat.color}`}
+                        className={`w-11 h-11 rounded-lg flex items-center justify-center ${card.color}`}
                       >
-                        <Icon className="w-6 h-6" />
+                        <Icon className="w-5 h-5" />
                       </div>
                     </div>
                   </CardContent>
@@ -77,52 +130,68 @@ export default function Dashboard() {
             })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>快速开始</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400">
-              <p>这是一个基于 Gin + React 的全栈应用脚手架。</p>
-              <ul className="space-y-2 list-disc list-inside">
-                <li>后端：Go + Gin + GORM</li>
-                <li>前端：React + TypeScript + Tailwind CSS</li>
-                <li>认证：JWT Token + 安全加密存储</li>
-                <li>部署：一键构建 + SSH 远程部署</li>
-              </ul>
+      {/* Daily usage chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">每日使用量（近 30 天）</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {usageLoading ? (
+            <div className="flex items-center justify-center h-64 text-gray-400">
+              <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              加载中...
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>系统信息</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">前端框架</span>
-                <span className="text-gray-900 dark:text-gray-100 font-medium">React 19</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">构建工具</span>
-                <span className="text-gray-900 dark:text-gray-100 font-medium">Vite 6</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">UI 框架</span>
-                <span className="text-gray-900 dark:text-gray-100 font-medium">
-                  Tailwind CSS + shadcn/ui
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 dark:text-gray-400">后端框架</span>
-                <span className="text-gray-900 dark:text-gray-100 font-medium">Gin</span>
-              </div>
+          ) : dailyUsage.length === 0 ? (
+            <div className="flex items-center justify-center h-64 text-gray-400 text-sm">
+              暂无使用量数据
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart
+                data={dailyUsage}
+                margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="currentColor"
+                  className="text-gray-200 dark:text-gray-700"
+                />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 11 }}
+                  tickFormatter={(v: string) => v.slice(5)}
+                  stroke="currentColor"
+                  className="text-gray-400"
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fontSize: 11 }}
+                  stroke="currentColor"
+                  className="text-gray-400"
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--color-gray-800, #1f2937)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '13px',
+                  }}
+                  labelFormatter={(label) => `日期: ${String(label)}`}
+                  formatter={(value) => [`${String(value)} 个`, '使用量']}
+                />
+                <Bar
+                  dataKey="count"
+                  fill="#3b82f6"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={32}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

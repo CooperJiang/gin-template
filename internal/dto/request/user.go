@@ -1,6 +1,6 @@
 package request
 
-import "template/internal/dto"
+import "email-manage/internal/dto"
 
 // LoginRequest 登录请求
 type LoginRequest struct {

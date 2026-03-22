@@ -215,7 +215,7 @@ check_logs() {
     print_title "日志文件检查"
     
     # 检查常见日志文件
-    log_files=("logs/app.log" "app.log" "/var/log/template/app.log")
+    log_files=("logs/app.log" "app.log" "/var/log/email-manage/app.log")
     
     for log_file in "${log_files[@]}"; do
         if [ -f "$log_file" ]; then

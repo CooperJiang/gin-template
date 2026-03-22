@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"template/internal/app"
-	"template/internal/routes"
-	"template/pkg/config"
-	"template/pkg/logger"
+	"email-manage/internal/app"
+	"email-manage/internal/routes"
+	"email-manage/pkg/config"
+	"email-manage/pkg/logger"
 )
 
 // 应用版本号

@@ -6,6 +6,7 @@ import Login from '@/auth/pages/Login'
 import Register from '@/auth/pages/Register'
 import ForgotPassword from '@/auth/pages/ForgotPassword'
 import Dashboard from '@/pages/Dashboard'
+import MailAccounts from '@/pages/MailAccounts'
 import Profile from '@/pages/Profile'
 import Settings from '@/pages/Settings'
 import NotFound from '@/pages/NotFound'
@@ -42,6 +43,7 @@ export default function AppRouter() {
         <Route element={<RequireAuth />}>
           <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="/mail-accounts" element={<MailAccounts />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />

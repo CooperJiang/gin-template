@@ -1,4 +1,4 @@
-module template
+module email-manage
 
 go 1.25.8
 

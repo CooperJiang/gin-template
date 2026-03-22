@@ -1,6 +1,6 @@
 # 应用基本配置
 app:
-  name: "template"               # 应用名称，用于日志、标识等
+  name: "email-manage"               # 应用名称，用于日志、标识等
   port: 9000                     # 应用监听端口
   mode: "release"                # 运行模式: debug/release
   defaultRootPass: "123456"      # 初次启动时自动创建的管理员账号密码
@@ -13,7 +13,7 @@ database:
   port: 3306                     # MySQL端口
   username: "dbuser"             # MySQL用户名
   password: "dbpassword"         # MySQL密码
-  name: "template_db"            # 数据库名称
+  name: "email_manage"            # 数据库名称
   charset: "utf8mb4"             # 字符集
   # 数据库启动策略默认值:
   # 1) release/production/prod: strict=true, auto_migrate=false, bootstrap_root=false
@@ -28,8 +28,8 @@ jwt:
   secret_key: "change-to-your-secure-secret-key" # JWT签名密钥
   expires_in: 24                 # access token有效期（小时）
   refresh_expires_in: 168        # refresh token有效期（小时）
-  issuer: "template-app"         # JWT发行者
-  audience: "template-users"     # JWT接收者
+  issuer: "email-manage-app"         # JWT发行者
+  audience: "email-manage-users"     # JWT接收者
   blacklist_enabled: true        # 是否启用令牌黑名单
 
 # Redis缓存配置
@@ -69,3 +69,12 @@ cors:
     - "Authorization"
   allow_credentials: true
   max_age: 86400
+
+# 字段加密配置（用于加密邮箱密码/refresh_token）
+security:
+  # 建议改成一串足够随机、长度至少 32 的字符串
+  encryption_key: "change-this-to-a-strong-random-key"
+
+# 外部邮箱提供方配置（wyx66）
+mail_provider:
+  base_url: "https://app.wyx66.com"  # 你的 wyx 邮箱服务地址

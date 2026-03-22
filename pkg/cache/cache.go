@@ -2,8 +2,8 @@ package cache
 
 import (
 	"strings"
-	"template/pkg/config"
-	"template/pkg/logger"
+	"email-manage/pkg/config"
+	"email-manage/pkg/logger"
 	"time"
 )
 

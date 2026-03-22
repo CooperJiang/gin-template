@@ -2,7 +2,7 @@ package cron
 
 import (
 	"log"
-	"template/pkg/logger"
+	"email-manage/pkg/logger"
 )
 
 // registerExampleTask 注册示例任务

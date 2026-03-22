@@ -1,7 +1,7 @@
 package models
 
 import (
-	"template/pkg/common"
+	"email-manage/pkg/common"
 	"time"
 
 	"gorm.io/gorm"

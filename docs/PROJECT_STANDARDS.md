@@ -20,7 +20,7 @@
 ### 项目根目录结构
 
 ```
-gin-template/
+email-manage/
 ├── cmd/                   # 应用程序入口
 │   └── main.go           # 主程序入口
 ├── internal/             # 内部包，不对外暴露
@@ -124,11 +124,11 @@ internal/
 package controllers
 
 import (
-    "template/internal/dto/request"
-    "template/internal/dto/response"
-    "template/internal/services"
-    "template/pkg/common"
-    "template/pkg/errors"
+    "email-manage/internal/dto/request"
+    "email-manage/internal/dto/response"
+    "email-manage/internal/services"
+    "email-manage/pkg/common"
+    "email-manage/pkg/errors"
     
     "github.com/gin-gonic/gin"
 )
@@ -179,10 +179,10 @@ package services
 
 import (
     "context"
-    "template/internal/dto/request"
-    "template/internal/models"
-    "template/internal/repositories"
-    "template/pkg/errors"
+    "email-manage/internal/dto/request"
+    "email-manage/internal/models"
+    "email-manage/internal/repositories"
+    "email-manage/pkg/errors"
 )
 
 type UserService interface {
@@ -242,8 +242,8 @@ package repositories
 
 import (
     "context"
-    "template/internal/models"
-    "template/pkg/common"
+    "email-manage/internal/models"
+    "email-manage/pkg/common"
     
     "gorm.io/gorm"
 )
@@ -297,7 +297,7 @@ package models
 
 import (
     "time"
-    "template/pkg/constants"
+    "email-manage/pkg/constants"
 )
 
 type User struct {
@@ -672,7 +672,7 @@ package constants
 
 // 缓存相关常量
 const (
-    CacheKeyPrefix = "gin-template:"
+    CacheKeyPrefix = "email-manage:"
     
     // 用户相关缓存键
     CacheKeyUser       = CacheKeyPrefix + "user:"
@@ -700,7 +700,7 @@ const (
 // internal/dto/request/user.go
 package request
 
-import "template/pkg/constants"
+import "email-manage/pkg/constants"
 
 // CreateUserRequest 创建用户请求
 type CreateUserRequest struct {
@@ -747,8 +747,8 @@ package response
 
 import (
     "time"
-    "template/internal/models"
-    "template/pkg/constants"
+    "email-manage/internal/models"
+    "email-manage/pkg/constants"
 )
 
 // UserResponse 用户响应
@@ -839,7 +839,7 @@ package common
 import (
     "reflect"
     "strings"
-    "template/pkg/errors"
+    "email-manage/pkg/errors"
     
     "github.com/gin-gonic/gin"
     "github.com/go-playground/validator/v10"
@@ -888,7 +888,7 @@ package constants
 
 // 缓存键前缀
 const (
-    CacheKeyPrefix = "gin-template:"
+    CacheKeyPrefix = "email-manage:"
     
     // 用户相关缓存键
     CacheKeyUser       = CacheKeyPrefix + "user:"
@@ -1070,10 +1070,10 @@ package services
 import (
     "context"
     "testing"
-    "template/internal/dto/request"
-    "template/internal/models"
-    "template/internal/services"
-    "template/pkg/errors"
+    "email-manage/internal/dto/request"
+    "email-manage/internal/models"
+    "email-manage/internal/services"
+    "email-manage/pkg/errors"
     
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/mock"
@@ -1198,7 +1198,7 @@ app:
 database:
   host: localhost
   port: 3306
-  name: gin_template_dev
+  name: email_manage_dev
 
 redis:
   host: localhost
@@ -1216,7 +1216,7 @@ app:
 database:
   host: test-db.example.com
   port: 3306
-  name: gin_template_test
+  name: email_manage_test
 
 redis:
   host: test-redis.example.com
@@ -1234,7 +1234,7 @@ app:
 database:
   host: prod-db.example.com
   port: 3306
-  name: gin_template_prod
+  name: email_manage_prod
 
 redis:
   host: prod-redis.example.com
@@ -1267,7 +1267,7 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: gin_template_dev
+      MYSQL_DATABASE: email_manage_dev
     ports:
       - "3306:3306"
 

@@ -1,8 +1,8 @@
 package response
 
 import (
-	"template/internal/dto"
-	"template/internal/models"
+	"email-manage/internal/dto"
+	"email-manage/internal/models"
 	"time"
 )
 

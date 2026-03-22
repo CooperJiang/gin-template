@@ -138,7 +138,7 @@ func TestValidateConfigReleaseRules(t *testing.T) {
 func newValidReleaseConfigForTest() Config {
 	return Config{
 		App: AppConfig{
-			Name:            "template",
+			Name:            "email-manage",
 			Port:            9000,
 			Mode:            "release",
 			DefaultRootPass: "root-pass-2026-safe",
@@ -149,15 +149,15 @@ func newValidReleaseConfigForTest() Config {
 			Host:     "127.0.0.1",
 			Port:     3306,
 			Username: "root",
-			Name:     "template_db",
+			Name:     "email_manage",
 			Charset:  "utf8mb4",
 		},
 		JWT: JWTConfig{
 			SecretKey:        "Akm9Xr1Q2Lm7Nw8P5Td3",
 			ExpiresIn:        24,
 			RefreshExpiresIn: 168,
-			Issuer:           "template",
-			Audience:         "template-users",
+			Issuer:           "email-manage",
+			Audience:         "email-manage-users",
 			BlacklistEnabled: true,
 		},
 		Redis: RedisConfig{

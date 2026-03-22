@@ -2,7 +2,7 @@ package common
 
 import (
 	"net/http"
-	"template/pkg/errors"
+	"email-manage/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 )

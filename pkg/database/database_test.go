@@ -1,7 +1,7 @@
 package database
 
 import (
-	"template/pkg/config"
+	"email-manage/pkg/config"
 	"testing"
 )
 

@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"time"
 
-	"template/internal/dto/response"
-	"template/internal/models"
-	uploadRepo "template/internal/repositories/upload"
-	"template/pkg/common"
-	"template/pkg/constants"
-	"template/pkg/database"
-	"template/pkg/logger"
-	"template/pkg/upload"
+	"email-manage/internal/dto/response"
+	"email-manage/internal/models"
+	uploadRepo "email-manage/internal/repositories/upload"
+	"email-manage/pkg/common"
+	"email-manage/pkg/constants"
+	"email-manage/pkg/database"
+	"email-manage/pkg/logger"
+	"email-manage/pkg/upload"
 )
 
 var defaultService Service

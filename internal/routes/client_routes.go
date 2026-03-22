@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strings"
-	"template/internal/static"
+	"email-manage/internal/static"
 
 	"github.com/gin-gonic/gin"
 )

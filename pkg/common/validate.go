@@ -1,7 +1,7 @@
 package common
 
 import (
-	"template/pkg/errors"
+	"email-manage/pkg/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"

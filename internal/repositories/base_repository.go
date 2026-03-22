@@ -2,8 +2,8 @@ package repositories
 
 import (
 	"context"
-	"template/pkg/common"
-	"template/pkg/errors"
+	"email-manage/pkg/common"
+	"email-manage/pkg/errors"
 
 	"gorm.io/gorm"
 )

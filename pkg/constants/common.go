@@ -4,21 +4,21 @@ import "time"
 
 // 应用常量
 const (
-	AppName    = "template"
+	AppName    = "email-manage"
 	AppVersion = "1.0.0"
 )
 
 // 缓存键前缀
 const (
-	CacheKeyPrefix = "template:"
+	CacheKeyPrefix = "email-manage:"
 )
 
 // 缓存键模板
 const (
-	CacheKeyUserInfo     = "template:user:info:%d"     // 用户信息
-	CacheKeyUserToken    = "template:user:token:%s"    // 用户令牌
-	CacheKeyEmailCode    = "template:email:code:%s"    // 邮箱验证码
-	CacheKeyLoginAttempt = "template:login:attempt:%s" // 登录尝试次数
+	CacheKeyUserInfo     = "email-manage:user:info:%d"     // 用户信息
+	CacheKeyUserToken    = "email-manage:user:token:%s"    // 用户令牌
+	CacheKeyEmailCode    = "email-manage:email:code:%s"    // 邮箱验证码
+	CacheKeyLoginAttempt = "email-manage:login:attempt:%s" // 登录尝试次数
 )
 
 // 缓存时间常量
@@ -52,8 +52,8 @@ var AllowedFileTypes = []string{
 
 // JWT常量
 const (
-	JWTIssuer   = "template-app"
-	JWTAudience = "template-users"
+	JWTIssuer   = "email-manage-app"
+	JWTAudience = "email-manage-users"
 )
 
 // 请求头常量

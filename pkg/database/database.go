@@ -3,11 +3,11 @@ package database
 import (
 	"fmt"
 	"strings"
-	"template/internal/models"
-	"template/pkg/common"
-	"template/pkg/config"
-	log "template/pkg/logger"
-	"template/pkg/utils"
+	"email-manage/internal/models"
+	"email-manage/pkg/common"
+	"email-manage/pkg/config"
+	log "email-manage/pkg/logger"
+	"email-manage/pkg/utils"
 	"time"
 
 	"gorm.io/driver/mysql"
@@ -183,6 +183,8 @@ func autoMigrate() error {
 		&models.FileShare{},
 		&models.FilePermission{},
 		&models.TemporaryAccess{},
+		// 邮箱账号管理
+		&models.MailAccount{},
 		// 在这里添加其他模型
 	)
 }

@@ -1,62 +1,54 @@
-# 应用基本配置
+# 应用配置（本地开发）
 app:
-  name: "template"               # 应用名称，用于日志、标识等
-  port: 9000                     # 应用监听端口
-  mode: "debug"                  # 运行模式: debug/release
-  defaultRootPass: "123456"      # 初次启动时自动创建的管理员账号密码
-  timezone: "Asia/Shanghai"      # 应用时区设置
+  name: "email-manage"
+  port: 9000
+  mode: "debug"
+  defaultRootPass: "sunny521"
+  timezone: "Asia/Shanghai"
 
-# 数据库配置
+# 数据库配置 - 云数据库
 database:
-  driver: "sqlite"               # 数据库类型: mysql/sqlite
-  host: ""                       # MySQL主机地址，空字符串表示使用SQLite
-  port: 3306                     # MySQL端口
-  username: ""                   # MySQL用户名
-  password: ""                   # MySQL密码
-  name: "gin_template"           # 数据库名称
-  charset: "utf8mb4"             # 字符集
-  # 数据库启动策略默认值:
-  # 1) release/production/prod: strict=true, auto_migrate=false, bootstrap_root=false
-  # 2) 其他模式: strict=false, auto_migrate=true, bootstrap_root=true
-  # 可用环境变量覆盖:
-  # APP_DB_STRICT=true|false
-  # APP_DB_AUTO_MIGRATE=true|false
-  # APP_DB_BOOTSTRAP_ROOT=true|false
+  driver: "mysql"
+  host: "110.42.111.49"
+  port: 1244
+  username: "email"
+  password: "tgiyGk32"
+  name: "email"
+  charset: "utf8mb4"
 
-# JWT认证配置
+# JWT配置 - 一个月有效期
 jwt:
-  secret_key: "change-to-your-secure-secret-key" # JWT签名密钥
-  expires_in: 24                 # access token有效期（小时）
-  refresh_expires_in: 168        # refresh token有效期（小时）
-  issuer: "template-app"         # JWT发行者
-  audience: "template-users"     # JWT接收者
-  blacklist_enabled: true        # 是否启用令牌黑名单
+  secret_key: "PD4GbH02PHF3YvRjonJf/2pgf5HGVwJOQguiYrRiZzdDIm/Bh0fH/8tmCkqr3krh"
+  expires_in: 720
+  refresh_expires_in: 1440
+  issuer: "email-manage-app"
+  audience: "email-manage-users"
+  blacklist_enabled: true
 
 # Redis缓存配置
 redis:
-  enabled: false                 # 是否启用Redis，禁用时降级为内存缓存
-  host: ""                       # Redis主机地址
-  port: 6379                     # Redis端口
-  password: ""                   # Redis密码
-  db: 0                          # Redis数据库索引
+  enabled: false
+  host: ""
+  port: 6379
+  password: ""
+  db: 0
 
 # 邮件服务配置
 mail:
-  host: "smtp.example.com"       # SMTP服务器地址
-  port: 465                      # SMTP端口
-  username: "your@example.com"   # SMTP用户名/邮箱地址
-  password: "email-password"     # SMTP密码
-  from: "your@example.com"       # 发件人邮箱
-  from_name: "应用名称"           # 发件人名称
-  reply_to: "your@example.com"   # 回复地址
-  enabled: false                 # 是否启用邮件服务
+  host: "smtpdm.aliyun.com"
+  port: 465
+  username: "nine_team@nineai.jiangly.com"
+  password: "Nine98Mailer"
+  from: "nine_team@nineai.jiangly.com"
+  from_name: "系统通知"
+  reply_to: "nine_team@nineai.jiangly.com"
+  enabled: false
 
 # 跨域(CORS)配置
 cors:
-  enabled: true                  # 是否启用CORS支持
+  enabled: true
   allowed_origins:
-    - "http://localhost:3000"
-    - "https://yourdomain.com"
+    - "*"
   allowed_methods:
     - "GET"
     - "POST"
@@ -69,3 +61,11 @@ cors:
     - "Authorization"
   allow_credentials: true
   max_age: 86400
+
+# 字段加密配置
+security:
+  encryption_key: "change-this-to-a-strong-random-key"
+
+# 外部邮箱提供方配置
+mail_provider:
+  base_url: "https://app.wyx66.com"

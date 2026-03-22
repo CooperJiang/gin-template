@@ -9,7 +9,7 @@
 make deploy-config
 ```
 **输入以下信息:**
-- 应用名称 (默认: template)
+- 应用名称 (默认: email-manage)
 - 服务器地址 (必填)
 - SSH用户名 (默认: root)
 - SSH端口 (默认: 22)
@@ -77,7 +77,7 @@ make deploy-check    # 查看当前部署配置
 ## 📂 部署包说明
 
 运行 `make build` 后会生成：
-- `./release/template_prod_package.tar.gz` - 完整部署包
+- `./release/email-manage_prod_package.tar.gz` - 完整部署包
 
 **包含内容:**
 - 编译好的 Go 二进制文件 (嵌入前端静态文件)

@@ -306,11 +306,11 @@ withDefaults(defineProps<ButtonProps>(), {
 
 ```vue
 <!-- ✅ 页面组件模板 -->
-<template>
+<email-manage>
   <div class="page-container">
     <!-- 页面内容 -->
   </div>
-</template>
+</email-manage>
 
 <script setup lang="ts">
 defineOptions({
@@ -404,12 +404,12 @@ export const userApi = {
 
 ```vue
 <!-- ✅ 样式使用模板 -->
-<template>
+<email-manage>
   <!-- 优先使用 TailwindCSS -->
   <div class="flex items-center justify-between p-4 bg-white rounded-lg shadow">
     <h1 class="text-xl font-bold text-gray-900">标题</h1>
   </div>
-</template>
+</email-manage>
 
 <style scoped>
 /* 仅在必要时使用自定义样式 */

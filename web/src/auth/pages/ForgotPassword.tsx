@@ -123,7 +123,7 @@ export default function ForgotPassword() {
               className="text-white text-xl"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
-              Gin Template
+              Email Manage
             </span>
           </div>
 
@@ -179,7 +179,7 @@ export default function ForgotPassword() {
               className="text-lg text-gray-900 dark:text-gray-100"
               style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 700 }}
             >
-              Gin Template
+              Email Manage
             </span>
           </div>
 

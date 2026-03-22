@@ -1,8 +1,8 @@
 package routes
 
 import (
-	uploadController "template/internal/controllers/upload"
-	uploadModule "template/internal/modules/upload"
+	uploadController "email-manage/internal/controllers/upload"
+	uploadModule "email-manage/internal/modules/upload"
 
 	"github.com/gin-gonic/gin"
 )

@@ -8,7 +8,7 @@ import (
 	"mime/multipart"
 	"path/filepath"
 	"strings"
-	"template/pkg/constants"
+	"email-manage/pkg/constants"
 
 	"github.com/google/uuid"
 )

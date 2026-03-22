@@ -1,6 +1,6 @@
 package common
 
-import "template/pkg/constants"
+import "email-manage/pkg/constants"
 
 // PaginationRequest 分页请求
 type PaginationRequest struct {
