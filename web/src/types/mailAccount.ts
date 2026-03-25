@@ -25,6 +25,7 @@ export interface MailAccount {
   last_mail_subject: string
   last_mail_from: string
   last_mail_received_at?: string | null
+  allocated_at?: string | null
   remark: string
   tags: string
   import_batch_no: string

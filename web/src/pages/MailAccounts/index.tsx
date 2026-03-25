@@ -626,6 +626,12 @@ export default function MailAccounts() {
                     {mailboxLabel(account.mailbox_status)}
                   </span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 text-xs w-10 shrink-0">使用</span>
+                  <span className="text-slate-700 dark:text-slate-300 truncate">
+                    {formatDateTime(account.allocated_at)}
+                  </span>
+                </div>
               </div>
 
               {/* Card bottom: actions */}
