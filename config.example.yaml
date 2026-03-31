@@ -1,7 +1,7 @@
 # 应用基本配置
 app:
   name: "template"               # 应用名称，用于日志、标识等
-  port: 9000                     # 应用监听端口
+  port: 8888                     # 应用监听端口
   mode: "release"                # 运行模式: debug/release
   defaultRootPass: "123456"      # 初次启动时自动创建的管理员账号密码
   timezone: "Asia/Shanghai"      # 应用时区设置

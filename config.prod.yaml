@@ -1,10 +1,9 @@
-# 生产环境配置
-# ⚠️ 重要：所有 ${VAR_NAME} 格式的配置项都需要通过环境变量提供！
+# Production config
 app:
   name: "template"
-  port: 7500
-  mode: "release"                # 生产模式
-  defaultRootPass: "${APP_DEFAULT_ROOT_PASS}"  # 必须通过环境变量设置
+  port: 8888
+  mode: "release"
+  defaultRootPass: "${APP_DEFAULT_ROOT_PASS}"
   timezone: "Asia/Shanghai"
   api_prefix: "/api/v1"
   static_path: "/static"
@@ -18,25 +17,25 @@ app:
     - "application/msword"
     - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-# 数据库配置 - 生产环境
+# Database config
 database:
   driver: "mysql"
-  host: "${DB_HOST:localhost}"        # 生产环境数据库地址
-  port: 3306
-  username: "${DB_USERNAME}"          # 必须通过环境变量设置
-  password: "${DB_PASSWORD}"          # 必须通过环境变量设置
-  name: "${DB_NAME:template}"         # 生产环境数据库名
+  host: "110.42.111.49"
+  port: 1244
+  username: "template"
+  password: "R3DmF2eR"
+  name: "template"
   charset: "utf8mb4"
   max_idle_conns: 10
   max_open_conns: 100
   conn_max_lifetime: 3600
   slow_query_threshold: 200
-  enable_logging: false          # 生产环境关闭SQL日志
+  enable_logging: false
   table_prefix: ""
 
-# JWT配置 - 生产环境
+# JWT config
 jwt:
-  secret_key: "${JWT_SECRET_KEY}"     # 必须通过环境变量设置（至少32字符）
+  secret_key: "${JWT_SECRET_KEY}"
   expires_in: 24
   refresh_expires_in: 168
   issuer: "template-app"
@@ -44,14 +43,14 @@ jwt:
   blacklist_enabled: true
   blacklist_cleanup_interval: 24
 
-# Redis配置 - 生产环境
+# Redis config
 redis:
-  enabled: true                  # 生产环境启用Redis
-  host: "localhost"              # 生产环境Redis地址
+  enabled: true
+  host: "localhost"
   port: 6379
-  password: ""     # 生产环境Redis密码
+  password: ""
   db: 0
-  pool_size: 20                  # 生产环境增加连接池
+  pool_size: 20
   min_idle_conns: 10
   max_conn_age: 3600
   idle_timeout: 240
@@ -59,40 +58,40 @@ redis:
   write_timeout: 3
   dial_timeout: 5
 
-# 日志配置 - 生产环境
+# Log config
 log:
-  level: "info"                  # 生产环境日志级别
+  level: "info"
   path: "logs"
   filename: "app.log"
   max_size: 100
-  max_backups: 30                # 生产环境保留更多日志
-  max_age: 30                    # 生产环境保留30天日志
+  max_backups: 30
+  max_age: 30
   compress: true
-  json_format: true              # 生产环境使用JSON格式便于分析
-  show_caller: false             # 生产环境关闭调用者信息
-  show_line: false               # 生产环境关闭行号信息
+  json_format: true
+  show_caller: false
+  show_line: false
   show_stack: false
-  enable_console: false          # 生产环境关闭控制台输出
+  enable_console: false
 
-# 邮件服务配置 - 生产环境
+# Mail config
 mail:
-  host: "smtpdm.aliyun.com"   # 生产环境SMTP服务器
+  host: "smtpdm.aliyun.com"
   port: 465
   username: "nine_team@nineai.jiangly.com"
-  password: "Nine98Mailer"      # 生产环境SMTP密码
+  password: "Nine98Mailer"
   from: "nine_team@nineai.jiangly.com"
   from_name: "系统通知"
   reply_to: "nine_team@nineai.jiangly.com"
   ssl: true
-  enabled: true                  # 生产环境启用邮件服务
+  enabled: true
   template_path: "templates/mail"
   max_retries: 3
   retry_interval: 5
 
-# CORS配置 - 生产环境
+# CORS config
 cors:
   enabled: true
-  allowed_origins:               # 生产环境只允许特定域名
+  allowed_origins:
     - "https://template.mmmss.com"
     - "http://template.mmmss.com"
   allowed_methods:
@@ -109,4 +108,4 @@ cors:
   max_age: 86400
   expose_headers:
     - "Content-Length"
-    - "Content-Type" 
+    - "Content-Type"
